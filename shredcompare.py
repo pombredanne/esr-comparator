@@ -40,7 +40,7 @@ class Shred:
     def merge(self, other):
         self.start = min(self.start, other.start)
         self.end   = max(self.end,   other.end)
-    # Make these sortable (not presently used)
+    # Make these sortable
     def __cmp__(self, other):
         return cmp((self.file, self.start, self.end), 
                    (other.file, other.start, other.end))
@@ -54,7 +54,7 @@ class Shred:
 
 class ShredTree:
     "Represent a collection of shreds corresponding to a file tree."
-    ws = re.compile(r"\s+")
+    ws = re.compile(r"[ \t\n]+")
 
     def __init__(self, path, ignorehash=False, shredsize=5, verbose=False):
         self.path = path
@@ -94,26 +94,28 @@ class ShredTree:
                 fullpath = os.path.join(root, file)
                 if self.__eligible(fullpath):
                     self.__shredfile(fullpath)
-    def __smash_whitespace(self, line):
-        "Replace each string of whitespace in a line with a single space."
-        return ShredTree.ws.sub(' ', line)
-    def __is_line_relevant(self, line):
-        "Don't start chunks on lines with no features.  This is a speed hack."
-        return line.strip()
     def __shredfile(self, file):
         "Build a dictionary of shred tuples corresponding to a specified file."
         if self.verbose:
             print file
         fp = open(file)
-        lines = map(self.__smash_whitespace, fp.readlines())
+        lines = map(lambda x: ShredTree.ws.sub('', x), fp.readlines())
         fp.close()
-        for i in range(len(lines)-shredsize):
-            if self.__is_line_relevant(lines[i]):
+        for i in range(len(lines)):
+            if lines[i]:
                 m = md5.new()
-                for j in range(self.shredsize):
-                    m.update(lines[i+j])
-                # Merging shreds into a dict automatically suppresses duplicates.
-                self.shreds[m.digest()] = Shred(file, i, i + self.shredsize)
+                need = self.shredsize
+                j = i
+                while need > 0:
+                    if j >= len(lines):
+                        break
+                    elif lines[j]:
+                        m.update(lines[j])
+                        need -= 1
+                    j += 1
+                if need == 0:
+                    # Merging into a dict automatically suppresses duplicates.
+                    self.shreds[m.digest()] = Shred(file, i, j)
     def __eligible(self, file):
         "Is a file eligible for comparison?"
         return filter(lambda x: file.endswith(x), ('.c','h','.y','.l','.txt'))
