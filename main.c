@@ -55,7 +55,7 @@ static void filehook(struct hash_t hash, const char *file)
 				      sizeof(struct hash_t) * (chunk_count+1));
     
     hash.start = TONET(hash.start);
-    hash.end = TONET(hash.end);
+    hash.end   = TONET(hash.end);
     chunk_buffer[chunk_count++] = hash;
 }
 
@@ -104,6 +104,32 @@ static void generate_shredfile(const char *tree, FILE *ofp)
 	net_chunks = TONET(chunk_count);
 	fwrite((char *)&net_chunks, sizeof(linenum_t), 1, ofp);
 	fwrite(chunk_buffer, sizeof(struct hash_t), chunk_count, ofp);
+	if (debug)
+	{
+	    struct hash_t	*np;
+	    fprintf(stderr, "Chunks for %s:\n", *place);
+	    for (np = chunk_buffer; np < chunk_buffer + chunk_count; np++)
+		fprintf(stderr,
+			"%d: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x %s:%d:%d\n", 
+		       np-chunk_buffer, 
+		       np->hash[0], 
+		       np->hash[1], 
+		       np->hash[2], 
+		       np->hash[3], 
+		       np->hash[4], 
+		       np->hash[5], 
+		       np->hash[6], 
+		       np->hash[7], 
+		       np->hash[8], 
+		       np->hash[9], 
+		       np->hash[10], 
+		       np->hash[11], 
+		       np->hash[12], 
+		       np->hash[13], 
+		       np->hash[14], 
+		       np->hash[15],
+		       *place, FROMNET(np->start), FROMNET(np->end));
+	}
 	free(chunk_buffer);
     }
 }
@@ -173,6 +199,45 @@ static void init_scf(char *file)
     new->name = strdup(file);
     new->next = scf_head;
     scf_head = new;
+}
+
+static void dump_array(struct sorthash_t *obarray, 
+		int hashcount, 
+		linenum_t (*fn)(linenum_t))
+/* dump the contents of a sort_hash array */
+{
+    struct sorthash_t	*np;
+
+    for (np = obarray; np < obarray + hashcount; np++)
+    {
+	struct hash_t scratch;
+
+	scratch = np->hash;
+	if (fn)
+	{
+	    scratch.start = fn(np->hash.start);
+	    scratch.end   = fn(np->hash.end);
+	}
+	printf("%d: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x %s:%d:%d\n", 
+	       np-obarray, 
+	       scratch.hash[0], 
+	       scratch.hash[1], 
+	       scratch.hash[2], 
+	       scratch.hash[3], 
+	       scratch.hash[4], 
+	       scratch.hash[5], 
+	       scratch.hash[6], 
+	       scratch.hash[7], 
+	       scratch.hash[8], 
+	       scratch.hash[9], 
+	       scratch.hash[10], 
+	       scratch.hash[11], 
+	       scratch.hash[12], 
+	       scratch.hash[13], 
+	       scratch.hash[14], 
+	       scratch.hash[15],
+	       np->file, scratch.start, scratch.end);
+    }
 }
 
 void report_time(char *legend, ...)
@@ -315,7 +380,6 @@ main(int argc, char *argv[])
 	/* consistency checks on the SCFs */
 	for (scf = scf_head; scf->next->next; scf = scf->next)
 	{
-	    printf("Foo\n");
 	    if (strcmp(scf->normalization, scf->next->normalization))
 	    {
 		fprintf(stderr, 
@@ -351,6 +415,12 @@ main(int argc, char *argv[])
 
     if (!compile_only)
     {
+	if (debug)
+	{
+	    printf("Consolidated hash list:\n");
+	    dump_array(sort_buffer, sort_count, NULL);
+	}
+
 	/* now we're ready to emit the report */
 	puts("#SCF-B 1.0");
 	printf("Hash-Method: %s\n", scf_head->hash_method);
@@ -362,6 +432,14 @@ main(int argc, char *argv[])
 	report_time("Hash merge done, %d entries", sort_count);
 	sort_hashes(sort_buffer, sort_count);
 	report_time("Sort done");
+
+#ifdef DEBUG
+	if (debug)
+	{
+	    puts("Chunk list before reduction.");
+	    dump_array(obarray, hashcount, NULL);
+	}
+#endif /* DEBUG */
 
 	emit_report(sort_buffer, sort_count);
     }

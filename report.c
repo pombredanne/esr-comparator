@@ -42,15 +42,15 @@ static struct match_t *reduced = &dummy_match;
 void merge_scf(const char *name, FILE *fp)
 /* merge hashes from specified files into an in-code list */
 {
-    u_int32_t	sectcount;
+    u_int32_t	filecount;
     int hashcount = 0;
     struct stat sb;
 
     stat(name, &sb);
     fprintf(stderr, "%% Reading hash list %s...   ", name);
-    fread(&sectcount, sizeof(u_int32_t), 1, fp);
-    sectcount = ntohl(sectcount);
-    while (sectcount--)
+    fread(&filecount, sizeof(u_int32_t), 1, fp);
+    filecount = ntohl(filecount);
+    while (filecount--)
     {
 	char	buf[BUFSIZ];
 	linenum_t	chunks;
@@ -59,7 +59,7 @@ void merge_scf(const char *name, FILE *fp)
 	fgets(buf, sizeof(buf), fp);
 	*strchr(buf, '\n') = '\0';
 	new = (struct item *)malloc(sizeof(struct item));
-	new->file = strdup(name);
+	new->file = strdup(buf);
 	new->next = head;
 	head = new;
 	fread(&chunks, sizeof(linenum_t), 1, fp);
@@ -311,33 +311,6 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
 {
     struct match_t *hitlist, *sorted, *match;
     int i, matchcount;
-
-    if (debug)
-    {
-	struct sorthash_t	*np;
-
-	puts("Chunk list before reduction.");
-	for (np = obarray; np < obarray + hashcount; np++)
-	    printf("%d: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x %s:%d:%d\n", 
-		   np-obarray, 
-		   np->hash.hash[0], 
-		   np->hash.hash[1], 
-		   np->hash.hash[2], 
-		   np->hash.hash[3], 
-		   np->hash.hash[4], 
-		   np->hash.hash[5], 
-		   np->hash.hash[6], 
-		   np->hash.hash[7], 
-		   np->hash.hash[8], 
-		   np->hash.hash[9], 
-		   np->hash.hash[10], 
-		   np->hash.hash[11], 
-		   np->hash.hash[12], 
-		   np->hash.hash[13], 
-		   np->hash.hash[14], 
-		   np->hash.hash[15],
-		   np->file, np->hash.start, np->hash.end);
-    }
 
     hitlist = reduce_matches(obarray, hashcount);
     report_time("Reduction done");
