@@ -2,7 +2,7 @@
 
 VERS=0.1
 
-CODE    = shredtree.c shredcompare.c main.c md5.c md5.h filterator
+CODE    = shredtree.c report.c main.c md5.c md5.h filterator
 DOCS    = README comparator.xml
 EXTRAS  = shredtree.py shredcompare.py
 TEST    = test1 test2 test3 test4
@@ -16,13 +16,13 @@ main.o: main.c shred.h
 	$(CC) -c $(CFLAGS) main.c 
 shredtree.o: shredtree.c shred.h
 	$(CC) -c $(CFLAGS) shredtree.c 
-shredcompare.o: shredcompare.c shred.h
-	$(CC) -c $(CFLAGS) shredcompare.c 
-comparator: main.o shredtree.o md5.o shredcompare.o
-	$(CC) main.o shredtree.o md5.o shredcompare.o -o comparator
+report.o: report.c shred.h
+	$(CC) -c $(CFLAGS) report.c 
+comparator: main.o shredtree.o md5.o report.o
+	$(CC) main.o shredtree.o md5.o report.o -o comparator
 
 clean:
-	rm -f comparator shredtree.o md5.o shredcompare.o main.o *~
+	rm -f comparator shredtree.o md5.o report.o main.o *~
 	rm -f comparator.1 filterator.1 
 
 comparator.1: comparator.xml
@@ -46,10 +46,10 @@ install: comparator.1 uninstall
 uninstall:
 	rm -f ${ROOT}/usr/bin/comparator 
 	rm -f ${ROOT}/usr/bin/filterator 
-	rm -f ${ROOT}/usr/share/man/man6/comparator.1
+	rm -f ${ROOT}/usr/share/man/man1/comparator.1
 
-comparator-$(VERS).tar.gz: $(SOURCES) comparator.6
-	@ls $(SOURCES) comparator.6 | sed s:^:comparator-$(VERS)/: >MANIFEST
+comparator-$(VERS).tar.gz: $(SOURCES) comparator.1
+	@ls $(SOURCES) comparator.1 | sed s:^:comparator-$(VERS)/: >MANIFEST
 	@(cd ..; ln -s comparator comparator-$(VERS))
 	(cd ..; tar -czvf comparator/comparator-$(VERS).tar.gz `cat comparator/MANIFEST`)
 	@(cd ..; rm comparator-$(VERS))
