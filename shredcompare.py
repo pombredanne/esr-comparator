@@ -79,6 +79,8 @@ def eligible(file):
 def shredtree(tree):
     "Shred an entire file tree; return a dictionary of checksums-to-locations."
     shreds = {}
+    if verbose:
+        print "% Shredding", tree
     if os.path.exists(tree + ".hash"):
         # There's a precomputed shred list.
         rfp = open(tree + ".hash")
@@ -136,7 +138,7 @@ def report_time(legend=None):
         hours = elapsed/3600; elapsed %= 3600
         minutes = elapsed/60; elapsed %= 60
         seconds = elapsed
-        print "%% %s: %dh, %dm, %ds" % (legend, hours, minutes, seconds)
+        print "%%%%#%%%% %s: %dh, %dm, %ds" % (legend, hours, minutes, seconds)
     mark_time = endtime
 
 if __name__ == '__main__':
