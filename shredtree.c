@@ -100,8 +100,8 @@ static void emit_chunk(shred *display, int linecount)
 	if (display[i].line)
 	    firstline = i;
     firstline = display[firstline].number;
-    outbuf[chunk_count].start = htonl(firstline);
-    outbuf[chunk_count].end = htonl(linecount);
+    outbuf[chunk_count].start = TONET(firstline);
+    outbuf[chunk_count].end = TONET(linecount);
     chunk_count++;
 }
 
