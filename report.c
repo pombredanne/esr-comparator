@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdarg.h>
 #include "shred.h"
 
 #define min(x, y)	((x < y) ? (x) : (y)) 
@@ -59,10 +60,11 @@ struct match_t
 dummy_match;
 static struct match_t *reduced = &dummy_match;
 
-static void report_time(char *legend)
+static void report_time(char *legend, ...)
 {
     static time_t mark_time;
     time_t endtime = time(NULL);
+    va_list	ap;
 
     if (mark_time)
     {
@@ -70,9 +72,11 @@ static void report_time(char *legend)
 	int hours = elapsed/3600; elapsed %= 3600;
 	int minutes = elapsed/60; elapsed %= 60;
 	int seconds = elapsed;
+	char	buf[BUFSIZ];
 
-	fprintf(stderr, "%% %s: %dh, %dm, %ds\n", 
-		legend, hours, minutes, seconds);
+	va_start(ap, legend);
+	vsprintf(buf, legend, ap);
+	fprintf(stderr, "%% %s: %%dh %dm %ds\n", buf, hours, minutes, seconds);
     }
     mark_time = endtime;
 }
@@ -105,12 +109,12 @@ void init_intern(const int count)
      np++;
  }
 
- static long merge_hashes(int argc, char *argv[])
+ static void merge_hashes(int argc, char *argv[])
  /* merge hashes from specified files into an in-code list */
  {
      struct shif_t *shiflist, *sp;
      struct stat sb;
-     long total, hashcount = 0;
+     long total;
 
      /* set up metadata blocks for the hash files */
      shiflist = (struct shif_t *)calloc(sizeof(struct shif_t), argc);
@@ -185,10 +189,11 @@ void init_intern(const int count)
 	 stat(sp->name, &sb);
 	 total += sb.st_size - ftell(sp->fp);
      }
-     fprintf(stderr, "%ld bytes to be read.\n", total);
+     fprintf(stderr, "%% %ld bytes to be read.\n", total);
      init_intern(total/sizeof(struct hash_t));	/* real work done here */
 
      /* read in all hashes */
+     hashcount = 0;
      for (sp = shiflist; sp < shiflist + argc; sp++)
      {
 	 u_int32_t	sectcount;
@@ -218,8 +223,6 @@ void init_intern(const int count)
 	     }
 	 }
      }
-
-     return hashcount;
  }
 
 static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
@@ -287,9 +290,10 @@ struct match_t *reduce_matches(int localdups)
 {
      static struct match_t dummy; 
      struct match_t *reduced = &dummy, *sp, *tp;
-     int retry;
+     int retry, nonuniques;
 
      /* build list of hashes with more than one range associated with */
+     nonuniques = 0;
      for (np = obarray; np < obarray + hashcount; np++)
      {
 	 if (np < obarray + hashcount - 1 && !HASHCMP(np, np+1))
@@ -329,6 +333,7 @@ struct match_t *reduce_matches(int localdups)
 	     reduced = new;
 	     new->nmatches = nmatches;
 	     new->matches=(struct range_t *)calloc(sizeof(struct range_t),new->nmatches);
+	     nonuniques++;
 	     for (i = 0; i < new->nmatches; i++)
 	     {
 		 new->matches[i].file  = np[i].file;
@@ -339,6 +344,8 @@ struct match_t *reduce_matches(int localdups)
 	}
      }
      free(obarray);
+
+     report_time("%d range groups after removing unique hashes", nonuniques);
 
 #ifdef DEBUG
      for (sp = reduced; sp->next; sp = sp->next)
@@ -379,11 +386,13 @@ struct match_t *reduce_matches(int localdups)
 		 printf("Merged %d into %d\n", tp->index, sp->index);
 #endif /* DEBUG */
 		 free(tp->matches);
+		 nonuniques--;
 		 tp->matches = NULL;
 		 /* list is altered, do another merge pass */
 	         retry = 1;
 	     }
      }
+     report_time("%d range groups after merging", nonuniques);
      return reduced;
 }
 
@@ -429,12 +438,12 @@ main(int argc, char *argv[])
     }
 
     report_time(NULL);
-    hashcount = merge_hashes(argc - optind, argv + optind);
-    report_time("Hash merge done.");
+    merge_hashes(argc - optind, argv + optind);
+    report_time("Hash merge done, %d entries", hashcount);
 
     /* the magic CPU-eating moment; sort the whole thing */ 
     qsort(obarray, hashcount, sizeof(struct sorthash_t), sortchunk);
-    report_time("Sort done.");
+    report_time("Sort done");
 
 #ifdef ODEBUG
     for (np = obarray; np < obarray + hashcount; np++)
