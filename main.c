@@ -506,18 +506,15 @@ main(int argc, char *argv[])
 	}
 	else if (compile_only)
 	{
-	    char	*outfile = alloca(strlen(source) + 4);
 	    FILE	*ofp;
 
-	    strcpy(outfile, source);
-	    strcat(outfile, ".scf");
-	    ofp = fopen(outfile, "w");
-	    if (!ofp)
+	    if (!outfile)
 	    {
-		fprintf(stderr, "comparator: couldn't open output file %s\n",
-			outfile);
-		exit(1);
+		outfile  = alloca(strlen(source) + 4);
+		strcpy(outfile, source);
+		strcat(outfile, ".scf");
 	    }
+	    ofp = redirect(outfile);
 
 	    if (dir)
 	    {
