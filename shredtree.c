@@ -93,7 +93,7 @@ static int normalize(char *buf)
 typedef struct
 {
     char	*line;
-    int  	number;
+    int  	start;
 }
 shred;
 
@@ -120,7 +120,7 @@ static struct hash_t emit_chunk(shred *display, int linecount)
     for (i = shredsize - 1; i >= 0; i--)
 	if (display[i].line)
 	    firstline = i;
-    firstline = display[firstline].number;
+    firstline = display[firstline].start;
     out.start = firstline;
     out.end = linecount;
 
@@ -155,7 +155,7 @@ void shredfile(const char *file,
 
 	/* create new shred */
 	display[shredsize-1].line = strdup(buf);
-	display[shredsize-1].number = linecount;
+	display[shredsize-1].start = linecount;
 
 	/* flush completed chunk */
 	if (accepted >= shredsize)
