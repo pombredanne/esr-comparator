@@ -71,6 +71,9 @@ class Range:
             text += rfp.readline()
         rfp.close()
         return text
+    def __cmp__(self, other):
+        return cmp((self.file, self.start, self.end), 
+                   (other.file, other.start, other.end))
     def __str__(self):
         # 0-origin line numbers internally, 1-origin externally.
         return "%s:%d-%d" % (self.file, self.start+1, self.end)
