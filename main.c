@@ -639,10 +639,8 @@ main(int argc, char *argv[])
     /* now we're ready to emit the report */
     redirect(outfile);
     puts("#SCF-B 2.0");
+    printf("Filtering: %s\n", nofilter ? "none" : "language");
     printf("Hash-Method: %s\n", scflist->hash_method);
-    puts("Merge-Program: comparator " VERSION);
-    printf("Normalization: %s\n", scflist->normalization);
-    printf("Shred-Size: %d\n", scflist->shred_size);
 
     report_time("Hash merge done, %d shreds", sort_count);
     sort_hashes(sort_buffer, sort_count);
@@ -650,6 +648,9 @@ main(int argc, char *argv[])
 
     mergecount = merge_compare(sort_buffer, sort_count);
     printf("Matches: %d\n", mergecount);
+    puts("Merge-Program: comparator " VERSION);
+    printf("Normalization: %s\n", scflist->normalization);
+    printf("Shred-Size: %d\n", scflist->shred_size);
 
     puts("%%");
     for (scf = scflist; scf->next; scf = scf->next)
