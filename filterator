@@ -52,6 +52,54 @@ def nontrivial(text):
             continue
     return text.strip()
 
+def report_common():
+    "Generate a report on common code"
+    count = 0
+    locations = []
+    while True:
+        line = sys.stdin.readline()
+        if not line:
+            break
+        m = shredline.search(line)
+        if m:
+            locations.append((m.group(1), int(m.group(2)), int(m.group(3))))
+        if line == '%%\n':
+            for (file, start, end) in locations:
+                try:
+                    rfp = open(file)
+                    for i in range(start-1):
+                        rfp.readline()
+                    text = ""
+                    for i in range(start, end+1):
+                        nextline = rfp.readline()
+                        if nextline[0] == '%':
+                            nextline = '%' + nextline
+                        text += nextline
+                    rfp.close()
+                    if nofilter or nontrivial(text):
+                        # We do this here in order to avaoid losing
+                        # the error message in noise if the user needs
+                        # -d and fails to supply it.
+                        if count == 0:
+                            print "Filter-Program: filterator 1.0"
+                            print "Filtering:", ("C-syntax", "none")[nofilter]
+                            print "Hash-Method: MD5"
+                            if merge_program:
+                                print "Merge-Program:", merge_program
+                            print "Normalization:", normalization
+                            print "Shred-Size: %d" % shredsize
+                            print "%%"
+                        count += 1
+                        print "%% %s:%s-%s: (%d matches)" % (file, start, end, len(locations))
+                        sys.stdout.write(text)
+                        #print `nontrivial(text)`
+                    locations = []
+                    break
+                except IOError:
+                    sys.stderr.write("filterator: can't open %s\n" % file)
+                    sys.exit(0)
+    print "%d overlaps." % count
+
 if __name__ == '__main__':
     try:
         (optlist, args) = getopt.getopt(sys.argv[1:], 'd:n')
@@ -87,44 +135,4 @@ if __name__ == '__main__':
         elif tag == "Hash-Method":
             hash_method = value
 
-    print "Filter-Program: filterator 1.0"
-    print "Filtering:", ("C-syntax", "none")[nofilter]
-    print "Hash-Method: MD5"
-    if merge_program:
-        print "Merge-Program:", merge_program
-    print "Normalization:", normalization
-    print "Shred-Size: %d" % shredsize
-    print "%%"
-    count = 0
-    locations = []
-    while True:
-        line = sys.stdin.readline()
-        if not line:
-            break
-        m = shredline.search(line)
-        if m:
-            locations.append((m.group(1), int(m.group(2)), int(m.group(3))))
-        if line == '%%\n':
-            for (file, start, end) in locations:
-                try:
-                    rfp = open(file)
-                    for i in range(start-1):
-                        rfp.readline()
-                    text = ""
-                    for i in range(start, end+1):
-                        nextline = rfp.readline()
-                        if nextline[0] == '%':
-                            nextline = '%' + nextline
-                        text += nextline
-                    rfp.close()
-                    if nofilter or nontrivial(text):
-                        count += 1
-                        print "%% %s:%s-%s: (%d matches)" % (file, start, end, len(locations))
-                        sys.stdout.write(text)
-                        #print `nontrivial(text)`
-                    locations = []
-                    break
-                except IOError:
-                    sys.stderr.write("filterator: can't open %s\n" % file)
-                    sys.exit(0)
-    print "%d overlaps." % count
+    report_common()
