@@ -68,7 +68,7 @@ static void emit_chunk(shred *display, int linecount)
 	for (i = 0; i < shredsize; i++)
 	    if (display[i].line)
 	    {
-		putchar('"');
+		putchar('\'');
 		for (cp = display[i].line; *cp; cp++)
 		    if (*cp == '\n')
 			fputs("\\n", stdout);
@@ -76,7 +76,7 @@ static void emit_chunk(shred *display, int linecount)
 			fputs("\\t", stdout);
 		    else
 			putchar(*cp);
-		putchar('"');
+		putchar('\'');
 	        putchar('\n');
 	    }    
     }
