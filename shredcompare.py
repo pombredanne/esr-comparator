@@ -222,9 +222,9 @@ if __name__ == '__main__':
         mark_time = endtime
 
     try:
-        (optlist, args) = getopt.getopt(sys.argv[1:], 'h:s:v')
+        (optlist, args) = getopt.getopt(sys.argv[1:], 'd:h:s:v')
     except getopt.GetoptError:
-        sys.stderr.write("usage: shredcompare [-s shredsize] [-v] [-h] tree1 tree2\n")
+        sys.stderr.write("usage: shredcompare [-s shredsize] [-v] [-h] [-d dir] tree1 tree2\n")
         sys.exit(2)
     makehash = None
     shredsize=5
@@ -232,10 +232,12 @@ if __name__ == '__main__':
     for (opt, val) in optlist:
         if opt == '-s':
             shredsize = int(val)
-        elif opt == '-v':
-            verbose = True
+        elif opt == '-d':
+            os.chdir(val)
         elif opt == '-h':
             makehash = val
+        elif opt == '-v':
+            verbose = True
     report_time()
     if makehash:
         shreds = ShredTree(makehash, ignorehash=True, shredsize=shredsize, verbose=verbose)
