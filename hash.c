@@ -1,7 +1,7 @@
 /* hash.c -- hash and digest computation for comparator */
 #include "hash.h"
 
-#ifdef INTEGRAL_HASH
+#ifndef USE_MD5
 /******************************************************************************
 
 According to the Birthday Theorem, successive random choices from a

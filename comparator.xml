@@ -48,7 +48,7 @@ can apply significance filtering.</para>
 
 <para><application>comparator</application> works by first chopping
 the specified trees into overlapping shreds (by default 3 lines long)
-and computing the MD5 hash of each shred.  The resulting list of
+and computing a hash of each shred.  The resulting list of
 shreds is examined and all unique hashes are thrown out.  Then
 <application>comparator</application> generates a report listing all
 cliques of lines with duplicate hashes, with overlapping ranges
@@ -164,9 +164,10 @@ to this is the number of matches reported for each range.</para>
 
 </refsect1>
 
-<refsect1 id='author'><title>AUTHOR</title>
-<para>Eric S. Raymond <email>esr@snark.thyrsus.com</email>.  See ESR's home
-page at <ulink
+<refsect1 id='author'><title>AUTHOR</title> <para>Eric S. Raymond
+<email>esr@snark.thyrsus.com</email>.  Ronald Rivest suggested the
+custom RXOR hash function used in versions 2.0 and up.  See ESR's home page
+at <ulink
 url='http://www.catb.org/~esr/'>http://www.catb.org/~esr/</ulink> for
 updates and other resources.</para>
 </refsect1>
@@ -185,11 +186,13 @@ into the territory of ideas and tend to produce false positives.</para>
 <para>The heuristic for eligible files can be fooled, though this
 is unlikely.</para>
 
-<para>The use of MD5 hashes means there is a very small probability of
-false-positive matches between shreds &mdash; 1 in
-18,446,744,073,709,551,616, to be precise. (You will probably be struck
-by a meteor or spontaneously combust before this happens.)  There
-is no possibility of false negatives.</para>
+<para>The use of hashes means there is a very small probability of
+false-positive matches between shreds; to be precise, with the default
+RXOR hash you can expect the first false positive after accumulating
+6,074,000,999 shreds.  For even very large forests, such as
+collections of Linux and Unix source trees running into the tens of
+millions of lines, you are very unlikely to ever see this.  There is
+no possibility of false negatives.</para>
 
 <para>This program handles a maximum of 65536 lines per file.  A full
 integer line-number range would increase working-set size by

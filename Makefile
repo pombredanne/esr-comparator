@@ -3,7 +3,7 @@
 # By building with -DLARGEFILES you can go to all 32-byte offsets.
 # This increases working-set size by 20% but handles > 65336 lines per file.
 
-VERS=1.6
+VERS=2.0
 
 CODE    = shredtree.c shred.h report.c hash.c main.c md5.c md5.h \
 		hash.h hashtab.h \
@@ -28,7 +28,7 @@ report.o: report.c shred.h hash.h
 comparator: main.o hash.o shredtree.o md5.o report.o
 	$(CC) $(CFLAGS) main.o hash.o shredtree.o md5.o report.o $(LDFLAGS) -o comparator
 
-hash.c: hashgen.py
+hashtab.h: hashgen.py
 	python hashgen.py >hashtab.h
 
 clean:

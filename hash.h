@@ -1,9 +1,11 @@
 /* interface file for comparator hash function */
 
-#ifdef INTEGRAL_HASH
+#ifndef FORCE_MD5
 typedef unsigned long long	hashval_t;
+#define HASHMETHOD	"RXOR"
 #else
 typedef unsigned char	hashval_t[16];
+#define HASHMETHOD	"MD5"
 #endif
 
 #define hash_compare(s, t)	memcmp(&(s), &(t), sizeof(hashval_t))

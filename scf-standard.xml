@@ -19,6 +19,14 @@
 
 <revhistory> 
    <revision>
+      <revnumber>2.0</revnumber>
+      <date>2003-12-15</date>
+      <authorinitials>esr</authorinitials>
+       <revremark>
+	 New custom hash function; binary format changes accordingly.
+       </revremark>
+  </revision>
+  <revision>
       <revnumber>1.3</revnumber>
       <date>2003-12-07</date>
       <authorinitials>esr</authorinitials>
@@ -249,7 +257,8 @@ may include the following:</para>
 
 <varlistentry>
 <term><emphasis>Hash-Method</emphasis>: (optional)</term>
-<listitem><para>The hashing method.  Defaults to MD5</para></listitem>
+<listitem><para>The hashing method.  Defaults to RXOR for the custom
+Rivest XOR hash; MD5 is also a legal value.</para></listitem>
 </varlistentry>
 
 <varlistentry>
@@ -271,8 +280,8 @@ records.  The length of the data section is drtivable from the data
 lengths.</para>
 
 <para>A shred record consists of ushorts (start and end line numbers)
-followed by a fixed-length block of hash data.  For the default MD5
-hash the data is 16 bytes.</para>
+followed by a fixed-length block of hash data.  For the default RXOR
+hash the data is 8 bytes; for MD5, it is 16.</para>
 
 <para>Shreds should be ordered by start line number.  Empty files should be
 skipped, and nonempty files should always have at least one shred.
