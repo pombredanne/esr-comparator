@@ -2,52 +2,25 @@
 #
 # shredcompare -- find similarities in file trees.
 #
-# 1.0 by Eric S. Raymond, 24 Aug 2003.
+# 0.1 by Eric S. Raymond, 24 Aug 2003.
 #
 # Implements the shred algorithm described at:
 #
 #	http://theinquirer.net/?article=10061
-#
-#   "Here is the procedure for finding the matching code.... "1. Each
-#   file withing each source tree is "shredded" into 5 line pieces (1-5,
-#   2-6, 3-7, etc.). MD5 sum is computed for each block of lines. The
-#   output is 3 columns: MD5sum, source file, 1st line in the block.
-#   
-#   "At this stage, 4.4BSD had [a] ~40Mb file, linux ~160Mb. Potentially,
-#   one could shred into smaller or larger pieces, however, with pieces
-#   too small there'll be a lot of noise, with pieces too large some
-#   matches won't be seen. 5 liners seem to be a good compromise.
-#   
-#   "2. Within each source tree the "shredded" file is sorted by MD5sum,
-#   and duplicate entries within the same tree are removed completely
-#   (these are either trivial 5-line sequences or licensing
-#   disclaimers). Unix sort here takes a couple of minutes on a 600Mhz
-#   P3.
-#   
-#   "3. A column indicating the origin of the file is inserted into the
-#   file (0 - BSD, 1 - linux). Both Linux and BSD "shredded" files are
-#   merged such that MD5sums stay sorted.
-#   
-#   "4. At this point a given MD5sum will occur either once or twice,
-#   i.e., in both source trees. Here remove all thesingle lines, and have
-#   the 5 liners left that are matching.
-#   
-#   "5. Count for each file in Linux tree the number of matches with the
-#   BSD tree using the file generated at step 4. Sort this list, and the
-#   largest counts will occur for the files with the largest number of
-#   matching lines. The range can be extracted from the file from step 4,
-#   since at step 1 we kept the address of the 1st line in the
-#   block. That is how the info above was generated.
-#
-# In this implementation, lines are preprocessed to remove whitespace
-# differences.
 #
 # The -h option supports building a cache containing the shred list
 # for a tree you specify.  This is strictly a speed hack.  If your
 # tree is named `foo', the file will be named `foo.hash'.  On your
 # next comparison run it will be picked up automatically. It is
 # your responsibility to make sure each hash file is newer than
-# the correspobding tree.
+# the corresponding tree.
+#
+# This is alpha software. There is a bug in the implementation,
+# somewhere in the logic for merging matching ranges before report
+# generation, that sometimes garbages the last number in the
+# target-tree range.  I haven't fixed it yet because I haven't found a
+# way to produce a test load that reproduces it that is smaller that
+# the entire Linux 2.6.o and Sysem V kernels.
 
 import sys, os, os.path, re, md5, getopt, time, cPickle
 
@@ -187,7 +160,7 @@ if __name__ == '__main__':
         report_time("Shred list complete.")
         cPickle.dump(shreds, wfp)
         wfp.close()
-        report_time("Pickling cmplete")
+        report_time("Pickling complete")
     else:
         matches = shredcompare(args[0], args[1])
         report_time("Match list complete")
