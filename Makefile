@@ -8,7 +8,7 @@ EXTRAS  = shredtree.py shredcompare.py
 TEST    = test1 test2 test3 test4
 SOURCES = $(CODE) $(DOCS) $(EXTRAS) $(TEST)
 
-CFLAGS=-O
+CFLAGS=-g
 
 all: comparator comparator.1
 
@@ -22,7 +22,7 @@ comparator: main.o shredtree.o md5.o shredcompare.o
 	$(CC) main.o shredtree.o md5.o shredcompare.o -o comparator
 
 clean:
-	rm -f comparator shredtree.o md5.o shredcompare.o *~
+	rm -f comparator shredtree.o md5.o shredcompare.o main.o *~
 
 comparator.1: comparator.xml
 	xmlto man comparator.xml
