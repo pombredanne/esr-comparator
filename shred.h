@@ -17,8 +17,8 @@ typedef u_int16_t	linenum_t;
 #define HASHSIZE	16
 struct hash_t
 {
-    linenum_t	start, end;
-    char	hash[HASHSIZE];
+    linenum_t   	start, end;
+    unsigned char	hash[HASHSIZE];
 };
 
 /* hashmap.c */

@@ -11,12 +11,10 @@ shredtree: shredtree.o md5.o
 shredtree.o: shredtree.c shred.h
 	$(CC) -c $(CFLAGS) shredtree.c 
 
-hashmap.o: hashmap.c shred.h
-	$(CC) -c $(CFLAGS) hashmap.c 
 shredcompare.o: shredcompare.c shred.h
 	$(CC) -c $(CFLAGS) shredcompare.c 
-shredcompare: shredcompare.o hashmap.o
-	$(CC) $(LFLAGS) shredcompare.o hashmap.o -o shredcompare
+shredcompare: shredcompare.o
+	$(CC) $(LFLAGS) shredcompare.o -o shredcompare
 
 clean:
 	rm -f shredtree shredcompare shredtree.o md5.o shredcompare.o

@@ -10,6 +10,14 @@
 
 static int local_duplicates;
 
+struct item
+{
+    char	*file;
+    struct item *next;
+}
+dummy;
+static struct item *head = &dummy;
+
 struct shif_t
 {
     char	*name;
@@ -18,6 +26,12 @@ struct shif_t
     int		shred_size;
     char	*hash_method;
     char	*generator_program;
+};
+
+struct sorthash_t
+{
+    struct hash_t	hash;
+    char		*file;
 };
 
 static report_time(char *legend)
@@ -38,42 +52,20 @@ static report_time(char *legend)
     mark_time = endtime;
 }
 
-main(int argc, char *argv[])
+static void merge_hashes(int argc, char *argv[])
+/* merge hashes from specified files into an in-code list */
 {
-    extern char	*optarg;	/* set by getopt */
-    extern int	optind;		/* set by getopt */
-    int	status, filecount;
     struct shif_t *shiflist, *sp;
     struct stat sb;
     long total;
 
-    while ((status = getopt(argc, argv, "dh")) != EOF)
-    {
-	switch (status)
-	{
-	case 'd':
-	    local_duplicates = 1;
-	    break;
-
-	case 'h':
-	default:
-	    fprintf(stderr,"usage: shredtree [-d] hashfile...\n");
-	    fprintf(stderr,"  -d      = remove local duplicates.\n");
-	    fprintf(stderr,"  -h      = help (display this message).\n");
-	    exit(0);
-	}
-    }
-
-    report_time(NULL);
-
     /* set up metadata blocks for the hash files */
-    filecount = argc - optind;
-    shiflist = (struct shif_t *)calloc(sizeof(struct shif_t), filecount);
-    for (sp = shiflist; sp < shiflist + filecount; sp++)
+    shiflist = (struct shif_t *)calloc(sizeof(struct shif_t), argc);
+    for (sp = shiflist; sp < shiflist + argc; sp++)
     {
 	char	buf[BUFSIZ];
 
-	sp->name = strdup(argv[optind++]);
+	sp->name = strdup(argv[sp - shiflist]);
 	sp->fp   = fopen(sp->name, "r");
 	fgets(buf, sizeof(buf), sp->fp);
 	if (strncmp(buf, "#SHIF-A ", 8))
@@ -105,7 +97,7 @@ main(int argc, char *argv[])
     }
 
     /* consistency checks */
-    for (sp = shiflist; sp < shiflist + filecount-1; sp++)
+    for (sp = shiflist; sp < shiflist + argc-1; sp++)
     {
 	struct shif_t	*next = sp + 1;
 
@@ -135,7 +127,7 @@ main(int argc, char *argv[])
 
     /* compute total data to be read, we'll use this for the progress meter */
     total = 0;
-    for (sp = shiflist; sp < shiflist + filecount; sp++)
+    for (sp = shiflist; sp < shiflist + argc; sp++)
     {
 	stat(sp->name, &sb);
 	total += sb.st_size;
@@ -143,7 +135,7 @@ main(int argc, char *argv[])
     fprintf(stderr, "%ld bytes to be read.\n", total);
 
     /* read in all hashes */
-    for (sp = shiflist; sp < shiflist + filecount; sp++)
+    for (sp = shiflist; sp < shiflist + argc; sp++)
     {
 	u_int32_t	sectcount;
 
@@ -155,7 +147,8 @@ main(int argc, char *argv[])
 	    linenum_t	chunks;
 
 	    fgets(buf, sizeof(buf), sp->fp);
-	    file_intern(buf);
+	    *strchr(buf, '\n') = '\0';
+	    file_intern(buf);			/* real work done here */
 	    fread(&chunks, sizeof(linenum_t), 1, sp->fp);
 	    chunks = FROMNET(chunks);
 
@@ -166,11 +159,57 @@ main(int argc, char *argv[])
 		fread(&this, sizeof(struct hash_t), 1, sp->fp);
 		this.start = FROMNET(this.start);
 		this.end = FROMNET(this.end);
-		hash_intern(&this);
+		hash_intern(&this);		/* real work done here */
 	    }
 	}
     }
+}
+
+void file_intern(const char *file)
+/* stash the name of a file */
+{
+    struct item *new;
+
+    printf("Interning: %s\n", file);
+    new = (struct item *)malloc(sizeof(new));
+    new->file = strdup(file);
+    new->next = head;
+    head = new;
+}
+
+void hash_intern(const struct hash_t *chunk)
+{
+    printf("Chunk: %d, %d\n", chunk->start, chunk->end);
+}
+
+main(int argc, char *argv[])
+{
+    extern char	*optarg;	/* set by getopt */
+    extern int	optind;		/* set by getopt */
+    int	status, filecount;
+
+    while ((status = getopt(argc, argv, "dh")) != EOF)
+    {
+	switch (status)
+	{
+	case 'd':
+	    local_duplicates = 1;
+	    break;
+
+	case 'h':
+	default:
+	    fprintf(stderr,"usage: shredtree [-d] hashfile...\n");
+	    fprintf(stderr,"  -d      = remove local duplicates.\n");
+	    fprintf(stderr,"  -h      = help (display this message).\n");
+	    exit(0);
+	}
+    }
+
+    report_time(NULL);
+    merge_hashes(argc - optind, argv + optind);
     report_time("Hash merge done.");
 
-    /* more... */
+    /* list files (DEBUG ONLY) */
+    for (; head->next; head = head->next)
+	printf("I see: %s\n", head->file);
 }
