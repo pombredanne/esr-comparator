@@ -19,6 +19,14 @@
 
 <revhistory> 
    <revision>
+      <revnumber>2.1</revnumber>
+      <date>2003-12-18</date>
+      <authorinitials>esr</authorinitials>
+       <revremark>
+	 Interpretation of normalization line changed.
+       </revremark>
+  </revision>
+   <revision>
       <revnumber>2.0</revnumber>
       <date>2003-12-15</date>
       <authorinitials>esr</authorinitials>
@@ -229,7 +237,7 @@ may include the following:</para>
 
 <itemizedlist>
 <listitem>
-<para><emphasis>none</emphasis>: No normalization.</para>
+<para><emphasis>line-oriented</emphasis>: Each feature is a line.</para>
 </listitem>
 
 <listitem>
