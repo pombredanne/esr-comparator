@@ -273,8 +273,8 @@ Rivest XOR hash; MD5 is also a legal value.</para></listitem>
 </varlistentry>
 
 <varlistentry>
-<term><emphasis>Comment</emphasis>: (optional)</term>
-<listitem><para>Arbitrary comment text for human eyes.</para></listitem>
+<term><emphasis>Matches</emphasis>: (mandatory)</term>
+<listitem><para>Count of common segments in the file.</para></listitem>
 </varlistentry>
 </variablelist>
 
@@ -286,8 +286,26 @@ records.  The length of the data section is drtivable from the data
 lengths.</para>
 
 <para>A shred record consists of ushorts (start and end line numbers)
-followed by a fixed-length block of hash data.  For the default RXOR
-hash the data is 8 bytes; for MD5, it is 16.</para>
+followed by a fixed-length block of hash data, followed by a flag
+byte.  For the default RXOR hash the data is 8 bytes; for MD5, it is
+16.</para>
+
+<para>Defined flags are:</para>
+
+<variablelist>
+<varlistentry>
+<term><emphasis>0x40</emphasis></term>
+<listitem><para>This chunk is deemed significant.</para></listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis>0x01</emphasis></term>
+<listitem><para>This chunk appears to be C code</para></listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis>0x02</emphasis></term>
+<listitem><para>This chunk appears to be shell code.</para></listitem>
+</varlistentry>
+</variablelist>
 
 <para>Shreds should be ordered by start line number.  Empty files should be
 skipped, and nonempty files should always have at least one shred.
@@ -336,28 +354,30 @@ discarded.</para>
 comparisons.</para>
 </listitem>
 </varlistentry>
-
-<varlistentry>
-<term>Comment: (optional)</term>
-<listitem><para>Arbitrary comment text for human eyes.</para></listitem>
-</varlistentry>
 </variablelist>
 
-<para>The data section consists of a statistics block followed by a
-sequence of range sets.  The statistics block consists of any number 
-of count lines followed by a %%\n section marker. Each linecount line
-consists of four colon-separated fields, 
+<para>The data section consists of a tree-properties block followed by
+a sequence of range sets.  The tree-properties block consists of any
+number of property lines followed by a %%\n section marker. Each
+property line consists of a tree name, followed by a set of
+comma-separated property settings.  Each property setting consists of
+a property, followed by an equal sign, followed by a value.  The
+following properties are defined:</para>
 
-<orderedlist>
-<listitem><para>The name of a tree</para></listitem>
-<listitem><para>A count of chunks containing files from the tree</para></listitem>
-<listitem><para>A count of common lines from the tree</para></listitem>
-<listitem><para>The total line count of the tree</para></listitem>
-</orderedlist>
-
-
-
-a tree name and a line count.</para>
+<variablelist>
+<varlistentry>
+<term><emphasis>matches</emphasis></term>
+<listitem><para>the count of chunks containing files from the tree</para></listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis>matchlines</emphasis></term>
+<listitem><para>the count of common lines from the tree</para></listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis>totallines</emphasis></term>
+<listitem><para>the total line count of the tree</para></listitem>
+</varlistentry>
+</variablelist>
 
 <para>Each range set consists of two or more ranges followed by a line
 containing a %%\n section marker.  A range is represented as four

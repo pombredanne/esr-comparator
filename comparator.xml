@@ -20,11 +20,12 @@
   <arg choice='opt'>-C</arg>
   <arg choice='opt'>-d <replaceable>dir</replaceable></arg>
   <arg choice='opt'>-m <replaceable>size</replaceable></arg>
+  <arg choice='opt'>-n</arg>
   <arg choice='opt'>-o <replaceable>file</replaceable></arg>
   <arg choice='opt'>-r</arg>
   <arg choice='opt'>-s <replaceable>shredsize</replaceable></arg>
-  <arg choice='opt'>-w</arg>
   <arg choice='opt'>-v</arg>
+  <arg choice='opt'>-w</arg>
   <arg choice='opt'>-x</arg>
   <arg choice='plain' rep='repeat'>path</arg>
   <sbr/>
@@ -124,7 +125,12 @@ smallest features we want to see in the output report.</para>
 (including blank lines) to be ignored for comparison purposes (line
 numbers in the output report will nevertheless be correct).</para>
 
-<para>The <option>-C</option> implies <option>-w</option> and also
+<para>Normally, <application>comparator</application> performs 
+insignificance filtering before emitting a span into the common-segment
+report. The <option>-n</option> suppresses this, emitting all common
+spans. See the discussion of significance filtering below.</para>
+
+<para>The <option>-C</option> option implies <option>-w</option> and also
 applies C-language-specific normalization; { and } characters are
 removed.  This is recommended for comparing C code; it prevents the
 comparison from being fooled by differences in indent style.</para>
@@ -152,6 +158,25 @@ percentage of printable characters near the front of the file is above
 90%.</para>
 </refsect2>
 
+<refsect2><title>Significance filtering</title>
+
+<para>Normally, <application>comparator</application> tries to
+throw out common segments that are just noise.  A segment is
+considered noise if one of the following conditions holds:</para>
+
+<orderedlist>
+<listitem><para>Its file has a .c or .h extension, and the segment
+consists entirely of whitespace, punctuation, C keywords, C include
+lines, and other things that are not C identifiers, function names, or
+user-defined macros.</para></listitem>
+
+<listitem><para>The file has a .sh extension or a #! first line 
+directing shell interpretation, and the segment consists entirely 
+of shell keywords and punctuation.</para></listitem>
+</orderedlist>
+
+</refsect2>
+
 <refsect2><title>filterator</title>
 
 <para><application>filterator</application> is a postprocessor for the
@@ -161,7 +186,7 @@ be noise.  The noise test for C files is to throw away whitespace, C syntax,
 #include lines and a few common macros and see if anything is left.
 The noise test for shell files throws away Bourne-shell keywords</para>
 
-<para>The <option>-n</option> suppresses noise filtering.  The
+<para>The
 <option>-d</option> acts as it does for
 <application>comparator</application>.  The <option>-m</option> option
 sets the minimum size of overlap to be reported. Setting this to a
@@ -169,8 +194,7 @@ slightly larger number than the <application>comparator</application>
 shred size is a useful way to filter out spurious matches; thus, while
 <application>comparator</application> defaults to a shred size of 3,
 <application>filterator</application> defaults to a minimum size of
-5. The <option>-x</option> enables some debugging output.  It is for
-developers; if you need to understand it, read the code.</para>
+5.</para>
 
 <para>Each <application>filterator</application> line beginning with %
 is the filename from which the following common span of lines is displayed 

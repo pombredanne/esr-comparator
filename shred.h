@@ -18,10 +18,11 @@ typedef u_int32_t	linenum_t;
 #define FROMNET		ntohl
 #endif
 #define MAX_LINENUM	(linenum_t)-1	/* 2s-complement assumption */
-#define UNIQUE_FLAG	MAX_LINENUM	/* 2s-complement assumption */
 
 /* use this to hold total line count of the entire source tree set */
 typedef u_int32_t	linecount_t;
+
+typedef unsigned char	flag_t;
 
 #include "hash.h"
 
@@ -29,6 +30,12 @@ struct hash_t
 {
     linenum_t   	start, end;
     hashval_t		hash;
+    flag_t		flags;
+#define SIGNIFICANT	0x40	/* something in this is not pure syntax */
+#define C_CODE		0x01	/* identified as C code */
+#define SHELL_CODE	0x02	/* identified as shell code */
+#define CATEGORIZED	0x03	/* we can significance-test this */
+#define UNIQUE_FLAG	0x80	/* internal use only */
 };
 #define SORTHASHCMP(s, t) hash_compare((s)->hash.hash, (t)->hash.hash)
 
@@ -49,7 +56,7 @@ struct sorthash_t
 extern int remove_braces;
 extern int remove_whitespace;
 extern int remove_comments;
-extern int verbose, debug;
+extern int verbose, debug, nofilter;
 extern int shredsize, minsize;
 
 /* main.c functions */
@@ -59,12 +66,18 @@ extern void corehook(struct hash_t hash, struct filehdr_t *file);
 extern void extend_current_chunk(void);
 extern void dump_array(const char *legend,
 		       struct sorthash_t *obarray, int hashcount);
+extern void dump_flags(const int flags, FILE *fp);
 
 /* shredtree.c functions */
 extern char **sorted_file_list(const char *, int *);
 extern int shredfile(struct filehdr_t *, 
 		     void (*hook)(struct hash_t, struct filehdr_t *));
 extern void sort_hashes(struct sorthash_t *hashlist, int hashcount);
+
+/* filter.c functions */
+extern void filter_init(void);
+extern void filter_set(int);
+extern int filter_pass(const char *line);
 
 /* shredcompare.c functions */
 extern void emit_report1(struct sorthash_t *obarray, int hashcount);

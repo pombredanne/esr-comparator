@@ -10,7 +10,7 @@
 #include <time.h>
 #include "shred.h"
 
-int verbose, debug, minsize;
+int verbose, debug, minsize, nofilter;
 
 struct scf_t
 {
@@ -28,7 +28,7 @@ static struct scf_t dummy_scf, *scflist = &dummy_scf;
 
 static struct filehdr_t dummy_filehdr, *filelist = &dummy_filehdr;
 
-static int chunk_count, sort_count;
+static int chunk_count, sort_count, dofilter;
 static struct hash_t *chunk_buffer;
 static struct sorthash_t *sort_buffer;
 
@@ -98,7 +98,7 @@ void extend_current_chunk(void)
 }
 
 static void write_options(char *buf)
-/* dump a Nirmalization line representing current options */
+/* dump a Normalization line representing current options */
 {
     buf[0] = '\0';
     if (remove_whitespace)
@@ -173,15 +173,25 @@ static void write_scf(const char *tree, FILE *ofp)
 	    struct hash_t	this = np[0];
 
 	    if (debug)
+	    {
 		fprintf(stderr,
-			"%d: %s %s:%d:%d\n",
+			"%d: %s %s:%d:%d",
 			np-chunk_buffer, hash_dump(this.hash),
 		       *place, this.start, this.end);
+		if (np->flags)
+		{
+		    fputc('\t', stderr);
+		    dump_flags(np->flags, stderr);
+		    fprintf(stderr, " (0x%02x)", np->flags);
+		}
+		fputc('\n', stderr);
+	    }
 	    this.start = TONET(this.start);
 	    this.end   = TONET(this.end);
 	    fwrite(&this.start, sizeof(linenum_t), 1, ofp);
 	    fwrite(&this.end,   sizeof(linenum_t), 1, ofp);
 	    fwrite(&this.hash,  sizeof(hashval_t), 1, ofp);
+	    fwrite(&this.flags, sizeof(flag_t), 1, ofp);
 	}
 	totalchunks += chunk_count;
 	free(chunk_buffer);
@@ -230,6 +240,7 @@ static void read_scf(struct scf_t *scf)
 	    fread(&this.start, sizeof(linenum_t), 1, scf->fp);
 	    fread(&this.end,  sizeof(linenum_t), 1, scf->fp);
 	    fread(&this.hash, sizeof(hashval_t), 1, scf->fp);
+	    fread(&this.flags, sizeof(flag_t), 1, scf->fp);
 	    this.start = FROMNET(this.start);
 	    this.end = FROMNET(this.end);
 	    corehook(this, filehdr);
@@ -343,6 +354,18 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
     }
 }
 
+void dump_flags(const int flags, FILE *fp)
+/* dump tokens corresponding to a flag set */
+{
+    fputc(' ', fp);
+    if (flags & SIGNIFICANT)
+	fputs(" significant", fp);
+    if (flags & C_CODE)
+	fputs(" C", fp);
+    if (flags & SHELL_CODE)
+	fputs(" shell", fp);
+}
+
 void dump_array(const char *legend, 
 		struct sorthash_t *obarray, int hashcount)
 /* dump the contents of a sort_hash array */
@@ -351,10 +374,19 @@ void dump_array(const char *legend,
 
     fputs(legend, stdout);
     for (np = obarray; np < obarray + hashcount; np++)
-	fprintf(stdout, "%2d: %s %s:%d:%d\n",
-	       np-obarray, 
-	       hash_dump(np->hash.hash),
-	       np->file->name, np->hash.start, np->hash.end);
+    {
+	fprintf(stdout, "%2d: %s %s:%d:%d",
+		np-obarray, 
+		hash_dump(np->hash.hash),
+		np->file->name, np->hash.start, np->hash.end);
+	if (np->hash.flags)
+	{
+	    fputc('\t', stdout);
+	    dump_flags(np->hash.flags, stdout);
+	    fprintf(stdout, " (0x%02x)", np->hash.flags);
+	}
+	fputc('\n', stdout);
+    }
 }
 
 void report_time(char *legend, ...)
@@ -397,11 +429,12 @@ static FILE *redirect(const char *outfile)
 
 static void usage(void)
 {
-    fprintf(stderr,"usage: comparator [-c] [-C] [-d dir ] [-m minsize] [-r] [-o file] [-s shredsize] [-v] [-w] [-x] path...\n");
+    fprintf(stderr,"usage: comparator [-c] [-C] [-d dir ] [-m minsize] [-n] [-r] [-o file] [-s shredsize] [-v] [-w] [-x] path...\n");
     fprintf(stderr,"  -c      = generate SCF files\n");
     fprintf(stderr,"  -C      = apply C normalizations\n");
     fprintf(stderr,"  -d dir  = change directory before digesting.\n");
     fprintf(stderr,"  -m size = set minimum size of span to be output.\n");
+    fprintf(stderr,"  -n      = suppress significance filtering.\n");
     fprintf(stderr,"  -o file = write to the specified file.\n");
     fprintf(stderr,"  -r      = renove comments\n");
     fprintf(stderr,"  -s size = set shred size (default %d)\n", shredsize);
@@ -422,9 +455,9 @@ main(int argc, char *argv[])
     struct scf_t	*scf;
     char *dir, *outfile;
 
-    compile_only = file_only = 0;
+    compile_only = file_only = nofilter = 0;
     dir = outfile = NULL;
-    while ((status = getopt(argc, argv, "cCd:hm:o:rs:vwx")) != EOF)
+    while ((status = getopt(argc, argv, "cCd:hm:no:rs:vwx")) != EOF)
     {
 	switch (status)
 	{
@@ -442,6 +475,10 @@ main(int argc, char *argv[])
 
 	case 'm':
 	    minsize = atoi(optarg);
+	    break;
+
+	case 'n':
+	    nofilter = 1;
 	    break;
 
 	case 'o':
@@ -484,6 +521,7 @@ main(int argc, char *argv[])
 	usage();
 
     report_time(NULL);
+    filter_init();
 
     /* special case if user gave exactly one tree */
     if (!compile_only && argcount == 1)
@@ -610,7 +648,7 @@ main(int argc, char *argv[])
 
     puts("%%");
     for (scf = scflist; scf->next; scf = scf->next)
-	printf("%s:%d:%d:%d\n", 
+	printf("%s: matches=%d, matchlines=%d, totallines=%d\n", 
 	       scf->name, 
 	       match_count(scf->name), 
 	       line_count(scf->name), 

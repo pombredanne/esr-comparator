@@ -122,7 +122,8 @@ static int normalize(char *buf)
 typedef struct
 {
     char	*line;
-    int  	start;
+    linenum_t  	start;
+    flag_t	flags;
 }
 shred;
 
@@ -133,22 +134,24 @@ static struct hash_t emit_chunk(shred *display, int linecount)
     struct hash_t	out;
 
     /* build completed chunk onto end of array */
+    out.flags = 0;
     hash_init();
-    if (debug)
-	fprintf(stderr, "Chunk:\n");
-    for (i = 0; i < shredsize; i++)
-	if (display[i].line)
-	{
-	    if (debug)
-		fprintf(stderr, "%d: '%s'\n", i, display[i].line);
-	    hash_update(display[i].line, strlen(display[i].line));
-	}
-    hash_complete(&out.hash);
     firstline = shredsize;
     for (i = shredsize - 1; i >= 0; i--)
 	if (display[i].line)
 	    firstline = i;
     firstline = display[firstline].start;
+    if (debug)
+	fprintf(stderr, "Chunk at line %d:\n", firstline);
+    for (i = 0; i < shredsize; i++)
+	if (display[i].line)
+	{
+	    if (debug)
+		fprintf(stderr, "%d (%02x): '%s'\n", i, display[i].flags, display[i].line);
+	    hash_update(display[i].line, strlen(display[i].line));
+	    out.flags |= display[i].flags;
+	}
+    hash_complete(&out.hash);
     out.start = firstline;
     out.end = linecount;
 
@@ -170,6 +173,15 @@ int shredfile(struct filehdr_t *file,
 		file->name, errno);
 	exit(1);
     }
+
+    /* deduce what filtering type we should use */
+#define endswith(suff) !strcmp(suff,file->name+strlen(file->name)-strlen(suff))
+    filter_set(0);
+    if (endswith(".c") || endswith(".h"))
+	filter_set(C_CODE);
+    else if (endswith(".sh"))
+	filter_set(SHELL_CODE);
+#undef endswith
 
     display = (shred *)calloc(sizeof(shred), shredsize);
 
@@ -208,9 +220,15 @@ int shredfile(struct filehdr_t *file,
 	}
 	accepted++;
 
+	/* maybe we can get the file type from the first line? */
+	if (linecount == 1 && buf[0] == '#')
+	    if (strstr(buf, "sh"))
+		filter_set(SHELL_CODE);
+
 	/* create new shred */
 	display[shredsize-1].line = strdup(buf);
 	display[shredsize-1].start = linecount;
+	display[shredsize-1].flags = filter_pass(buf);
 
 	/* flush completed chunk */
 	if (accepted >= shredsize)
@@ -221,6 +239,7 @@ int shredfile(struct filehdr_t *file,
 	for (i=1; i < shredsize; i++)
 	    display[i-1] = display[i];
 	display[shredsize-1].line = NULL;
+	display[shredsize-1].flags = 0;
     }
     if (accepted && accepted < shredsize)
 	hook(emit_chunk(display, linecount), file);

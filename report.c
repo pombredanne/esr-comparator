@@ -65,6 +65,7 @@ static int merge_ranges(struct sorthash_t *p,
     {
 	p[i].hash.start = min(p[i].hash.start, q[i].hash.start);
 	p[i].hash.end   = max(p[i].hash.end, q[i].hash.end);
+	p[i].hash.flags |= q[i].hash.flags;
     }
     return(1);
 }
@@ -230,15 +231,15 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
       * The technique: first mark...
       */
      if (SORTHASHCMP(obarray, obarray+1))
-	 obarray[0].hash.start = UNIQUE_FLAG;
+	 obarray[0].hash.flags = UNIQUE_FLAG;
      for (np = obarray+1; np < obarray + hashcount-1; np++)
 	 if (SORTHASHCMP(np, np-1) && SORTHASHCMP(np, np+1))
-	     np->hash.start = UNIQUE_FLAG;
+	     np->hash.flags = UNIQUE_FLAG;
      if (SORTHASHCMP(obarray+hashcount-2, obarray+hashcount-1))
-	 obarray[hashcount-1].hash.start = UNIQUE_FLAG;
+	 obarray[hashcount-1].hash.flags = UNIQUE_FLAG;
      /* ...then sweep. */
      for (mp = np = obarray; np < obarray + hashcount; np++)
-	 if (np->hash.start != UNIQUE_FLAG)
+	 if (np->hash.flags != UNIQUE_FLAG)
 	     *mp++ = *np;
      /* now we get to reduce the memory footprint */
      report_time("Compaction reduced %d shreds to %d", 
@@ -375,23 +376,25 @@ void emit_report2(void)
 
     for (match = hitlist; match < hitlist + mergecount; match++)
     {
-	int	i;
+	int	i, flags = 0, maxsize = 0;
 
-	if (minsize)
+	for (i=0; i < match->nmatches; i++)
 	{
-	    int	maxsize = 0;
+	    struct sorthash_t	*rp = match->matches+i;
+	    int matchsize = rp->hash.end - rp->hash.start + 1;
 
-	    for (i=0; i < match->nmatches; i++)
-	    {
-		struct sorthash_t	*rp = match->matches+i;
-		int matchsize = rp->hash.end - rp->hash.start + 1;
-
-		if (matchsize >= maxsize)
-		    maxsize = matchsize;
-	    }
-	    if (maxsize < minsize)
-		continue;
+	    if (matchsize >= maxsize)
+		maxsize = matchsize;
+	    flags |= rp->hash.flags;
 	}
+
+	/*
+	 * Filter for sigificance right at the last minute.  The
+	 * point of doing it this way is to allow significance bits to 
+	 * propagate through range merges.
+	 */
+	if (maxsize < minsize || !(nofilter || (flags & SIGNIFICANT)))
+	    continue;
 
 	for (i=0; i < match->nmatches; i++)
 	{
@@ -433,7 +436,7 @@ int line_count(const char *name)
 
     for (match = hitlist; match < hitlist + mergecount; match++)
 	for (i=0; i < match->nmatches; i++)
-	    if (strncmp(name, match->matches[i].file->name, strlen(name)))
+	    if (!strncmp(name, match->matches[i].file->name, strlen(name)))
 	    {
 		count += match->matches[i].hash.end -  match->matches[i].hash.start + 1;
 		break;
