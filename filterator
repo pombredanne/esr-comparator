@@ -8,49 +8,42 @@ import os, sys, re, getopt
 shredline = re.compile("([^:]*):([0-9]+):([0-9]+)")
 
 # Tokens to be removed when checking whether a shred is significant
-C_junk = [r'\bbreak\b',  r'\bcase\b',r'\bcontinue\b', r'\bdefault\b',
+junk = re.compile("|".join((
+          # Bare C keywords
+          r'\bbreak\b',  r'\bcase\b',r'\bcontinue\b', r'\bdefault\b',
           r'\bdo\b', r'\belse\b', r'\bif\b', r'\bgoto\b', r'\breturn\b',
           r'\bswitch\b', r'\bwhile\b',
           r'enum', r'\bint\b', r'\blong\b', r'\bshort\b', r'\bstatic\b',
           r'\bstruct\b', r'typedef', r'\bunion\b', r'\bvoid\b',
           r'#define',r'#endif',r'#else',r'#if\b',r'#ifdef\b',r'#ifndef\b', 
           r'/\*+', r'\*+/', r'\*+',
-          r'\b0\b', r'\b1\b',
           # Common preprocessor macros, not significant by themselves.
           r'\bASSERT\b', r'\bFALSE\b', r'\bNULL\b', r'\bSTATIC\b', r'\bTRUE\b',
           # Macro include lines are noise, too.
           r'\s*#include.*', 
           # Common error macros.
           r'\bEINVAL\b', r'\bENOSYS\b', 
-          # Conventional variables frequently found in kernel code.
-          # But if they're surrounded by nothing but C syntax and no
-          # 'real' identifiers, we're looking at boilerplate
-          # function-return code.
-          r'\berr\b', r'\berror\b', r'\brc\b', r'\bretcode\b', r'\bretval\b',
-          ]
-
-# C junk to be removed from matches; inclues all single-lowercase-letter vars. 
-junk = re.compile("|".join(C_junk + map(lambda x: r'\b' + chr(x) + r'\b',
-                                        range(ord('a'), ord('z')))))
+          )))
 
 def nontrivial(text):
     "Identify a shred as trivial or nontrivial."
-    # Basic theory of this function is that if we throw out all C syntax, and
-    # there is still an identifier with a name longer than one char left,
-    # we're looking at something that might be interesting.
+    # Basic theory of this function is that if we throw out all C
+    # syntax and and common constants, and there is still an
+    # identifier with a name longer than one char left, we're looking
+    # at something that might be interesting.
     text = ' ' + text
-    for ch in ('{','}', '(',')','<','>',
-               ';', ':', ',','%','^','&','|','*','?',
-               '+', '-', '/', '=', '!', '\n','\t'):
-        text = text.replace(ch, ' ')
     while True:
-        reduced = junk.sub('', text)
-        if reduced == text:
+        savecopy = text
+        for ch in ('0', '1', '{','}', '(',')', '<','>', '[',']',
+                   ';', ':', ',', '.', '%', '^', '&', '|', '*','?',
+                   '+', '-', '/', '=', '!', '\n','\t'):
+            text = text.replace(ch, ' ')
+        text = junk.sub(' ', text)
+        if savecopy == text:
             break
         else:
-            text = reduced
             continue
-    return reduced.strip()
+    return text.strip()
 
 if __name__ == '__main__':
     try:
