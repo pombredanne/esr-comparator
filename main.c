@@ -15,6 +15,7 @@ struct scf_t
 {
     char	*name;
     FILE	*fp;
+    u_int32_t	totallines;
     char	*normalization;
     int		shred_size;
     char	*hash_method;
@@ -77,12 +78,12 @@ static void write_scf(const char *tree, FILE *ofp)
 {
     char	**place, **list;
     int		file_count, progress, totalchunks;
-    u_int32_t	netfile_count;
+    u_int32_t	netfile_count, totallines = 0;
     char	buf[BUFSIZ];
 
     list = sorted_file_list(tree, &file_count);
 
-    fputs("#SCF-A 1.0\n", ofp);
+    fputs("#SCF-A 1.1\n", ofp);
     fputs("Generator-Program: comparator 1.0\n", ofp);
     fputs("Hash-Method: MD5\n", ofp);
     buf[0] = '\0';
@@ -112,7 +113,7 @@ static void write_scf(const char *tree, FILE *ofp)
 	/* shredfile adds data to chunk_buffer */
 	chunk_buffer = (struct hash_t *)calloc(sizeof(struct hash_t), 1);
 	chunk_count = 0;
-	shredfile(*place, filehook);
+	totallines += shredfile(*place, filehook);
 
 	/* the actual output */
 	fputs(*place, ofp);
@@ -158,57 +159,64 @@ static void write_scf(const char *tree, FILE *ofp)
 	    fprintf(stderr, "\b\b\b%02.0f%%", progress / (file_count * 0.01));
     }
     fprintf(stderr, "\b\b\b100%%, done, %d total chunks.\n", totalchunks);
+
+    /* the statistics trailer */
+    totallines = htonl(totallines);
+    fwrite(&totallines, sizeof(u_int32_t), 1, ofp);
 }
 
-void read_scf(const char *name, FILE *fp)
+static void read_scf(struct scf_t *scf)
 /* merge hashes from specified files into an in-code list */
 {
-    u_int32_t	filecount;
+    u_int32_t	filecount, totallines;
     int hashcount = 0;
     struct stat sb;
 
-    stat(name, &sb);
-    fprintf(stderr, "%% Reading hash list %s...   ", name);
-    fread(&filecount, sizeof(u_int32_t), 1, fp);
+    stat(scf->name, &sb);
+    fprintf(stderr, "%% Reading hash list %s...   ", scf->name);
+    fread(&filecount, sizeof(u_int32_t), 1, scf->fp);
     filecount = ntohl(filecount);
     while (filecount--)
     {
 	char	buf[BUFSIZ];
 	linenum_t	chunks;
 
-	fgets(buf, sizeof(buf), fp);
+	fgets(buf, sizeof(buf), scf->fp);
 	*strchr(buf, '\n') = '\0';
 	/*
 	 * This isn't freed anywhere before end of execution.
 	 * That's a potential memory leak if this routine is misapplied
 	 */
-	name = strdup(buf);
+	scf->name = strdup(buf);
 
-	fread(&chunks, sizeof(linenum_t), 1, fp);
+	fread(&chunks, sizeof(linenum_t), 1, scf->fp);
 	chunks = FROMNET(chunks);
 	while (chunks--)
 	{
 	    struct hash_t	this;
 
-	    fread(&this.start, sizeof(linenum_t), 1, fp);
-	    fread(&this.end,  sizeof(linenum_t), 1, fp);
-	    fread(this.hash, sizeof(char), HASHSIZE, fp);
+	    fread(&this.start, sizeof(linenum_t), 1, scf->fp);
+	    fread(&this.end,  sizeof(linenum_t), 1, scf->fp);
+	    fread(this.hash, sizeof(char), HASHSIZE, scf->fp);
 	    this.start = FROMNET(this.start);
 	    this.end = FROMNET(this.end);
-	    corehook(this, name);
+	    corehook(this, scf->name);
 	    hashcount++;
 	    if (!debug && hashcount % 10000 == 0)
-		fprintf(stderr,"\b\b\b%02.0f%%",(ftell(fp) / (sb.st_size * 0.01)));
+		fprintf(stderr,"\b\b\b%02.0f%%",(ftell(scf->fp) / (sb.st_size * 0.01)));
 	}
     }
     fprintf(stderr, "\b\b\b100%%...done, %d shreds\n", hashcount);
+
+    fread(&scf->totallines, sizeof(u_int32_t), 1, scf->fp);
 }
 
-static void merge_tree(char *tree)
+static int merge_tree(char *tree)
 /* add to the in-core list of sorthash structures from a tree */
 {
     char	**place, **list;
     int	old_entry_count, file_count, i;
+    u_int32_t	totallines = 0;
 
     old_entry_count = sort_count;
     file_count = 0;
@@ -541,7 +549,7 @@ main(int argc, char *argv[])
 	/* finish reading in all SCFs */
 	for (scf = scf_head; scf->next; scf = scf->next)
 	{
-	    read_scf(scf->name, scf->fp);
+	    read_scf(scf);
 	    fclose(scf->fp);
 	}
 
