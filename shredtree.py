@@ -12,8 +12,12 @@ def eligible(file):
      st_atime, st_mtime, st_ctime) = os.stat(file)
     if st_size <= 0:
         return False
+    elif filter(lambda x: file.endswith(x), ('.o','~', '.bdf')):
+        return False
+    elif filter(lambda x: file.find(x)>-1, ('RCS','SCCS','CVS','SVN','.svn')):
+        return False
     elif c_only:
-        return filter(lambda x: file.endswith(x), ('.c','h','.txt'))
+        return filter(lambda x: file.endswith(x), ('.c','.cc','.h','.html'))
     else:
         return True
 

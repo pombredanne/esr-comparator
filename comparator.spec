@@ -1,6 +1,6 @@
 Name: comparator
 Summary: fast comparison of large source-code trees
-Version: 2.5
+Version: 2.6
 Release: 1
 License: GPL
 Group: Utilities
@@ -44,6 +44,9 @@ cp comparator.py "$RPM_BUILD_ROOT"${pylib}
 %{_libdir}/python*/site-packages/comparator.py
 
 %changelog
+* Mon Sep 20 2004 Eric S. Raymond <esr@snark.thyrsus.com> - 2.6-1
+- Ignore .svn files and and SVN subdirectories.  Typo fixes on manual page.
+
 * Sat Aug  7 2004 Eric S. Raymond <esr@snark.thyrsus.com> - 2.5-1
 - Alan Burlinson's tweaks to ease porting to SunOS. Emil Sit's 
   dramatic speedup for SCF-file reads.  Fix incorrect statistics

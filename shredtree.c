@@ -42,7 +42,7 @@ static int file_count;
 static int eligible(const char *file)
 /* is the specified file eligible to be compared? */ 
 {
-    if (strstr(file, "CVS") || strstr(file,"RCS") || strstr(file,"SCCS") || strstr(file, ".svn"))
+    if (strstr(file, "CVS") || strstr(file,"RCS") || strstr(file,"SCCS") || strstr(file, "SVN") || strstr(file, ".svn"))
 	return(0);
     /* fast check for the most common suffixes */
 #define endswith(suff)	!strcmp(suff, file + strlen(file) - strlen(suff))
@@ -130,7 +130,7 @@ int shredfile(struct filehdr_t *file,
     /* deduce what filtering type we should use */
 #define endswith(suff) !strcmp(suff,file->name+strlen(file->name)-strlen(suff))
     linebyline.mode(0);
-    if (endswith(".c") || endswith(".h"))
+    if (endswith(".c") || endswith(".cc") || endswith(".h"))
 	linebyline.mode(C_CODE);
     else if (endswith(".sh"))
 	linebyline.mode(SHELL_CODE);
