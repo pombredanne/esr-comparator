@@ -75,7 +75,7 @@ int analyzer_init(unsigned char *buf)
 	    exit(1);
 	}
 
-    cp = strtok(buf, ", ");
+    cp = strtok(strdup(buf), ", ");
     if (strcmp(cp, "line-oriented"))
 	return(1);
     while (cp = strtok(NULL, ", "))
