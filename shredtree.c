@@ -26,6 +26,12 @@ static struct item *head = &dummy;
 
 static int file_count;
 
+/*************************************************************************
+ *
+ * File shredding 
+ *
+ *************************************************************************/
+
 static int eligible(const char *file)
 /* is the specified file eligible to be compared? */ 
 {
@@ -149,6 +155,12 @@ void shredfile(const char *file,
     fclose(fp);
 }
 
+/*************************************************************************
+ *
+ * File list generation
+ *
+ *************************************************************************/
+
 static int treewalker(const char *file, const struct stat *sb, int flag)
 /* walk the tree, emitting hash sections for eligible files */
 {
@@ -192,5 +204,35 @@ char **sorted_file_list(const char *tree, int *fc)
     *fc = file_count;
     return(list);
 }
+
+/*************************************************************************
+ *
+ * Hash sorting
+ *
+ *************************************************************************/
+
+static int sortchunk(void *a, void *b)
+/* sort by hash */
+{
+    int cmp = HASHCMP((struct sorthash_t *)a, (struct sorthash_t *)b);
+
+    /*
+     * Using the file name as a secondary key implies that, later on when
+     * we use sort adjacency to build a duplicates list, the duplicates
+     * will be ordered by filename -- thus, implicitly, by tree of origin.
+     */
+    if (cmp)
+	return(cmp);
+    else
+	return(strcmp(((struct sorthash_t *)a)->file,
+		      ((struct sorthash_t *)b)->file));
+}
+
+void sort_hashes(struct sorthash_t *hashlist, int hashcount)
+/* the magic CPU-eating moment; sort the whole thing */ 
+{
+    qsort(hashlist, hashcount, sizeof(struct sorthash_t), sortchunk);
+}
+
 
 /* shredtree.c ends here */

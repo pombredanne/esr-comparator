@@ -6,7 +6,6 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdarg.h>
 #include "shred.h"
 
 #define min(x, y)	((x < y) ? (x) : (y)) 
@@ -32,8 +31,6 @@ struct shif_t
 };
 static struct shif_t *shiflist;
 
-#define HASHCMP(s, t)	memcmp((s)->hash.hash, (t)->hash.hash, HASHSIZE)
-
 static struct sorthash_t *obarray, *np;
 static int hashcount;
 
@@ -54,27 +51,6 @@ struct match_t
 }
 dummy_match;
 static struct match_t *reduced = &dummy_match;
-
-static void report_time(char *legend, ...)
-{
-    static time_t mark_time;
-    time_t endtime = time(NULL);
-    va_list	ap;
-
-    if (mark_time)
-    {
-	int elapsed = endtime - mark_time;
-	int hours = elapsed/3600; elapsed %= 3600;
-	int minutes = elapsed/60; elapsed %= 60;
-	int seconds = elapsed;
-	char	buf[BUFSIZ];
-
-	va_start(ap, legend);
-	vsprintf(buf, legend, ap);
-	fprintf(stderr, "%% %s: %dh %dm %ds\n", buf, hours, minutes, seconds);
-    }
-    mark_time = endtime;
-}
 
 static void init_intern(const int count)
 /* prepare an alllocation area of a given size */
@@ -105,7 +81,7 @@ void hash_intern(const struct hash_t *chunk)
      np++;
 }
 
-static void merge_hashes(int argc, char *argv[])
+struct sorthash_t *merge_hashes(int argc, char *argv[], int *count)
 /* merge hashes from specified files into an in-code list */
 {
     struct shif_t *sp;
@@ -225,6 +201,9 @@ static void merge_hashes(int argc, char *argv[])
 	}
 	fprintf(stderr, "\b\b\b100%%...done, %d entries\n", sp->hashcount);
     }
+
+    *count = hashcount;
+    return obarray;
 }
 
 static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
@@ -434,23 +413,6 @@ struct match_t *reduce_matches(void)
      return reduced;
 }
 
-static int sortchunk(void *a, void *b)
-/* sort by hash */
-{
-    int cmp = HASHCMP((struct sorthash_t *)a, (struct sorthash_t *)b);
-
-    /*
-     * Using the file name as a secondary key implies that, later on when
-     * we use sort adjacency to build a duplicates list, the duplicates
-     * will be ordered by filename -- thus, implicitly, by tree of origin.
-     */
-    if (cmp)
-	return(cmp);
-    else
-	return(strcmp(((struct sorthash_t *)a)->file,
-		      ((struct sorthash_t *)b)->file));
-}
-
 static int sortmatch(void *a, void *b)
 /* sort by file and first line */
 {
@@ -466,21 +428,10 @@ static int sortmatch(void *a, void *b)
     return(0);
 }
 
-void shredreport(int argc, char *argv[])
-/* merge hashes from several files and generate a report to standard output */
+void emit_report(struct sorthash_t *obarray, int hashcount)
 {
-    extern char	*optarg;	/* set by getopt */
-    extern int	optind;		/* set by getopt */
-    int	i, matchcount;
     struct match_t *hitlist, *sorted, *match;
-
-    report_time(NULL);
-    merge_hashes(argc, argv);
-    report_time("Hash merge done, %d entries", hashcount);
-
-    /* the magic CPU-eating moment; sort the whole thing */ 
-    qsort(obarray, hashcount, sizeof(struct sorthash_t), sortchunk);
-    report_time("Sort done");
+    int i, matchcount;
 
 #ifdef ODEBUG
     for (np = obarray; np < obarray + hashcount; np++)

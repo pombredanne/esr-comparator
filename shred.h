@@ -22,6 +22,7 @@ struct hash_t
     linenum_t   	start, end;
     unsigned char	hash[HASHSIZE];
 };
+#define HASHCMP(s, t)	memcmp((s)->hash.hash, (t)->hash.hash, HASHSIZE)
 
 struct sorthash_t
 {
@@ -38,5 +39,10 @@ extern int shredsize;
 /* shredtree.c functions */
 extern char **sorted_file_list(const char *, int *);
 extern void shredfile(const char *, void (*hook)(struct hash_t, const char *));
+extern struct sorthash_t *merge_hashes(int argc, char *argv[], int *count);
+extern void sort_hashes(struct sorthash_t *hashlist, int hashcount);
+extern void emit_report(struct sorthash_t *obarray, int hashcount);
+extern void report_time(char *legend, ...);
+
 
 /* shred.h ends here */
