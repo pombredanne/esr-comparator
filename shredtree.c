@@ -10,6 +10,7 @@
 
 static c_only = 0;
 static rws = 0;
+static debug = 0;
 static shredsize = 5;
 
 static int eligible(const char *file)
@@ -46,13 +47,53 @@ typedef struct
 }
 shred;
 
+static void emit_chunk(shred *display, int linecount)
+/* emit chunk corresponding to current display */
+{
+    struct md5_ctx	ctx;
+    int  		i;
+    unsigned char hash[32];
+
+    if (debug)
+    {
+	for (i = 0; i < shredsize; i++)
+	    if (display[i].line)
+		puts(display[i].line);
+    }
+
+    /* flush completed chunk */
+    md5_init_ctx(&ctx);
+    for (i = 0; i < shredsize; i++)
+	if (display[i].line)
+	    md5_process_bytes(display[i].line, strlen(display[i].line), &ctx);
+    md5_finish_ctx(&ctx, (void *)hash);
+    fprintf(stdout, 
+	    "%d\t%d\t%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", 
+	    display[0].number, linecount, 
+	    hash[0],
+	    hash[1],
+	    hash[2],
+	    hash[3],
+	    hash[4],
+	    hash[5],
+	    hash[6],
+	    hash[7],
+	    hash[8],
+	    hash[9],
+	    hash[10],
+	    hash[11],
+	    hash[12],
+	    hash[13],
+	    hash[14],
+	    hash[15]);
+}
+
 void shredfile(const char *file)
 /* emit hash section for specified file */
 {
     FILE *fp;
     char buf[BUFSIZ];
     int i, linecount, accepted;
-    unsigned char hash[32];
     shred *display;
 
     if ((fp = fopen(file, "r")) == NULL)
@@ -80,49 +121,17 @@ void shredfile(const char *file)
 
 	/* flush completed chunk */
 	if (accepted >= shredsize)
-	{
-	    struct md5_ctx	ctx;
-
-#ifdef SHOWCHUNK
-	    printf("Chunk starts at: %d\n", display[0].number);
-	    for (i = 0; i < shredsize; i++)
-		puts(display[i].line);
-#endif /* SHOWCHUNK */
-
-	    /* flush completed chunk */
-	    md5_init_ctx(&ctx);
-	    for (i = 0; i < shredsize; i++)
-		md5_process_bytes(buf, strlen(buf), &ctx);
-	    md5_finish_ctx(&ctx, (void *)hash);
-	    fprintf(stdout, 
-		    "%d\t%d\t%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", 
-		    display[0].number, linecount, 
-		    hash[0],
-		    hash[1],
-		    hash[2],
-		    hash[3],
-		    hash[4],
-		    hash[5],
-		    hash[6],
-		    hash[7],
-		    hash[8],
-		    hash[9],
-		    hash[10],
-		    hash[11],
-		    hash[12],
-		    hash[13],
-		    hash[14],
-		    hash[15]);
-	}
+	    emit_chunk(display, linecount);
 
 	/* shreds in progress are shifted down */
 	free(display[0].line);
 	for (i=1; i < shredsize; i++)
 	    display[i-1] = display[i];
     }
+    if (linecount < shredsize)
+	emit_chunk(display, linecount);
 
     puts("");
-
     free(display);
     fclose(fp);
 }
@@ -142,12 +151,16 @@ main(int argc, char *argv[])
 
     int status;
     char *dir = ".";
-    while ((status = getopt(argc, argv, "cs:w")) != EOF)
+    while ((status = getopt(argc, argv, "cds:w")) != EOF)
     {
 	switch (status)
 	{
 	case 'c':
 	    c_only = 1;
+	    break;
+
+	case 'd':
+	    debug = 1;
 	    break;
 
 	case 's':
