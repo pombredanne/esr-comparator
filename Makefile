@@ -3,7 +3,7 @@
 # By building with -DLARGEFILES you can go to all 32-byte offsets.
 # This increases working-set size by 20% but handles > 65336 lines per file.
 
-VERS=2.0
+VERS=2.1
 
 CODE    = shredtree.c shred.h report.c hash.c linebyline.c main.c \
 		hash.h hashtab.h \
@@ -13,7 +13,7 @@ DOCS    = README NEWS comparator.xml scf-standard.xml COPYING
 EXTRAS  = shredtree.py shredcompare.py
 TEST    = test
 SOURCES = $(CODE) $(SCRIPTS) $(DOCS) $(EXTRAS) $(TEST) comparator.spec Makefile
-CFLAGS  = -g	#-O3
+CFLAGS  = -O3
 LDFLAGS = 
 
 all: comparator comparator.1
