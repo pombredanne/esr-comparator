@@ -34,11 +34,11 @@ scf-standard.html: scf-standard.xml
 	xmlto html-nochunks scf-standard.xml
 
 test1: comparator
-	@comparator -w -C -d test test1-a test1-b
+	@comparator -C -d test test1-a test1-b
 test2: comparator
-	@comparator -w -C -d test test2-a test2-b
+	@comparator -C -d test test2-a test2-b
 test3: comparator
-	@comparator -w -C -d test test3-a test3-b
+	@comparator -C -d test test3-a test3-b
 
 install: comparator.1 uninstall
 	install -m 755 -o 0 -g 0 -d $(ROOT)/usr/bin/

@@ -17,11 +17,12 @@
 <cmdsynopsis>
   <command>comparator</command>
   <arg choice='opt'>-c</arg>
+  <arg choice='opt'>-C</arg>
   <arg choice='opt'>-d <replaceable>dir</replaceable></arg>
   <arg choice='opt'>-o <replaceable>file</replaceable></arg>
+  <arg choice='opt'>-r</arg>
   <arg choice='opt'>-s <replaceable>shredsize</replaceable></arg>
   <arg choice='opt'>-w</arg>
-  <arg choice='opt'>-C</arg>
   <arg choice='opt'>-x</arg>
   <arg choice='plain' rep='repeat'>path</arg>
   <sbr/>
@@ -98,6 +99,9 @@ numbers in the output report will nevertheless be correct).</para>
 applies C-language-specific normalization; { and } characters are
 removed.  This is recommended for comparing C code; it prevents the
 comparison from being fooled by differences in indent style.</para>
+
+<para>The <option>-r</option> option removes comments.  This is 
+only effective in conjunction with <option>-C</option>.</para>
 
 <para>The <option>-x</option> enables some debugging output.  It
 is for developers; if you need to understand it, read the code.</para>

@@ -86,6 +86,8 @@ static void write_scf(const char *tree, FILE *ofp)
     buf[0] = '\0';
     if (remove_whitespace)
 	strcat(buf, "remove-whitespace,");
+    if (remove_comments)
+	strcat(buf, "remove-comments,");
     if (remove_braces)
 	strcat(buf, "remove-braces,");
     if (buf[0])
@@ -331,10 +333,12 @@ void report_time(char *legend, ...)
 
 static void usage(void)
 {
-    fprintf(stderr,"usage: shredtree [-c] [-d dir ] [-o file] [-s shredsize] [-w] [-x] path...\n");
+    fprintf(stderr,"usage: comparator [-c] [-C] [-d dir ] [-r] [-o file] [-s shredsize] [-w] [-x] path...\n");
     fprintf(stderr,"  -c      = generate SCF files\n");
+    fprintf(stderr,"  -C      = apply C normalizations\n");
     fprintf(stderr,"  -d dir  = change directory before digesting.\n");
     fprintf(stderr,"  -o file = write to the specified file.\n");
+    fprintf(stderr,"  -r      = renove comments\n");
     fprintf(stderr,"  -s size = set shred size (default %d)\n", shredsize);
     fprintf(stderr,"  -w      = remove whitespace.\n");
     fprintf(stderr,"  -x      = debug, display chunks in output.\n");
@@ -352,7 +356,7 @@ main(int argc, char *argv[])
 
     compile_only = file_only = 0;
     dir = outfile = NULL;
-    while ((status = getopt(argc, argv, "cCd:ho:s:wx")) != EOF)
+    while ((status = getopt(argc, argv, "cCd:ho:rs:wx")) != EOF)
     {
 	switch (status)
 	{
@@ -361,7 +365,7 @@ main(int argc, char *argv[])
 	    break;
 
 	case 'C':
-	    remove_braces = 1;
+	    remove_whitespace = remove_braces = 1;
 	    break;
 
 	case 'd':
@@ -371,6 +375,9 @@ main(int argc, char *argv[])
 	case 'o':
 	    outfile = optarg;
 	    break;
+
+	case 'r':
+	    remove_comments = 1;
 
 	case 's':
 	    shredsize = atoi(optarg);
@@ -480,9 +487,11 @@ main(int argc, char *argv[])
 	dummy_scf.hash_method = "MD5";
 	buf[0] == '\0';
 	if (remove_whitespace)
-	    strcat(buf, "remove-whitespace,");
+	    strcat(buf, "remove-whitespace, ");
+	if (remove_comments)
+	    strcat(buf, "remove-comments, ");
 	if (remove_braces)
-	    strcat(buf, "remove-braces,");
+	    strcat(buf, "remove-braces, ");
 	if (buf[0])
 	    buf[strlen(buf)-1] = '\0';
 	else

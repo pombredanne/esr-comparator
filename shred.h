@@ -33,6 +33,7 @@ struct sorthash_t
 /* control bits, meant to be set at startup */
 extern int remove_braces;
 extern int remove_whitespace;
+extern int remove_comments;
 extern int debug;
 extern int shredsize;
 
