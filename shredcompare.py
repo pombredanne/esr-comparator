@@ -67,9 +67,8 @@ class Shred:
         self.end   = max(self.end,   other.end)
     # Make these sortable
     def __cmp__(self, other):
-        return cmp((self.file, self.start, self.end), 
-                   (other.file, other.start, other.end))
-    def __hash_(self):
+        return cmp((self.file, self.start, self.end), (other.file, other.start, other.end))
+    def __hash__(self):
         return hash((self.file, self.start, self.end))
     # External representation
     def __str__(self):
@@ -199,7 +198,8 @@ if __name__ == '__main__':
                 break
         else:
             continue
-        # Test passed, record it
+        # Test passed, record it. Sort first so the output will be in canonical form.
+        match.sort()
         matches.append(match)
     # We're done with the database file.
     hashdict.close()
@@ -234,7 +234,9 @@ if __name__ == '__main__':
                 matches[i] = None
                 retry = True
     matches = filter(lambda x: x, matches)
-    matches.sort(lambda x, y: cmp(x[0], y[0]))	# by source chunk
+    print "Before sorting:", matches
+    matches.sort()
+    print "After sorting:", matches
     report_time("Reduction done")
     # OK, dump all matches.
     print "#SHIF-B 1.0"
