@@ -356,7 +356,7 @@ static int sortmatch(const void *a, const void *b)
 static struct match_t *hitlist;
 static int mergecount;
 
-void emit_report1(struct sorthash_t *obarray, int hashcount)
+int merge_compare(struct sorthash_t *obarray, int hashcount)
 /* report our results (header portion) */
 {
     struct match_t *match, *copy;
@@ -370,60 +370,65 @@ void emit_report1(struct sorthash_t *obarray, int hashcount)
     if (debug)
 	dump_array("After removing uniques.\n", obarray, hashcount);
     report_time("%d range groups after removing unique hashes", matchcount);
+
     mergecount = collapse_ranges(hitlist, matchcount);
+    /*
+     * Here's where we do significance filtering.  As a side effect,
+     * compact the match list in order to cut the n log n qsort time
+     */
+    for (copy = match = hitlist; match < hitlist + matchcount; match++)
+	if (match->nmatches > 0 && copy < match)
+	{
+	    int	i, flags = 0, maxsize = 0;
+
+	    for (i=0; i < match->nmatches; i++)
+	    {
+		struct sorthash_t	*rp = match->matches+i;
+		int matchsize = rp->hash.end - rp->hash.start + 1;
+
+		if (matchsize >= maxsize)
+		    maxsize = matchsize;
+
+		/*
+		 * This odd-looking bit of logic, deals with an
+		 * annoying edge case.  Sometimes we'll get boilerplate C
+		 * stuff in both a C and a text file. To cope, propagate
+		 * insignificance -- if we know from one context that a
+		 * particular span of text is not interesting, declare it
+		 * uninteresting everywhere.
+		 */
+		flags |= rp->hash.flags;
+	    }
+
+	    /*
+	     * Filter for sigificance right at the last minute.  The
+	     * point of doing it this way is to allow significance bits to 
+	     * propagate through range merges.
+	     */
+	    if (maxsize >= minsize && (nofilter || !(flags & INSIGNIFICANT)))
+		*copy++ = *match;
+	}
+
+    mergecount = (copy - hitlist);
+
+    /* sort everything so the report looks neat */
+    qsort(hitlist, mergecount, sizeof(struct match_t), sortmatch);
+
     if (debug)
 	dump_array("After merging ranges.\n", obarray, hashcount);
     report_time("%d range groups after merging", mergecount);
 
-    /*
-     * A little extra effort so we can generate a sorted report.
-     * Compact the match list in order to cut the n log n qsort time
-     */
-    for (copy = match = hitlist; match < hitlist + matchcount; match++)
-	if (match->nmatches > 0 && copy < match)
-	    *copy++ = *match;
-    mergecount = (copy - hitlist);
-
-    printf("Matches: %d\n", mergecount);
+    return(mergecount);
  }
 
-void emit_report2(void)
+void emit_report(void)
 /* report our results (matches) */
 {
     struct match_t *match;
 
-    qsort(hitlist, mergecount, sizeof(struct match_t), sortmatch);
-
     for (match = hitlist; match < hitlist + mergecount; match++)
     {
-	int	i, flags = 0, maxsize = 0;
-
-	for (i=0; i < match->nmatches; i++)
-	{
-	    struct sorthash_t	*rp = match->matches+i;
-	    int matchsize = rp->hash.end - rp->hash.start + 1;
-
-	    if (matchsize >= maxsize)
-		maxsize = matchsize;
-
-	    /*
-	     * This odd-looking bit of logic, deals with an
-	     * annoying edge case.  Sometimes we'll get boilerplate C
-	     * stuff in both a C and a text file. To cope, propagate
-	     * insignificance -- if we know from one context that a
-	     * particular span of text is not interesting, declare it
-	     * uninteresting everywhere.
-	     */
-	    flags |= rp->hash.flags;
-	}
-
-	/*
-	 * Filter for sigificance right at the last minute.  The
-	 * point of doing it this way is to allow significance bits to 
-	 * propagate through range merges.
-	 */
-	if (maxsize < minsize || (!nofilter && (flags & INSIGNIFICANT)))
-	    continue;
+	int	i;
 
 	for (i=0; i < match->nmatches; i++)
 	{

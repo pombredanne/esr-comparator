@@ -80,8 +80,8 @@ extern void filter_set(int);
 extern int filter_pass(const char *line);
 
 /* shredcompare.c functions */
-extern void emit_report1(struct sorthash_t *obarray, int hashcount);
-extern void emit_report2(void);
+extern int merge_compare(struct sorthash_t *obarray, int hashcount);
+extern void emit_report(void);
 extern int match_count(const char *name);
 extern int line_count(const char *name);
 

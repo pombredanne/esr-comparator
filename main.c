@@ -452,7 +452,7 @@ main(int argc, char *argv[])
     extern char	*optarg;	/* set by getopt */
     extern int	optind;		/* set by getopt */
 
-    int status, file_only, compile_only, argcount;
+    int status, file_only, compile_only, argcount, mergecount;
     struct scf_t	*scf;
     char *dir, *outfile;
 
@@ -645,7 +645,8 @@ main(int argc, char *argv[])
     sort_hashes(sort_buffer, sort_count);
     report_time("Sort done");
 
-    emit_report1(sort_buffer, sort_count);
+    mergecount = merge_compare(sort_buffer, sort_count);
+    printf("Matches: %d\n", mergecount);
 
     puts("%%");
     for (scf = scflist; scf->next; scf = scf->next)
@@ -656,7 +657,7 @@ main(int argc, char *argv[])
 	       scf->totallines);
     puts("%%");
 
-    emit_report2();
+    emit_report();
 
     exit(0);
 }
