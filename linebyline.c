@@ -26,10 +26,12 @@ static char *c_patterns[] = {
     " NOTREACHED ", 
     " FALL *THRO?UG?H? ",
     /* Bare C keywords */
-    " auto ", " break ",  " case "," continue ", " default ", " do ", " else ",
-    " enum ", " if ", " goto "," return ", " switch ", " while ", " int ",
-    " long ", " short ", " static ", " struct ", " typedef ", " union ", 
-    " void ",
+    " auto ", " break ",  " case ", "char", " const ", " continue ", 
+    " default ", " do ", " double ", " else ", " enum ", " extern ",
+    " float ", " for ", " goto ", " if ", " int ", " long ", " register ",
+    " return ", " short ", " signed ", " sizeof ", " static ", " struct ", 
+    " switch ", " typedef ", " union ", " unsigned ", " void ",
+    " volatile ", " while ",
     /* Preprocessor constructs (# has already been stripped) */
     "^ define"," endif"," else", " ifdef "," ifndef ",
     /* Common preprocessor macros, not significant by themselves. */
