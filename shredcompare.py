@@ -39,9 +39,10 @@
 #
 # In this implementation, lines are preprocessed to remove whitespace
 # differences.
-import sys, os, os.path, re, md5, getopt
+import sys, os, os.path, re, md5, getopt, time
 
 shredsize = 5
+verbose = False
 ws = re.compile(r"\s+")
 
 # These just make the code more readable.
@@ -68,6 +69,8 @@ def smash_whitespace(line):
 
 def shredfile(file, tree):
     "Build a dictionary of shred tuples corresponding to a specified file."
+    if verbose:
+        print file
     shreds = {}
     fp = open(file)
     lines = map(smash_whitespace, fp.readlines())
@@ -130,14 +133,24 @@ def shredcompare(tree1, tree2):
 
 if __name__ == '__main__':
     try:
-        (optlist, args) = getopt.getopt(sys.argv[1:], 's:')
+        (optlist, args) = getopt.getopt(sys.argv[1:], 's:v')
     except getopt.GetoptError:
         sys.stderr.write("usage: shredcompare [-s shredsize] tree1 tree2\n")
         sys.exit(2)
     for (opt, val) in optlist:
         if opt == '-s':
             shredsize = int(val)
+        elif opt == '-v':
+            verbose = True
+    starttime = time.time()
     matches = shredcompare(args[0], args[1])
+    endtime = time.time()
+    if verbose:
+        elapsed = endtime - starttime 
+        hours = elapsed/3600; elapsed %= 3600
+        minutes = elapsed/60; elapsed %= 60
+        seconds = elapsed
+        print "Done in %dh, %dm, %ds" % (hours, minutes, seconds)
     for (source, target) in matches:
         print source, "->", target
 
