@@ -12,8 +12,6 @@
 #define min(x, y)	((x < y) ? (x) : (y)) 
 #define max(x, y)	((x > y) ? (x) : (y)) 
 
-static int local_duplicates;
-
 struct item
 {
     char	*file;
@@ -310,7 +308,7 @@ static int sametree(const char *s, const char *t)
     return (sn == tn) && strncmp(s, t, sn); 
 }
 
-struct match_t *reduce_matches(int localdups)
+struct match_t *reduce_matches(void)
 /* assemble list of duplicated hashes */
 {
      static struct match_t dummy; 
@@ -459,18 +457,13 @@ main(int argc, char *argv[])
     int	status;
     struct match_t *hitlist;
 
-    while ((status = getopt(argc, argv, "dh")) != EOF)
+    while ((status = getopt(argc, argv, "h")) != EOF)
     {
 	switch (status)
 	{
-	case 'd':
-	    local_duplicates = 1;
-	    break;
-
 	case 'h':
 	default:
-	    fprintf(stderr,"usage: shredtree [-d] hashfile...\n");
-	    fprintf(stderr,"  -d      = remove local duplicates.\n");
+	    fprintf(stderr,"usage: shredtree hashfile...\n");
 	    fprintf(stderr,"  -h      = help (display this message).\n");
 	    exit(0);
 	}
@@ -489,7 +482,7 @@ main(int argc, char *argv[])
 	printf("%d: %s:%d:%d (%02x%02x)\n", np-obarray, np->file, np->hash.start, np->hash.end, np->hash.hash[0], np->hash.hash[1]);
 #endif /* ODEBUG */
 
-    hitlist = reduce_matches(local_duplicates);
+    hitlist = reduce_matches();
     report_time("Reduction done");
 
     puts("#SHIF-B 1.0");

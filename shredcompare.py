@@ -135,15 +135,11 @@ if __name__ == '__main__':
     try:
         (optlist, args) = getopt.getopt(sys.argv[1:], 'd')
     except getopt.GetoptError:
-        sys.stderr.write("usage: shredcompare [-h] [-d] file\n")
+        sys.stderr.write("usage: shredcompare [-h] file\n")
         sys.exit(2)
-    local_duplicates = True
     for (opt, val) in optlist:
-        if opt == '-d':
-            local_duplicates = False
-        elif opt == '-h':
+        if opt == '-h':
 	    sys.stderr.write("usage: shredcompare [-d] file\n");
-	    sys.stderr.write(" -d      = discard local duplicates.\n");
 	    sys.stderr.write(" -h      = help (display this message).\n");
 	    sys.exit(0);
 
