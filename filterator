@@ -5,7 +5,7 @@
 import os, sys, re, getopt
 
 # Template for parsing the output from comparator.
-shredline = re.compile("(.*):([0-9]+):([0-9]+)")
+shredline = re.compile("(.*):([0-9]+):([0-9]+):([0-9]+)")
 
 # Tokens to be removed when checking whether a shred is significant
 junk = {
@@ -87,9 +87,10 @@ def report_common(stats=1,list=1):
             break
         m = shredline.search(line)
         if m:
-            locations.append((m.group(1), int(m.group(2)), int(m.group(3))))
+            locations.append((m.group(1), int(m.group(2)),
+                              int(m.group(3)), int(m.group(4))))
         if line == '%%\n':
-            for (file, start, end) in locations:
+            for (file, start, end, length) in locations:
                 if end - start + 1 < minsize:
                     continue
                 try:
