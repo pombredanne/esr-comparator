@@ -8,9 +8,11 @@ import os, sys, re, getopt
 shredline = re.compile("-> ([^:]*):([0-9]+)-([0-9]+)")
 
 # Tokens to be removed when checking whether a shred is significant
-C_junk = [r'\bbreak\b', r'\bcontinue\b', r'\bdefault\b',
-          r'\belse\b', r'\bif\b', r'\bgoto\b', r'\breturn\b',
-          r'\bint\b', r'\blong\b', r'\bshort\b', r'\bstatic\b', r'\bvoid\b',
+C_junk = [r'\bbreak\b',  r'\bcase\b',r'\bcontinue\b', r'\bdefault\b',
+          r'\bdo\b', r'\belse\b', r'\bif\b', r'\bgoto\b', r'\breturn\b',
+          r'\bswitch\b', r'\bwhile\b',
+          r'enum', r'\bint\b', r'\blong\b', r'\bshort\b', r'\bstatic\b',
+          r'\bstruct\b', r'typedef', r'\bunion\b', r'\bvoid\b',
           r'#define',r'#endif',r'#else',r'#if\b',r'#ifdef\b',r'#ifndef\b', 
           r'/\*+', r'\*+/', r'\*+',
           r'\b0\b', r'\b1\b',
@@ -35,8 +37,8 @@ def nontrivial(text):
     # there is still an identifier with a name longer than one char left,
     # we're looking at something that might be interesting.
     text = ' ' + text
-    for ch in ('{','}', '(',')',
-               ';', ':', ',',
+    for ch in ('{','}', '(',')','<','>',
+               ';', ':', ',','%','^','&','|','*','?',
                '+', '-', '/', '=', '!', '\n','\t'):
         text = text.replace(ch, ' ')
     while True:

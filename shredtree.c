@@ -68,6 +68,7 @@ static void emit_chunk(shred *display, int linecount)
 	for (i = 0; i < shredsize; i++)
 	    if (display[i].line)
 	    {
+		putchar('"');
 		for (cp = display[i].line; *cp; cp++)
 		    if (*cp == '\n')
 			fputs("\\n", stdout);
@@ -75,6 +76,7 @@ static void emit_chunk(shred *display, int linecount)
 			fputs("\\t", stdout);
 		    else
 			putchar(*cp);
+		putchar('"');
 	        putchar('\n');
 	    }    
     }
@@ -228,8 +230,6 @@ main(int argc, char *argv[])
 
     /* make file list */
     ftw(argv[optind], treewalker, 16);
-
-    printf("Filecount: %d\n", filecount);
 
     /* now that we know the length, copy into an array */
     list = place = (char **)calloc(sizeof(char *), filecount);
