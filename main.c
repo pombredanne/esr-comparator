@@ -27,7 +27,7 @@ static struct sorthash_t *sort_buffer;
 static int is_scf_file(const char *file)
 /* is the specified file an SCF hash list? */
 {
-    char	buf[10];
+    char	buf[BUFSIZ];
     FILE	*fp = fopen(file, "r");
 
     if (!fp)
@@ -115,8 +115,14 @@ static void merge_tree(char *tree)
     int	oldcount, file_count;
 
     oldcount = sort_count;
-    fprintf(stderr, "%% Reading tree %s...", tree);
+    file_count = 0;
     list = sorted_file_list(tree, &file_count);
+    if (!file_count)
+    {
+	fprintf(stderr, "comparator: couldn't open %s\n", tree);
+	exit(1);
+    }
+    fprintf(stderr, "%% Reading tree %s...", tree);
     for (place = list; place < list + file_count; place++)
 	shredfile(*place, corehook);
     fprintf(stderr, "%d entries\n", sort_count - oldcount);
@@ -135,10 +141,10 @@ static void init_scf(char *file)
     new->name = strdup(file);
     new->fp   = fopen(new->name, "r");
     fgets(buf, sizeof(buf), new->fp);
-    if (strncmp(buf, "#SCF-A ", 8))
+    if (strncmp(buf, "#SCF-A ", 6))
     {
 	fprintf(stderr, 
-		"shredcompare: %s is not a SCF-A file.", 
+		"shredcompare: %s is not a SCF-A file.\n", 
 		new->name);
 	exit(1);
     }
@@ -307,30 +313,29 @@ main(int argc, char *argv[])
     else
     {
 	/* consistency checks on the SCFs */
-	for (scf = scf_head; scf->next; scf = scf->next)
+	for (scf = scf_head; scf->next->next; scf = scf->next)
 	{
-	    struct scf_t	*next = scf + 1;
-
-	    if (strcmp(scf->normalization, next->normalization))
+	    printf("Foo\n");
+	    if (strcmp(scf->normalization, scf->next->normalization))
 	    {
 		fprintf(stderr, 
 			"shredcompare: normalizations of %s and %s don't match\n",
-			scf->name, next->name);
+			scf->name, scf->next->name);
 		exit(1);
 	    }
-	    else if (scf->shred_size != next->shred_size)
+	    else if (scf->shred_size != scf->next->shred_size)
 	    {
 		fprintf(stderr, 
 			"shredcompare: shred sizes of %s and %s don't match\n",
-			scf->name, next->name);
+			scf->name, scf->next->name);
 		exit(1);
 
 	    }
-	    else if (strcmp(scf->hash_method, next->hash_method))
+	    else if (strcmp(scf->hash_method, scf->next->hash_method))
 	    {
 		fprintf(stderr, 
 			"shredcompare: hash methods of %s and %s don't match\n",
-			scf->name, next->name);
+			scf->name, scf->next->name);
 		exit(1);
 	    }
 	}
