@@ -33,7 +33,9 @@ make uninstall
 %doc README comparator.1
 /usr/bin/comparator
 /usr/bin/filterator
-/usr/share/man/man1/comparator.1
+/usr/share/man/man1/comparator.1*
+/usr/local/lib/python*/site-packages/comparator.py
+/usr/local/lib/python*/site-packages/comparator.pyc
 
 %changelog
 * Sun Sep  7 2003 Eric S. Raymond <esr@snark.thyrsus.com> 
