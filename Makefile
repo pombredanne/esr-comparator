@@ -10,8 +10,8 @@ DOCS    = README NEWS comparator.xml scf-standard.xml COPYING
 EXTRAS  = shredtree.py shredcompare.py
 TEST    = test
 SOURCES = $(CODE) $(DOCS) $(EXTRAS) $(TEST) comparator.spec Makefile
-CFLAGS  = -O -Wall
-LDFLAGS = 
+CFLAGS  = -pg -g
+LDFLAGS = -pg
 
 all: comparator comparator.1
 
@@ -37,12 +37,21 @@ comparator.html: comparator.xml
 scf-standard.html: scf-standard.xml
 	xmlto html-nochunks scf-standard.xml
 
-test1: comparator
-	@comparator -C -d test test1-a test1-b
-test2: comparator
-	@comparator -C -d test test2-a test2-b
-test3: comparator
-	@comparator -C -d test test3-a test3-b
+makeregress:
+	@for n in 1 2 3; do \
+	    comparator -C -d test test$${n}-a test$${n}-b >test/out$${n}.good;\
+	done
+
+regress:
+	@for n in 1 2 3; do \
+	    comparator -C -d test test$${n}-a test$${n}-b >test/out$${n}.log 2>/dev/null;\
+	    if diff -c test/out$${n}.good test/out$${n}.log; \
+	    then \
+		echo "Test $${n} passed."; \
+	    else \
+		echo "Test $${n} failed."; \
+	    fi \
+	done
 
 install: comparator.1 uninstall
 	install -m 755 -o 0 -g 0 -d $(ROOT)/usr/bin/
