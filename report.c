@@ -269,6 +269,8 @@ static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
 	    if (p[i].start - p[i].start != offset)
 		return(0);
     }
+    else
+	return(0);
 
     /* merge attempt successful */
     for (i = 0; i < nmatches; i++)
