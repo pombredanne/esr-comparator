@@ -10,6 +10,14 @@ working Python versions.  These were used to prototype the concept.
 The document scf-standard.xml describes file interchange formata
 for programs that wish to interoperate with comparator.
 
+There are a few other programs that do similar things:
+
+srcdupchk - the shred algorithm in C++
+	http://www.randomhacks.net/stories/srcdupchk-release.html
+
+ctcompare - C Token Comparator
+	http://minnie.tuhs.org/Programs/Ctcompare/
+
 See the NEWS file for recent developmets.
 
 
