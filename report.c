@@ -11,24 +11,20 @@
 #define min(x, y)	((x < y) ? (x) : (y)) 
 #define max(x, y)	((x > y) ? (x) : (y)) 
 
-struct range_t
-{
-    char	*file;
-    linenum_t	start, end;
-};
-
 struct match_t
 {
     struct match_t *next;
     int            nmatches;
-    struct range_t *matches;
+    struct sorthash_t *matches;
 #ifdef DEBUG
     int	index;
 #endif /* DEBUG */
 }
 dummy_match;
 
-static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
+static int merge_ranges(struct sorthash_t *p, 
+			struct sorthash_t *q,
+			int nmatches)
 /* merge p into q, if the ranges in the match are compatible */
 {
     int	i, mc, overlap;
@@ -63,13 +59,13 @@ static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
     overlap = 0;
     mc = 0;
     for (i = 0; i < nmatches; i++)
-	if (p[i].start >= q[i].start && p[i].start <= q[i].end)
+	if (p[i].hash.start >= q[i].hash.start && p[i].hash.start <= q[i].hash.end)
 	    mc++;
     if (mc == nmatches)
 	overlap = 1;
     mc = 0;
     for (i = 0; i < nmatches; i++)
-	if (q[i].start >= p[i].start && q[i].start <= p[i].end)
+	if (q[i].hash.start >= p[i].hash.start && q[i].hash.start <= p[i].hash.end)
 	    mc++;
     if (mc == nmatches)
 	overlap = 1;
@@ -84,8 +80,8 @@ static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
     /* merge attempt successful */
     for (i = 0; i < nmatches; i++)
     {
-	p[i].start = min(p[i].start, q[i].start);
-	p[i].end   = max(p[i].end, q[i].end);
+	p[i].hash.start = min(p[i].hash.start, q[i].hash.start);
+	p[i].hash.end   = max(p[i].hash.end, q[i].hash.end);
     }
     return(1);
 }
@@ -108,7 +104,7 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 #ifdef DEBUG
      for (sp = reduced; sp->next; sp = sp->next)
      {
-	 struct range_t	*rp;
+	 struct sorthash_t	*rp;
 
 	 printf("Clique beginning at %d:\n", sp->index);
 	 for (rp = sp->matches; rp < sp->matches + sp->nmatches; rp++)
@@ -153,7 +149,6 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 		 for (rp=sp->matches; rp < sp->matches+sp->nmatches; rp++)
 		     printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
 #endif /* DEBUG */
-		 /* free(tp->matches); */
 		 nonuniques--;
 		 tp->matches = NULL;
 	     }
@@ -248,16 +243,15 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 	 new->next  = reduced;
 	 reduced = new;
 	 new->nmatches = nmatches;
-	 new->matches=(struct range_t *)calloc(sizeof(struct range_t),new->nmatches);
+	 /*
+	  * Point into the existing hash array rather than allocating
+	  * new storage.  This means our working set won't get any
+	  * smaller, but it avoids the time overhead of doing a bunch
+	  * of malloc and free calls.
+	  */
+	 new->matches = np;
 	 nonuniques++;
-	 for (i = 0; i < new->nmatches; i++)
-	 {
-	     new->matches[i].file  = np[i].file;
-	     new->matches[i].start = np[i].hash.start;
-	     new->matches[i].end   = np[i].hash.end;
-	 }
      }
-     free(obarray);
      fprintf(stderr, "\b\b\b100%% done.\n");
 
      report_time("%d range groups after removing unique hashes", nonuniques);
@@ -269,14 +263,14 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 static int sortmatch(const void *a, const void *b)
 /* sort by file and first line */
 {
-    struct range_t *s = ((struct match_t *)a)->matches;
-    struct range_t *t = ((struct match_t *)b)->matches;
+    struct sorthash_t *s = ((struct match_t *)a)->matches;
+    struct sorthash_t *t = ((struct match_t *)b)->matches;
 
     int cmp = strcmp(s->file, t->file);
     if (cmp)
 	return(cmp);
     else
-	return(s->start - t->start);
+	return(s->hash.start - t->hash.start);
 
     return(0);
 }
@@ -311,9 +305,9 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
 
 	for (i=0; i < match->nmatches; i++)
 	{
-	    struct range_t	*rp = match->matches+i;
+	    struct sorthash_t	*rp = match->matches+i;
 
-	    printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
+	    printf("%s:%d:%d\n",  rp->file, rp->hash.start, rp->hash.end);
 	}
 	printf("%%%%\n");
     }
