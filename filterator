@@ -47,7 +47,7 @@ if __name__ == '__main__':
             state.cliquefilter(lambda file, start, end: filter.search(file))
         try:
             if expand:
-                state.metadump(sys.stdout, 75 * '-', reporthook, {"Minimum-Size":minsize})
+                state.metadump(sys.stdout, (75 * '-')+"\n", reporthook, {"Minimum-Size":minsize})
             else:
                 state.dump(sys.stdout)
         except (KeyboardInterrupt, IOError):
