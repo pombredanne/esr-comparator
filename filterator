@@ -77,6 +77,34 @@ class CommonReport:
                     break
         return lines
 
+    def extract_text(self, clique):
+        "Return text corresponding to the nth clique."
+        for (file, start, end) in clique:
+            try:
+                # Try to deduce the deletia
+                deletia = None
+                if file.endswith(".c") or file.endswith(".h"):
+                    deletia = "C"
+                # Skip to the relevant chunk
+                rfp = open(file)
+                for i in range(start-1):
+                    line = rfp.readline()
+                    if not deletia and i == 0:
+                        deletia = deduce_deletia(line)
+                text = ""
+                for i in range(start, end+1):
+                    nextline = rfp.readline()
+                    if not deletia and i == 0 and start == 1:
+                        deletia = deduce_deletia(line)
+                    if nextline[0] == '%':
+                        nextline = '%' + nextline
+                    text += nextline
+                rfp.close()
+                break
+            except IOError:
+                sys.stderr.write("filterator: can't open %s\n" % file)
+                sys.exit(0)
+        return (deletia, text)
 
 # Tokens to be removed when checking whether a shred is significant
 junk = {
@@ -173,34 +201,12 @@ def report_common(state, stats=1,list=1):
                 continue
             if end - start + 1 < minsize:
                 continue
-            try:
-                # Try to deduce the deletia
-                deletia = None
-                if file.endswith(".c") or file.endswith(".h"):
-                    deletia = "C"
-                # Skip to the relevant chunk
-                rfp = open(file)
-                for i in range(start-1):
-                    line = rfp.readline()
-                    if not deletia and i == 0:
-                        deletia = deduce_deletia(line)
-                text = ""
-                for i in range(start, end+1):
-                    nextline = rfp.readline()
-                    if not deletia and i == 0 and start == 1:
-                        deletia = deduce_deletia(line)
-                    if nextline[0] == '%':
-                        nextline = '%' + nextline
-                    text += nextline
-                rfp.close()
-                if nofilter or nontrivial(text, deletia):
-                     if list:
-                        print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(clique))
-                        sys.stdout.write(text)
-                break
-            except IOError:
-                sys.stderr.write("filterator: can't open %s\n" % file)
-                sys.exit(0)
+            (deletia, text) = state.extract_text(clique)
+            if nofilter or nontrivial(text, deletia):
+                 if list:
+                    print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(clique))
+                    sys.stdout.write(text)
+            break
 
 if __name__ == '__main__':
     try:
