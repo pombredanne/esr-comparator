@@ -114,7 +114,7 @@ if __name__ == '__main__':
                     for i in range(start, end+1):
                         nextline = rfp.readline()
                         if nextline[0] == '%':
-                            nextline[0] = '%' + nextline
+                            nextline = '%' + nextline
                         text += nextline
                     rfp.close()
                     if nofilter or nontrivial(text):
