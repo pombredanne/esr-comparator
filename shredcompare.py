@@ -8,23 +8,14 @@
 #
 #	http://theinquirer.net/?article=10061
 #
-# In this implementation, blank lines are ignored.
-#
 # The -h option supports building a cache containing the shred list
 # for a tree you specify.  This is strictly a speed hack.  If your
 # tree is named `foo', the file will be named `foo.hash'.  On your
 # next comparison run it will be picked up automatically. It is
 # your responsibility to make sure each hash file is newer than
 # the corresponding tree.
-#
-# This is alpha software. There is a bug in the implementation,
-# somewhere in the logic for merging matching ranges before report
-# generation, that very occasionally garbages the last number in the
-# target-tree range.  I haven't fixed it yet because I haven't found a
-# way to produce a test load that reproduces it that is smaller that
-# the entire Linux 2.6.0 and Sysem V kernels.
 
-import sys, os, os.path, re, md5, getopt, time, cPickle
+import sys, os, os.path, re, md5, getopt, time
 
 class Shred:
     "Represent a range of lines."
