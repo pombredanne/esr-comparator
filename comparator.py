@@ -77,6 +77,12 @@ class CommonReport:
     shredline = re.compile("(.*):([0-9]+):([0-9]+):([0-9]+)")
 
     def __init__(self, fp, dir):
+        "Read and parse an SCF-B report."
+        # Handle either file objects or strings
+        self.name = None
+        if type(fp) == type(""):
+            self.name = fp
+            self.fp = file(self.name)
         # Read the SCF header
         self.dir = dir
         self.hash_method = "RXOR"
@@ -124,6 +130,9 @@ class CommonReport:
             if line == '%%\n':
                 self.cliques.append(locations)
                 locations = []
+        # We're done, clean up
+        if self.name:
+            self.fp.close()
 
     def segment_count(self):
         "Number of common chunks in the report."
