@@ -191,9 +191,9 @@ static void write_scf(const char *tree, FILE *ofp)
 	totalchunks += chunk_count;
 	free(chunk_buffer);
 	if (!debug && progress++ % 100 == 0)
-	    fprintf(stderr, "\b\b\b%02.0f%%", progress / (file_count * 0.01));
+	    fprintf(stderr, "\b\b\b\b%3.0f%%", progress / (file_count * 0.01));
     }
-    fprintf(stderr, "\b\b\b100%%, done, %d total chunks.\n", totalchunks);
+    fprintf(stderr, "\b\b\b\b100%%, done, %d total chunks.\n", totalchunks);
 
     /* the statistics trailer */
     totallines = htonl(totallines);
@@ -238,10 +238,10 @@ static void read_scf(struct scf_t *scf)
 	    corehook(this, filehdr);
 	    hashcount++;
 	    if (!debug && hashcount % 10000 == 0)
-		fprintf(stderr,"\b\b\b%02.0f%%",(ftell(scf->fp) / (sb.st_size * 0.01)));
+		fprintf(stderr,"\b\b\b\b%3.0f%%",(ftell(scf->fp) / (sb.st_size * 0.01)));
 	}
     }
-    fprintf(stderr, "\b\b\b100%%...done, %d shreds\n", hashcount);
+    fprintf(stderr, "\b\b\b\b100%%...done, %d shreds\n", hashcount);
 
     fread(&scf->totallines, sizeof(linecount_t), 1, scf->fp);
     scf->totallines = ntohl(scf->totallines);
@@ -274,9 +274,9 @@ static int merge_tree(char *tree)
 	filep->length = lines; 
 	totallines += lines;
 	if (!debug && !(i++ % 100))
-	    fprintf(stderr, "\b\b\b%02.0f%%", i / (file_count * 0.01));
+	    fprintf(stderr, "\b\b\b\b%3.0f%%", i / (file_count * 0.01));
     }
-    fprintf(stderr, "\b\b\b100%%...done, %d files, %d shreds.\n", 
+    fprintf(stderr, "\b\b\b\b100%%...done, %d files, %d shreds.\n", 
 	    file_count, sort_count - old_entry_count);
     free(list);
     return(totallines);
