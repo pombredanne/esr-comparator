@@ -167,7 +167,7 @@ if __name__ == '__main__':
             debug = 1
 
     # Read the SCF header
-    hash_method = "MD5"
+    hash_method = "RXOR"
     merge_program = None
     id = sys.stdin.readline()
     if not id.startswith("#SCF-B "):
