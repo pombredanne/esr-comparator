@@ -87,7 +87,7 @@ if __name__ == '__main__':
                     for i in range(start-1):
                         rfp.readline()
                     text = ""
-                    for i in range(start, end):
+                    for i in range(start, end+1):
                         text += rfp.readline()
                     rfp.close()
                     if nofilter or nontrivial(text):
