@@ -118,7 +118,7 @@ static void write_scf(const char *tree, FILE *ofp)
     fputs("#SCF-A 2.0\n", ofp);
     fputs("Generator-Program: comparator 1.0\n", ofp);
     fputs("Hash-Method: " HASHMETHOD "\n", ofp);
-    linebyline.dump(buf);
+    linebyline.dumpopt(buf);
     fprintf(ofp, "Normalization: %s\n", buf);
     fprintf(ofp, "Root: %s\n", tree);
     fprintf(ofp, "Shred-Size: %d\n", shredsize);
@@ -330,7 +330,7 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
 	char	buf[BUFSIZ];
 
 	scf->hash_method = HASHMETHOD;
-	linebyline.dump(buf);
+	linebyline.dumpopt(buf);
 	scf->normalization = strdup(buf);
 	scf->shred_size = shredsize;
 	scf->generator_program = "comparator " VERSION;
@@ -416,15 +416,12 @@ static void usage(void)
 {
     fprintf(stderr,"usage: comparator [-c] [-C] [-d dir ] [-m minsize] [-n] [-r] [-o file] [-s shredsize] [-v] [-w] [-x] path...\n");
     fprintf(stderr,"  -c      = generate SCF files\n");
-    fprintf(stderr,"  -C      = apply C normalizations\n");
     fprintf(stderr,"  -d dir  = change directory before digesting.\n");
     fprintf(stderr,"  -m size = set minimum size of span to be output.\n");
     fprintf(stderr,"  -n      = suppress significance filtering.\n");
     fprintf(stderr,"  -o file = write to the specified file.\n");
-    fprintf(stderr,"  -r      = renove comments\n");
     fprintf(stderr,"  -s size = set shred size (default %d)\n", shredsize);
     fprintf(stderr,"  -v      = enable progress messages on stderr.\n");
-    fprintf(stderr,"  -w      = remove whitespace.\n");
     fprintf(stderr,"  -x      = debug, display chunks in output.\n");
     fprintf(stderr,"This is comparator version " VERSION ".\n");
     exit(0);
@@ -436,22 +433,18 @@ main(int argc, char *argv[])
     extern char	*optarg;	/* set by getopt */
     extern int	optind;		/* set by getopt */
 
-    int status, file_only, compile_only, argcount, mergecount, flags;
+    int status, file_only, compile_only, argcount, mergecount;
     struct scf_t	*scf;
-    char *dir, *outfile;
+    char *dir, *outfile, *normalization = "line_oriented";
 
-    compile_only = file_only = nofilter = flags = 0;
+    compile_only = file_only = nofilter = 0;
     dir = outfile = NULL;
-    while ((status = getopt(argc, argv, "cCd:hm:no:rs:vwx")) != EOF)
+    while ((status = getopt(argc, argv, "cd:hm:nN:o:rs:vx")) != EOF)
     {
 	switch (status)
 	{
 	case 'c':
 	    compile_only = 1;
-	    break;
-
-	case 'C':
-	    flags |= CAPC_FLAG;
 	    break;
 
 	case 'd':
@@ -466,12 +459,12 @@ main(int argc, char *argv[])
 	    nofilter = 1;
 	    break;
 
-	case 'o':
-	    outfile = optarg;
+	case 'N':
+	    normalization = strdup(optarg);
 	    break;
 
-	case 'r':
-	    flags |= R_FLAG;
+	case 'o':
+	    outfile = optarg;
 	    break;
 
 	case 's':
@@ -480,10 +473,6 @@ main(int argc, char *argv[])
 
 	case 'v':
 	    verbose = 1;
-	    break;
-
-	case 'w':
-	    flags |= W_FLAG;
 	    break;
 
 	case 'x':
@@ -506,7 +495,16 @@ main(int argc, char *argv[])
 	usage();
 
     report_time(NULL);
-    linebyline.init(flags);
+
+    /*
+     * Check each normalizer to see if it fires.
+     */
+    status = linebyline.init(normalization);
+    if (status != 0)
+    {
+	fprintf(stderr, "comparator: bad analyzer option\n");
+	exit(1);
+    }
 
     /* special case if user gave exactly one tree */
     if (!compile_only && argcount == 1)

@@ -59,15 +59,11 @@ feature_t;
 
 struct analyzer_t	/* structure describing a feature analyzer */
 {
-    unsigned int flags;
-#define CAPC_FLAG	0x01
-#define R_FLAG		0x02
-#define W_FLAG		0x04
-    void (*init)(unsigned int);
+    int (*init)(unsigned char *);
     void (*mode)(int);
     feature_t *(*get)(const struct filehdr_t *, FILE *, linenum_t *);
     void (*free)(const char *);
-    void (*dump)(char *);
+    void (*dumpopt)(char *);
 };
 
 /* mode bits for controlling the analyzer */

@@ -21,6 +21,7 @@
   <arg choice='opt'>-d <replaceable>dir</replaceable></arg>
   <arg choice='opt'>-m <replaceable>minsize</replaceable></arg>
   <arg choice='opt'>-n</arg>
+  <arg choice='opt'>-N <replaceable>normalization-spec</replaceable></arg>
   <arg choice='opt'>-o <replaceable>file</replaceable></arg>
   <arg choice='opt'>-r</arg>
   <arg choice='opt'>-s <replaceable>shredsize</replaceable></arg>
@@ -119,26 +120,10 @@ controls how likely common segments are to not get recognized because
 of unshared things near them, while minimum span size defines the
 smallest features we want to see in the output report.</para>
 
-<para>The <option>-w</option> causes all whitespace in the file
-(including blank lines) to be ignored for comparison purposes (line
-numbers in the output report will nevertheless be correct).</para>
-
 <para>Normally, <application>comparator</application> performs 
 insignificance filtering before emitting a span into the common-segment
 report. The <option>-n</option> suppresses this, emitting all common
 spans. See the discussion of significance filtering below.</para>
-
-<para>The <option>-C</option> option implies <option>-w</option> and also
-applies C-language-specific normalization; { and } characters are
-removed.  This is recommended for comparing C code; it prevents the
-comparison from being fooled by differences in indent style.</para>
-
-<para>The <option>-r</option> option removes comments.  This is only
-effective in conjunction with <option>-C</option>. In C files, ll // comments,
-but only "winged" /* comments with the start and end of comment on the
-same line are ignored; also, block /* comments are retained, but the
-beginning /* and ending */ are ignored, In other files, all #
-comments are removed.</para>
 
 <para>The option <option>-v</option> enables progress and timing
 messages to standard error.</para>
@@ -154,6 +139,37 @@ extensions are always eligible. Files with <filename>.o</filename> or
 SCCS directories are ignored.  Other files are checked to see if the
 percentage of printable characters near the front of the file is above
 90%.</para>
+</refsect2>
+
+<refsect2><title>Normalization specifications</title>
+
+<para>The <option>-N</option> option passes in its argument as a
+normalization specification.  A normalization specification consists
+of a comma-separated list of tokens.  The first token names a
+normalizer, e.g., a set of rules for transforming code into a
+canonical form.  Subsequent tokens (if present) are options to the
+normalizer.</para>
+
+<refsect3><title>The line-oriented normalizer</title>
+
+<para>The default normalizer is named by the leading token 
+<option>line-oriented</option>.  It has the following options:</para>
+
+<para>The <option>remove-whitespace</option> causes all whitespace in the file
+(including blank lines) to be ignored for comparison purposes (line
+numbers in the output report will nevertheless be correct).</para>
+
+<para>The <option>remove-braces</option> option strips { and }
+characters.  This is recommended for comparing C code; it prevents the
+comparison from being fooled by differences in indent style.</para>
+
+<para>The <option>remove_comments</option> option removes comments in
+C files, All // comments are removed, but only "winged" /* comments
+with the start and end of comment on the same line are ignored; also,
+block /* comments are retained, but the beginning /* and ending */ are
+ignored, In other files, all # comments are removed.</para>
+
+</refsect3>
 </refsect2>
 
 <refsect2><title>Significance filtering</title>

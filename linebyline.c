@@ -52,10 +52,11 @@ static regex_t shell_regexps[sizeof(shell_patterns)/sizeof(*shell_patterns)];
 
 static linenum_t	linecount;
 
-void analyzer_init(unsigned int flags)
+int analyzer_init(unsigned char *buf)
 /* initialize line filtering */
 {
     int i;
+    char	*cp;
 
     for (i = 0; i < sizeof(c_patterns)/sizeof(*c_patterns); i++)
 	if (regcomp(c_regexps+i, c_patterns[i], REG_EXTENDED))
@@ -72,12 +73,21 @@ void analyzer_init(unsigned int flags)
 	    exit(1);
 	}
 
-    if (flags & CAPC_FLAG)
-	remove_braces = remove_whitespace = 1;
-    if (flags & R_FLAG)
-	remove_comments = 1;
-    if (flags & W_FLAG)
-	remove_whitespace = 1;
+    cp = strtok(buf, ", ");
+    if (strcmp(cp, "line-oriented"))
+	return(1);
+    while (cp = strtok(NULL, ", "))
+    {
+	if (strcmp(cp, "remove-whitespace") == 0)
+	    remove_whitespace = 1;
+	else if (strcmp(cp, "remove-comments") == 0)
+	    remove_comments = 1;
+	else if (strcmp(cp, "remove-braces") == 0)
+	    remove_braces = 1;
+	else
+	    return(-1);
+    }
+    return(0);
 }
 
 static unsigned char	active = 0;
@@ -109,7 +119,7 @@ static int normalize(char *buf)
 {
     if (remove_comments)
     {
-	if (remove_braces)	/* remove C comments */
+	if (active & C_CODE)	/* remove C comments */
 	{
 	    char	*ss = strstr(buf, "//");
 
@@ -289,7 +299,7 @@ struct analyzer_t linebyline =
     mode: analyzer_mode,
     get:  analyzer_get,
     free: analyzer_free,
-    dump: analyzer_dump,
+    dumpopt: analyzer_dump,
 };
 
 #ifdef TEST

@@ -51,23 +51,24 @@ comparator.html: comparator.xml
 scf-standard.html: scf-standard.xml
 	xmlto html-nochunks scf-standard.xml
 
+OPTS="-N line-oriented, remove-braces, remove-whitespace"
 makeregress:
 	@for n in 1 2 3; do \
-	    comparator -C -d test test$${n}-a test$${n}-b >test/out$${n}.good;\
+	    comparator $(OPTS) -d test test$${n}-a test$${n}-b >test/out$${n}.good;\
 	done
 
 regress:
 	@for n in 1 2 3; do \
-	    comparator -C -d test test$${n}-a test$${n}-b >test/out$${n}.log;\
+	    comparator $(OPTS) -d test test$${n}-a test$${n}-b >test/out$${n}.log;\
 	    if diff -c test/out$${n}.good test/out$${n}.log; \
 	    then \
 		echo "Test $${n} from trees passed."; \
 	    else \
 		echo "Test $${n} from trees failed."; \
 	    fi; \
-	    comparator -C -d test -c test$${n}-a >test$${n}-a.scf; \
-	    comparator -C -d test -c test$${n}-b >test$${n}-b.scf; \
-	    comparator -C test$${n}-a.scf test$${n}-b.scf >test/out$${n}.log;\
+	    comparator $(OPTS) -d test -c test$${n}-a >test$${n}-a.scf; \
+	    comparator $(OPTS) -d test -c test$${n}-b >test$${n}-b.scf; \
+	    comparator $(OPTS) test$${n}-a.scf test$${n}-b.scf >test/out$${n}.log;\
 	    rm test$${n}-a.scf test$${n}-b.scf; \
 	    if diff -u test/out$${n}.good test/out$${n}.log; \
 	    then \
