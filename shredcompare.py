@@ -2,6 +2,8 @@
 #
 # shredcompare -- find similarities in file trees.
 #
+# 1.0 by Eric S. Raymond, 24 Aug 2003.
+#
 # Implements the shred algorithm described at:
 #
 #	http://theinquirer.net/?article=10061
@@ -39,7 +41,15 @@
 #
 # In this implementation, lines are preprocessed to remove whitespace
 # differences.
-import sys, os, os.path, re, md5, getopt, time
+#
+# The -h option supports building a cache containing the shred list
+# for a tree you specify.  This is strictly a speed hack.  If your
+# tree is named `foo', the file will be named `foo.hash'.  On your
+# next comparison run it will be picked up automatically. It is
+# your responsibility to make sure each hash file is newer than
+# the correspobding tree.
+
+import sys, os, os.path, re, md5, getopt, time, cPickle
 
 shredsize = 5
 verbose = False
@@ -90,12 +100,18 @@ def eligible(file):
 def shredtree(tree):
     "Shred an entire file tree; return a dictionary of checksums-to-locations."
     shreds = {}
-    # First, prepare the shred list.
-    for root, dirs, files in os.walk(tree):
-        for file in files:
-            path = os.path.join(root, file)
-            if eligible(path):
-                shreds.update(shredfile(path, tree))
+    if os.path.exists(tree + ".hash"):
+        # There's a precomputed shred list.
+        rfp = open(tree + ".hash")
+        shreds = cPickle.load(rfp)
+        rfp.close()
+    else:
+        # No precomputed hashes.  Prepare a news shred list.
+        for root, dirs, files in os.walk(tree):
+            for file in files:
+                path = os.path.join(root, file)
+                if eligible(path):
+                    shreds.update(shredfile(path, tree))
     return shreds
 
 def shredcompare(tree1, tree2):
@@ -131,19 +147,8 @@ def shredcompare(tree1, tree2):
                 matches = matches[:j] + matches[j+1:]
     return matches
 
-if __name__ == '__main__':
-    try:
-        (optlist, args) = getopt.getopt(sys.argv[1:], 's:v')
-    except getopt.GetoptError:
-        sys.stderr.write("usage: shredcompare [-s shredsize] [-v] tree1 tree2\n")
-        sys.exit(2)
-    for (opt, val) in optlist:
-        if opt == '-s':
-            shredsize = int(val)
-        elif opt == '-v':
-            verbose = True
-    starttime = time.time()
-    matches = shredcompare(args[0], args[1])
+def report_time():
+    "Report time since the last elapsed time"
     endtime = time.time()
     if verbose:
         elapsed = endtime - starttime 
@@ -151,6 +156,32 @@ if __name__ == '__main__':
         minutes = elapsed/60; elapsed %= 60
         seconds = elapsed
         print "%% Done in %dh, %dm, %ds" % (hours, minutes, seconds)
-    for (source, target) in matches:
-        print source, "->", target
+
+
+if __name__ == '__main__':
+    try:
+        (optlist, args) = getopt.getopt(sys.argv[1:], 'h:s:v')
+    except getopt.GetoptError:
+        sys.stderr.write("usage: shredcompare [-s shredsize] [-v] [-h] tree1 tree2\n")
+        sys.exit(2)
+    makehash = None
+    for (opt, val) in optlist:
+        if opt == '-s':
+            shredsize = int(val)
+        elif opt == '-v':
+            verbose = True
+        elif opt == '-h':
+            makehash = val
+    starttime = time.time()
+    if makehash:
+        shreds = shredtree(makehash)
+        report_time()
+        wfp = open(makehash + ".hash")
+        cPickle.dump(shreds, wfp)
+        wfp.close()
+    else:
+        matches = shredcompare(args[0], args[1])
+        report_time()
+        for (source, target) in matches:
+            print source, "->", target
 
