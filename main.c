@@ -362,7 +362,7 @@ main(int argc, char *argv[])
     int status, file_only, compile_only;
     struct scf_t	*scf;
     char *dir, *outfile;
-    struct sorthash_t *mp, *np;
+    struct sorthash_t *np;
 
     compile_only = file_only = 0;
     dir = outfile = NULL;
@@ -565,37 +565,6 @@ main(int argc, char *argv[])
 	report_time("Hash merge done, %d shreds", sort_count);
 	sort_hashes(sort_buffer, sort_count);
 	report_time("Sort done");
-
-	if (debug)
-	{
-	    puts("Chunk list before compaction.");
-	    dump_array(sort_buffer, sort_count, NULL);
-	}
-
-	/*
-	 * To reduce the size of the in-core working set, we do a 
-	 * a pre-elimination of duplicates based on hash key alone, in
-	 * linear time.  This may leave in the the array hashes that
-	 * all point to the same tree.  We'll catch those in a later phase.
-	 * The technique: first mark...
-	 */
-	if (!HASHCMP(sort_buffer, sort_buffer+1))
-	    sort_buffer[0].hash.start = UNIQUE_FLAG;
-	for (np = sort_buffer+1; np < sort_buffer + sort_count-1; np++)
-	    if (!HASHCMP(np, np-1) && !HASHCMP(np, np+1))
-		np->hash.start = UNIQUE_FLAG;
-	if (!HASHCMP(sort_buffer+sort_count-2, sort_buffer+sort_count-1))
-	    sort_buffer[sort_count-1].hash.start = UNIQUE_FLAG;
-	/* ...then sweep. */
-	for (mp = np = sort_buffer; np < sort_buffer + sort_count; np++)
-	    if (np->hash.start != UNIQUE_FLAG && mp < np)
-		*mp++ = *np;
-	/* now we get to reduce the memory footprint */
-	report_time("Compaction reduced %d shreds to %d", 
-		    sort_count, mp - sort_buffer);
-	sort_count = mp - sort_buffer;
-	sort_buffer = (struct sorthash_t *)realloc(sort_buffer, 
-			       sizeof(struct sorthash_t)* sort_count);
 
 	if (debug)
 	{
