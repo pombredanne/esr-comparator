@@ -99,10 +99,11 @@ static int sametree(const char *s, const char *t)
     return (sn == tn) && !strncmp(s, t, sn); 
 }
 
-static void collapse_ranges(struct match_t *reduced, int *nonuniques)
+static int collapse_ranges(struct match_t *reduced, int nonuniques)
 /* collapse together overlapping ranges in the hit list */
 { 
     struct match_t *sp, *tp;
+    int removed = 0;
 
 #ifdef DEBUG
      for (sp = reduced; sp->next; sp = sp->next)
@@ -153,10 +154,12 @@ static void collapse_ranges(struct match_t *reduced, int *nonuniques)
 		     printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
 #endif /* DEBUG */
 		 free(tp->matches);
-		 (*nonuniques)--;
+		 nonuniques--;
 		 tp->matches = NULL;
 	     }
 	 }
+
+     return(nonuniques);
 }
 
 struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
@@ -259,7 +262,7 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 
      report_time("%d range groups after removing unique hashes", nonuniques);
 
-     *hashcountp = hashcount;
+     *hashcountp = nonuniques;
      return reduced;
 }
 
@@ -285,7 +288,7 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
     int i, matchcount;
 
     hitlist = reduce_matches(obarray, &hashcount);
-    collapse_ranges(hitlist, &hashcount);
+    hashcount = collapse_ranges(hitlist, hashcount);
     report_time("%d range groups after merging", hashcount);
     report_time("Reduction done");
 
