@@ -8,6 +8,11 @@
 #include <sys/stat.h>
 #include "shred.h"
 
+#define min(x, y)	((x < y) ? (x) : (y)) 
+#define max(x, y)	((x > y) ? (x) : (y)) 
+
+#define DEBUG
+
 static int local_duplicates;
 
 struct item
@@ -47,9 +52,11 @@ struct range_t
 struct match_t
 {
     struct match_t *next;
-    struct match_t *last;
     int            nmatches;
     struct range_t *matches;
+#ifdef DEBUG
+    int	index;
+#endif /* DEBUG */
 }
 dummy_match;
 static struct match_t *reduced = &dummy_match;
@@ -217,11 +224,55 @@ void init_intern(const int count)
      return hashcount;
  }
 
-static int merge(struct range_t *s, struct range_t *t)
-/* merge t into s */
+static int merge(struct range_t *p, struct range_t *q, int nmatches)
+/* merge t into s, if the ranges in the match are compatible */
 {
-    /* merge attempt unsuccessful */
-    return(0);
+    int	i;
+    /*
+     * The general problem: you have two lists of shreds, of the same
+     * lengths.  Within each list, all shreds have the same hash.
+     * Within the lists, the shreds are sorted in filename order.
+     * 
+     * First, check to see that all the filenames match pairwise.
+     * If there are no such matches, these chunks are completely
+     * irrelevant to each other.  It might be that for some values
+     * of i the filenames are equal and for others not.  In that case
+     * the pair of lists of ranges cannot represent the same overlapping
+     * segments of text, which is the only case we are interested in.
+     */
+    for (i = 0; i < nmatches; i++)
+	if (strcmp(p->file, p->file))
+	    return(0);
+ 
+    /*
+     * There are two possible overlap cases.  Either the start line of s is
+     * within t or vice-versa.  In either case, all shreds must overlap by
+     * the same offset for this to be an eligible match.
+     */
+    if (p->start >= q->start && p->start <= q->end)
+    {
+	int offset = p->start - q->start;
+
+	for (i = 1; i < nmatches; i++)
+	    if (p[i].start - q[i].start != offset)
+		return(0);
+    }
+    else if (q->start >= p->start && q->start <= p->end)
+    {
+	int offset = q->start - p->start;
+
+	for (i = 1; i < nmatches; i++)
+	    if (p[i].start - p[i].start != offset)
+		return(0);
+    }
+
+    /* merge attempt successful */
+    for (i = 0; i < nmatches; i++)
+    {
+	p[i].start = min(p[i].start, q[i].start);
+	p[i].end   = max(p[i].end, q[i].end);
+    }
+    return(1);
 }
 
 static int sametree(const char *s, const char *t)
@@ -268,9 +319,10 @@ struct match_t *reduce_matches(int localdups)
 	     printf("%d has %d in its clique\n", np-obarray, nmatches);
 	     /* passed all tests, keep this set of ranges */
 	     new = (struct match_t *)malloc(sizeof(struct match_t));
-	     new->last = NULL;
+#ifdef DEBUG
+	     new->index = np - obarray;
+#endif /* DEBUG */
 	     new->next  = reduced;
-	     reduced->last = new;
 	     reduced = new;
 	     new->nmatches = nmatches;
 	     new->matches=(struct range_t *)calloc(sizeof(struct range_t),new->nmatches);
@@ -296,16 +348,22 @@ struct match_t *reduce_matches(int localdups)
 		 /* intersection is symmetrical */
 		 if (sp >= tp)
 		     continue;
-		 /* don't recheck deleted ranges */
+		 /* neither must have been deleted */
 		 if (!sp->matches || !tp->matches)
 		     continue;
-		 /* attempt the merge */
-		 if (!merge(sp->matches, tp->matches))
+		 /* ranges must be the same length */
+		 if (sp->nmatches != tp->nmatches)
 		     continue;
-		 /* clean up */
+		 /* attempt the merge */
+		 if (!merge(sp->matches, tp->matches, sp->nmatches))
+		     continue;
+		 /* merge succeeded, clean up */
+#ifdef DEBUG
+		 printf("Merged %d into %d\n", tp->index, sp->index);
+#endif /* DEBUG */
 		 free(tp->matches);
-		 tp->last->next = tp->next;
-		 tp->next->last = tp->last;
+		 tp->matches = NULL;
+		 /* if this garbages *tp the loop may fail */ 
 		 free(tp);
 		 /* list is altered, do another merge pass */
 	         retry = 1;
@@ -370,15 +428,16 @@ main(int argc, char *argv[])
     report_time("Reduction done.");
 
     for (; hitlist->next; hitlist = hitlist->next)
-    {
-	int	i;
-
-	for (i=0; i < hitlist->nmatches; i++)
+	if (hitlist->matches)
 	{
-	    struct range_t	*rp = hitlist->matches+i;
+	    int	i;
 
-	    printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
+	    for (i=0; i < hitlist->nmatches; i++)
+	    {
+		struct range_t	*rp = hitlist->matches+i;
+
+		printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
+	    }
+	    printf("-\n");
 	}
-	printf("-\n");
-    }
 }
