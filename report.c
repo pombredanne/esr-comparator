@@ -246,7 +246,12 @@ static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
      */
     for (i = 0; i < nmatches; i++)
 	if (strcmp(p[i].file, q[i].file))
+	{
+#ifdef DEBUG
+	    printf("File mismatch\n");
+#endif /* DEBUG */
 	    return(0);
+	}
  
     /*
      * There are two possible overlap cases.  Either the start line of s is
@@ -259,18 +264,33 @@ static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
 
 	for (i = 1; i < nmatches; i++)
 	    if (p[i].start - q[i].start != offset)
+	    {
+#ifdef DEBUG
+		printf("Mismatched offset (A)\n");
+#endif /* DEBUG */
 		return(0);
+	    }
     }
     else if (q->start >= p->start && q->start <= p->end)
     {
 	int offset = q->start - p->start;
 
 	for (i = 1; i < nmatches; i++)
-	    if (p[i].start - p[i].start != offset)
+	    if (q[i].start - p[i].start != offset)
+	    {
+#ifdef DEBUG
+		printf("Mismatched offset (B)\n");
+#endif /* DEBUG */
 		return(0);
+	    }
     }
     else
+    {
+#ifdef DEBUG
+	printf("Intervals don't intersect\n");
+#endif /* DEBUG */
 	return(0);
+    }
 
     /* merge attempt successful */
     for (i = 0; i < nmatches; i++)
@@ -364,9 +384,7 @@ struct match_t *reduce_matches(int localdups)
 #endif /* DEBUG */
 
      /* time to remove duplicates */
-     retry = 1;
-     while (retry)
-     {
+     do {
 	 retry = 0;
 	 for (sp = reduced; sp->next; sp = sp->next)
 	     for (tp = reduced; tp->next; tp = tp->next)
@@ -374,29 +392,45 @@ struct match_t *reduce_matches(int localdups)
 		 /* intersection is symmetrical */
 		 if (sp >= tp)
 		     continue;
-		 /* neither must have been deleted */
-		 if (!sp->matches || !tp->matches)
-		     continue;
-		 /* ranges must be the same length */
-		 if (sp->nmatches != tp->nmatches)
-		     continue;
-		 /* attempt the merge */
 #ifdef DEBUG
 		 printf("Trying merge of %d into %d\n", tp->index, sp->index);
 #endif /* DEBUG */
-		 if (!merge_ranges(sp->matches, tp->matches, sp->nmatches))
-		     continue;
-		 /* merge succeeded, clean up */
+		 /* neither must have been deleted */
+		 if (!sp->matches || !tp->matches)
+		 {
 #ifdef DEBUG
-		 printf("Merged %d into %d\n", tp->index, sp->index);
+		     printf("Null match pointer: %d=%p, %d=%p\n", 
+			    sp->index, sp->matches, tp->index, tp->matches);
 #endif /* DEBUG */
-		 free(tp->matches);
-		 nonuniques--;
-		 tp->matches = NULL;
-		 /* list is altered, do another merge pass */
-	         retry = 1;
+		     continue;
+		 }
+		 /* ranges must be the same length */
+		 if (sp->nmatches != tp->nmatches)
+		 {
+#ifdef DEBUG
+		     printf("Range length mismatch\n");
+#endif /* DEBUG */
+		     continue;
+		 }
+		 /* attempt the merge */
+		 if (merge_ranges(sp->matches, tp->matches, sp->nmatches))
+ 		 {		 
+#ifdef DEBUG
+		     struct range_t	*rp;
+
+		     printf("Merged %d into %d\n", tp->index, sp->index);
+		     for (rp=sp->matches; rp < sp->matches+sp->nmatches; rp++)
+			 printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
+#endif /* DEBUG */
+		     free(tp->matches);
+		     nonuniques--;
+		     tp->matches = NULL;
+		     /* list is altered, do another merge pass */
+		     retry++;
+		 }
 	     }
-     }
+     } while
+	 (retry);
      report_time("%d range groups after merging", nonuniques);
      return reduced;
 }
