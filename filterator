@@ -8,22 +8,28 @@ import os, sys, re, getopt
 shredline = re.compile("([^:]*):([0-9]+):([0-9]+)")
 
 # Tokens to be removed when checking whether a shred is significant
-junk = re.compile("|".join((
-          # Bare C keywords
-          r'\bbreak\b',  r'\bcase\b',r'\bcontinue\b', r'\bdefault\b',
-          r'\bdo\b', r'\belse\b', r'\bif\b', r'\bgoto\b', r'\breturn\b',
-          r'\bswitch\b', r'\bwhile\b',
-          r'enum', r'\bint\b', r'\blong\b', r'\bshort\b', r'\bstatic\b',
-          r'\bstruct\b', r'typedef', r'\bunion\b', r'\bvoid\b',
-          r'#define',r'#endif',r'#else',r'#if\b',r'#ifdef\b',r'#ifndef\b', 
-          r'/\*+', r'\*+/', r'\*+',
-          # Common preprocessor macros, not significant by themselves.
-          r'\bASSERT\b', r'\bFALSE\b', r'\bNULL\b', r'\bSTATIC\b', r'\bTRUE\b',
-          # Macro include lines are noise, too.
-          r'\s*#include.*', 
-          # Common error macros.
-          r'\bEINVAL\b', r'\bENOSYS\b', 
-          )))
+junk = map(re.compile, (
+    # Idioms that don't convey any meaning in isolation
+    r"return +\(?[a-z]+\)?;", r"return +\(?-?[01]+\)?;", r"goto +[a-z]+;",
+    r"exit *\([01]\);",
+    # Pragmas
+    r'/\* ARGSUSED \*/', r'/\* NOTREACHED \*/', 
+    # Bare C keywords
+    r'\bbreak\b',  r'\bcase\b',r'\bcontinue\b', r'\bdefault\b',
+    r'\bdo\b', r'\belse\b', r'\bif\b', r'\bgoto\b', r'\breturn\b',
+    r'\bswitch\b', r'\bwhile\b',
+    r'enum', r'\bint\b', r'\blong\b', r'\bshort\b', r'\bstatic\b',
+    r'\bstruct\b', r'typedef', r'\bunion\b', r'\bvoid\b',
+    r'# *define',r'# *endif',r'# *else',r'# *if\b',
+    r'# *ifdef\b',r'# *ifndef\b', 
+    r'/\*+', r'\*+/', r'\*+',
+    # Common preprocessor macros, not significant by themselves.
+    r'\bASSERT\b', r'\bFALSE\b', r'\bNULL\b', r'\bSTATIC\b', r'\bTRUE\b',
+    # Macro include lines are noise, too.
+    r'\s*#include.*',
+    # Common error macros.
+    r'\bEINVAL\b', r'\bENOSYS\b', 
+    ))
 
 def nontrivial(text):
     "Identify a shred as trivial or nontrivial."
@@ -34,11 +40,12 @@ def nontrivial(text):
     text = ' ' + text
     while True:
         savecopy = text
-        for ch in ('0', '1', '{','}', '(',')', '<','>', '[',']',
+        for regexp in junk:
+            text = regexp.sub(' ', text)
+        for ch in ('{','}', '(',')', '<','>', '[',']',
                    ';', ':', ',', '.', '%', '^', '&', '|', '*','?',
                    '+', '-', '/', '=', '!', '\n','\t'):
             text = text.replace(ch, ' ')
-        text = junk.sub(' ', text)
         if savecopy == text:
             break
         else:
