@@ -28,6 +28,7 @@ struct shif_t
     int		shred_size;
     char	*hash_method;
     char	*generator_program;
+    int		hashcount;
 };
 static struct shif_t *shiflist;
 
@@ -190,7 +191,6 @@ void init_intern(const int count)
 	 stat(sp->name, &sb);
 	 total += sb.st_size - ftell(sp->fp);
      }
-     fprintf(stderr, "%% %ld bytes to be read.\n", total);
      init_intern(total/sizeof(struct hash_t));	/* real work done here */
 
      /* read in all hashes */
@@ -199,6 +199,7 @@ void init_intern(const int count)
      {
 	 u_int32_t	sectcount;
 
+	 fprintf(stderr, "Reading %s...   ", sp->name);
 	 fread(&sectcount, sizeof(u_int32_t), 1, sp->fp);
 	 sectcount = ntohl(sectcount);
 	 while (sectcount--)
@@ -221,8 +222,12 @@ void init_intern(const int count)
 		 this.end = FROMNET(this.end);
 		 hash_intern(&this);		/* real work done here */
 		 hashcount++;
+		 sp->hashcount++;
+		 if (hashcount % 10000 == 0)
+		     fprintf(stderr, "\b\b\b%02.0f%%", (ftell(sp->fp) / (total * 0.01)));
 	     }
 	 }
+	 fprintf(stderr, "\b\b\b100%%...done, %d entries\n", sp->hashcount);
      }
  }
 

@@ -19,15 +19,21 @@ shredcompare: shredcompare.o
 clean:
 	rm -f shredtree shredcompare shredtree.o md5.o shredcompare.o
 
-test:
+test-a:
 	shredtree -c test1 >TEST1
 	shredtree -c test2 >TEST2
 	shredcompare TEST1 TEST2
-
-testgood:
+test-b:
 	shredtree -c test3 >TEST1
 	shredtree -c test4 >TEST2
-	@echo "*** Python;"
-	shredcompare.py TEST1 TEST2
-	@echo "*** C:"
 	shredcompare TEST1 TEST2
+
+goodtest:
+	shredtree -c -d ~/src/unix src5r4/src/ucbhead >src5r4.shif
+	shredtree -c -d ~/src/unix linux-2.6.0-test4/include/linux >linux-2.6.0-test4.shif
+	shredcompare src5r4.shif linux-2.6.0-test4.shif >TEST.LOG
+
+bigtest:
+	shredtree -c -d ~/src/unix src5r4 >src5r4.shif
+	shredtree -c -d ~/src/unix linux-2.6.0-test4 >linux-2.6.0-test4.shif
+	shredcompare src5r4.shif linux-2.6.0-test4.shif >TEST.LOG

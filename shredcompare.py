@@ -10,6 +10,7 @@ class SHIF:
         self.name = name
         self.fp = open(name)
         self.comments = []
+        self.hashcount = 0
         id = self.fp.readline()
         if not id.startswith("#SHIF-A "):
             sys.stderr.write("shredcompare: %s is not a SHIF-A file."%self.fp.name)
@@ -78,27 +79,28 @@ class Shred:
 
 hashcount = total = 0
 
-def merge_hashes(fp, dict):
+def merge_hashes(shif, dict):
     "Read and merge hashes corresponding to one file."
     global hashcount
-    file = fp.readline()
+    file = shif.fp.readline()
     if not file:
         return False
     file = file.strip()
     # Record count comes right after the filename
-    (record_count,) = struct.unpack("!H", fp.read(2))
+    (record_count,) = struct.unpack("!H", shif.fp.read(2))
     while record_count > 0:
         record_count -= 1
         # 4 bytes of start line number + 4 of end line number + 16 of MD5 hash
-        (start, end, hashval) = struct.unpack("!HH16s", fp.read(20))
+        (start, end, hashval) = struct.unpack("!HH16s", shif.fp.read(20))
         if dict.has_key(hashval):
             oldval = dict[hashval]
         else:
             oldval = ""
         dict[hashval] = oldval + file + "\t" + `start` + "\t" + `end` + "\n"
         hashcount += 1
+        shif.hashcount += 1
         if hashcount % 10000 == 0:
-            sys.stderr.write("\b\b\b%02.0f%%" % (fp.tell() / (total * 0.01)))
+            sys.stderr.write("\b\b\b%02.0f%%" % (shif.fp.tell() / (total * 0.01)))
     return True
 
 def item_factory(db):
@@ -153,17 +155,16 @@ if __name__ == '__main__':
         shiflist[i].compatible(shiflist[i+1])
     # Compute amount of data to be read
     total = sum(map(lambda x: filesize(x.name) - x.fp.tell(), shiflist))
-    sys.stderr.write("%d bytes of data to be read\n" % total)
     # Read in the filecounts, though this implementation won't use them.
     for shif in shiflist:
         shif.fp.read(struct.calcsize("!i"))
     # Read in all hashes
     hashdict = bsddb.hashopen(None, 'c')
     for shif in shiflist:
-        sys.stderr.write("Reading...   ")
-        while merge_hashes(shif.fp, hashdict):
+        sys.stderr.write("Reading %s...   " % shif.name)
+        while merge_hashes(shif, hashdict):
             continue
-        sys.stderr.write("\b\b\b100%...done\n")
+        sys.stderr.write("\b\b\b100%...done, %d entries\n" % shif->hashcount)
     report_time("Hash merge done, %d entries" % hashcount)
     # Nuke all unique hashes
     nonuniques = 0
