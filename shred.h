@@ -3,15 +3,24 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
+#ifndef LARGEFILES
 /*
- * 65,536 lines should be enough, but maybe someday this will be 32 bits.
+ * 65,536 lines should be enough, but make it possible to compile with 32 bits.
  * The point of making it a short is that the data sets can get quite large,
  * so we want the hash_t and sorthash_t structures to be small.
  */
 typedef u_int16_t	linenum_t;
 #define TONET		htons
 #define FROMNET		ntohs
+#else
+typedef u_int32_t	linenum_t;
+#define TONET		htonl
+#define FROMNET		ntohl
+#endif
 #define UNIQUE_FLAG	(linenum_t)-1	/* 2s-complement assumption */
+
+/* use this to hold total line count of the entire source tree set */
+typedef u_int32_t	linecount_t;
 
 #define HASHSIZE	16
 struct hash_t

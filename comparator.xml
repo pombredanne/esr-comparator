@@ -187,6 +187,10 @@ false-positive matches between shreds &mdash; 1 in
 by a meteor or spontaneously combust before this happens.)  There
 is no possibility of false negatives.</para>
 
+<para>This program handles a maximum of 65536 lines per file.  A full
+integer line-number range would increase working-set size by
+20%.</para>
+
 <para>You will get spurious results if you mix
 <filename>.scf</filename> files with different shred sizes or
 normalizations, or with settings for these that conflict with the

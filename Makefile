@@ -1,4 +1,7 @@
 # Makefile for the comparator/filterator tools
+#
+# By building with -DLARGEFILES you can go to all 32-byte offsets.
+# This increases working-set size by 20% but handles > 65336 lines per file.
 
 VERS=1.5
 

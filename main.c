@@ -99,7 +99,7 @@ static void write_scf(const char *tree, FILE *ofp)
 {
     char	**place, **list;
     int		file_count, progress, totalchunks;
-    u_int32_t	netfile_count, totallines = 0;
+    linecount_t	netfile_count, totallines = 0;
     char	buf[BUFSIZ];
 
     list = sorted_file_list(tree, &file_count);
@@ -123,7 +123,7 @@ static void write_scf(const char *tree, FILE *ofp)
     fputs("%%\n", ofp);
 
     netfile_count = htonl(file_count);
-    fwrite(&netfile_count, sizeof(u_int32_t), 1, ofp);
+    fwrite(&netfile_count, sizeof(linecount_t), 1, ofp);
     fprintf(stderr, "%% Reading %s...   ", tree);
     progress = totalchunks = 0;
     for (place = list; place < list + file_count; place++)
@@ -189,19 +189,19 @@ static void write_scf(const char *tree, FILE *ofp)
 
     /* the statistics trailer */
     totallines = htonl(totallines);
-    fwrite(&totallines, sizeof(u_int32_t), 1, ofp);
+    fwrite(&totallines, sizeof(linecount_t), 1, ofp);
 }
 
 static void read_scf(struct scf_t *scf)
 /* merge hashes from specified files into an in-code list */
 {
-    u_int32_t	filecount;
+    linecount_t	filecount;
     int hashcount = 0;
     struct stat sb;
 
     stat(scf->name, &sb);
     fprintf(stderr, "%% Reading hash list %s...   ", scf->name);
-    fread(&filecount, sizeof(u_int32_t), 1, scf->fp);
+    fread(&filecount, sizeof(linecount_t), 1, scf->fp);
     filecount = ntohl(filecount);
     while (filecount--)
     {
@@ -235,7 +235,7 @@ static void read_scf(struct scf_t *scf)
     }
     fprintf(stderr, "\b\b\b100%%...done, %d shreds\n", hashcount);
 
-    fread(&scf->totallines, sizeof(u_int32_t), 1, scf->fp);
+    fread(&scf->totallines, sizeof(linecount_t), 1, scf->fp);
 }
 
 static int merge_tree(char *tree)
@@ -243,7 +243,7 @@ static int merge_tree(char *tree)
 {
     char	**place, **list;
     int	old_entry_count, file_count, i;
-    u_int32_t	totallines = 0;
+    linecount_t	totallines = 0;
 
     old_entry_count = sort_count;
     file_count = 0;
