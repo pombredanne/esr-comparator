@@ -410,7 +410,7 @@ main(int argc, char *argv[])
 
 	case 'r':
 	    remove_comments = 1;
-	    break
+	    break;
 
 	case 's':
 	    shredsize = atoi(optarg);
