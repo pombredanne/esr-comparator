@@ -536,8 +536,11 @@ main(int argc, char *argv[])
 	}
     }
 
+    if (compile_only)
+	exit(0);
+
     /* are we running the right instance of comparator? */
-    for (scf = scflist; scf->next; scf = scf->next)
+    for (scf = scflist; scf; scf = scf->next)
 	if (strcmp(scf->hash_method, HASHMETHOD))
 	{
 	    fprintf(stderr, 
@@ -578,27 +581,24 @@ main(int argc, char *argv[])
 	    fclose(scf->fp);
 	}
 
-    if (!compile_only)
-    {
-	if (debug)
-	    dump_array("Consolidated hash list:\n", sort_buffer, sort_count);
+    if (debug)
+	dump_array("Consolidated hash list:\n", sort_buffer, sort_count);
 
-	/* now we're ready to emit the report */
-	puts("#SCF-B 2.0");
-	printf("Hash-Method: %s\n", scflist->hash_method);
-	puts("Merge-Program: comparator " VERSION);
-	printf("Normalization: %s\n", scflist->normalization);
-	printf("Shred-Size: %d\n", scflist->shred_size);
-	puts("%%");
-	for (scf = scflist; scf->next; scf = scf->next)
-	    printf("%s:%d\n", scf->name, scf->totallines);
-	puts("%%");
+    /* now we're ready to emit the report */
+    puts("#SCF-B 2.0");
+    printf("Hash-Method: %s\n", scflist->hash_method);
+    puts("Merge-Program: comparator " VERSION);
+    printf("Normalization: %s\n", scflist->normalization);
+    printf("Shred-Size: %d\n", scflist->shred_size);
+    puts("%%");
+    for (scf = scflist; scf->next; scf = scf->next)
+	printf("%s:%d\n", scf->name, scf->totallines);
+    puts("%%");
 
-	report_time("Hash merge done, %d shreds", sort_count);
-	sort_hashes(sort_buffer, sort_count);
-	report_time("Sort done");
-	emit_report(sort_buffer, sort_count);
-    }
+    report_time("Hash merge done, %d shreds", sort_count);
+    sort_hashes(sort_buffer, sort_count);
+    report_time("Sort done");
+    emit_report(sort_buffer, sort_count);
 
     exit(0);
 }
