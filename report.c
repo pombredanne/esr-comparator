@@ -493,10 +493,10 @@ main(int argc, char *argv[])
     report_time("Reduction done");
 
     puts("#SHIF-B 1.0");
-    puts("Merge-Program: shredcompare 1.0");
-    printf("Shred-Size: %d\n", shiflist[0].shred_size);
     printf("Hash-Method: %s\n", shiflist[0].hash_method);
+    puts("Merge-Program: shredcompare 1.0");
     printf("Normalization: %s\n", shiflist[0].normalization);
+    printf("Shred-Size: %d\n", shiflist[0].shred_size);
     puts("%%");
 
     for (; hitlist->next; hitlist = hitlist->next)

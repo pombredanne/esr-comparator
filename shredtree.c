@@ -230,8 +230,8 @@ main(int argc, char *argv[])
     puts("#SHIF-A 1.0");
     puts("Generator-Program: shredtree 1.0");
     puts("Hash-Method: MD5");
-    printf("Shred-Size: %d\n", shredsize);
     printf("Normalization: %s\n", rws ? "remove_whitespace" : "none");
+    printf("Shred-Size: %d\n", shredsize);
     puts("%%");
 
     /* make file list */

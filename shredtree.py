@@ -102,12 +102,12 @@ if __name__ == '__main__':
         print "#SHIF-A 1.0"
         print "Generator-Program: shredtree.py 1.0"
         print "Hash-Method: MD5"
+        print "Normalization: %s" % ",".join(normalization);
         print "Shred-Size: %d" % shredsize
         normalization = []
         if ws: normalization.append("remove_whitespace")
         if not normalization:
             normalization.append("none")
-        print "Normalization: %s" % ",".join(normalization);
         print "%%"        
         filenames = []
         for root, dirs, files in os.walk(args[0]):

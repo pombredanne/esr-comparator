@@ -241,10 +241,10 @@ if __name__ == '__main__':
     report_time("Reduction done")
     # OK, dump all matches.
     print "#SHIF-B 1.0"
-    print "Merge-Program: shredcompare.py 1.0"
     print "Hash-Method: MD5"
-    print "Shred-Size: %d" % shiflist[0].shredsize
     print "Normalization:", ",".join(shiflist[0].normalization)
+    print "Merge-Program: shredcompare.py 1.0"
+    print "Shred-Size: %d" % shiflist[0].shredsize
     print "%%"
     # FIXME: do something appropriate with comments
     for match in matches:
