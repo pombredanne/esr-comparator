@@ -466,6 +466,10 @@ main(int argc, char *argv[])
     {
 	char	*olddir, *source = argv[optind];
 
+	scf = (struct scf_t *)calloc(sizeof(struct scf_t), 1);
+	scf->next = scflist;
+	scflist = scf;
+
 	if (is_scf_file(source))
 	{
 	    if (dir)
@@ -473,10 +477,7 @@ main(int argc, char *argv[])
 		olddir = getcwd(NULL, 0);	/* may fail off Linux */
 		chdir(dir);
 	    }
-	    scf = (struct scf_t *)malloc(sizeof(struct scf_t));
 	    init_scf(source, scf);
-	    scf->next = scflist;
-	    scflist = scf;
 	    if (dir)
 		chdir(olddir);
 	}
@@ -526,6 +527,9 @@ main(int argc, char *argv[])
 	/* consistency checks on the SCFs */
 	for (scf = scflist; scf->next->next; scf = scf->next)
 	{
+	    if (!scf->fp)
+		continue;
+
 	    if (strcmp(scf->normalization, scf->next->normalization))
 	    {
 		fprintf(stderr, 
@@ -552,10 +556,11 @@ main(int argc, char *argv[])
 
 	/* finish reading in all SCFs */
 	for (scf = scflist; scf->next; scf = scf->next)
-	{
-	    read_scf(scf);
-	    fclose(scf->fp);
-	}
+	    if (scf->fp)
+	    {
+		read_scf(scf);
+		fclose(scf->fp);
+	    }
 
     }
 
