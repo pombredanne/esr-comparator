@@ -196,9 +196,6 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 	     np->hash.start = UNIQUE_FLAG;
      if (HASHCMP(obarray+hashcount-2, obarray+hashcount-1))
 	 obarray[hashcount-1].hash.start = UNIQUE_FLAG;
-     for (np = obarray; np < obarray + hashcount; np++)
-	 printf("%d ", np->hash.start);
-     putchar('\n');
      /* ...then sweep. */
      for (mp = np = obarray; np < obarray + hashcount; np++)
 	 if (np->hash.start != UNIQUE_FLAG)
