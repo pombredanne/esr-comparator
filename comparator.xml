@@ -93,7 +93,7 @@ generates a SCF file from each tree specified on the command
 line.  The name of the resulting file is the argument name with
 <filename>.scf</filename> appended.</para>
 
-<para>The <option>-o</option> directs output to a specified file. This
+<para>The <option>-o</option> option directs output to a specified file. This
 may be used with <option>-c</option> to override the normal
 <filename>.scf</filename> convention, or simply as an alternative
 to ouput redirection when generating a final report.  One advantage
@@ -135,8 +135,8 @@ is for developers; if you need to understand it, read the code.</para>
 for figuring out which files in a tree are eligible to be compared.
 Files with <filename>.c</filename> and <filename>.h</filename>
 extensions are always eligible. Files with <filename>.o</filename> or
-<filename>~</filename> extensions are always ignored.  CVS, RCS, and
-SCCS directories are ignored.  Other files are checked to see if the
+<filename>~</filename> extensions are always ignored.  CVS, RCS,
+SCCS, and .svn directories are ignored.  Other files are checked to see if the
 percentage of printable characters near the front of the file is above
 90%.</para>
 </refsect2>
@@ -211,7 +211,7 @@ filter out spurious matches; thus, while
 5.</para>
 
 <para>The -f option takes a Python regexp as argument and throws out
-all cliques for which no assocoated filename matches the regexp.  This
+all cliques for which no associated filename matches the regexp.  This
 might be useful if you want to see a common-segment report only for
 files with a particular extension such as .h or .S.</para>
 
