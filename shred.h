@@ -50,7 +50,7 @@ extern int remove_braces;
 extern int remove_whitespace;
 extern int remove_comments;
 extern int verbose, debug;
-extern int shredsize;
+extern int shredsize, minsize;
 
 /* main.c functions */
 extern void report_time(char *legend, ...);

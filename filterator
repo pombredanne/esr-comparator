@@ -218,7 +218,7 @@ if __name__ == '__main__':
     try:
         (optlist, args) = getopt.getopt(sys.argv[1:], 'd:ns:Sx')
     except getopt.GetoptError:
-        sys.stderr.write("usage: filterator [-d dir] [-n] [-s size] [-x]\n")
+        sys.stderr.write("usage: filterator [-d dir] [-m size] [-n] [-x]\n")
         sys.exit(2)
     stats = nofilter = debug = 0
     minsize = 5
@@ -226,10 +226,10 @@ if __name__ == '__main__':
     for (opt, val) in optlist:
         if opt == '-d':
             os.chdir(val)
+        elif opt == '-m':
+            minsize = int(val)
         elif opt == '-n':
             nofilter = 1
-        elif opt == '-s':
-            minsize = int(val)
         elif opt == '-S':
             stats = 1
         elif opt == '-x':

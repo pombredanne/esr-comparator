@@ -10,7 +10,7 @@
 #include <time.h>
 #include "shred.h"
 
-int verbose = 0, debug = 0;
+int verbose, debug, minsize;
 
 struct scf_t
 {
@@ -392,10 +392,11 @@ static FILE *redirect(const char *outfile)
 
 static void usage(void)
 {
-    fprintf(stderr,"usage: comparator [-c] [-C] [-d dir ] [-r] [-o file] [-s shredsize] [-v] [-w] [-x] path...\n");
+    fprintf(stderr,"usage: comparator [-c] [-C] [-d dir ] [-m minsize] [-r] [-o file] [-s shredsize] [-v] [-w] [-x] path...\n");
     fprintf(stderr,"  -c      = generate SCF files\n");
     fprintf(stderr,"  -C      = apply C normalizations\n");
     fprintf(stderr,"  -d dir  = change directory before digesting.\n");
+    fprintf(stderr,"  -m size = set minimum size of span to be output.\n");
     fprintf(stderr,"  -o file = write to the specified file.\n");
     fprintf(stderr,"  -r      = renove comments\n");
     fprintf(stderr,"  -s size = set shred size (default %d)\n", shredsize);
@@ -418,7 +419,7 @@ main(int argc, char *argv[])
 
     compile_only = file_only = 0;
     dir = outfile = NULL;
-    while ((status = getopt(argc, argv, "cCd:ho:rs:vwx")) != EOF)
+    while ((status = getopt(argc, argv, "cCd:hm:o:rs:vwx")) != EOF)
     {
 	switch (status)
 	{
@@ -432,6 +433,10 @@ main(int argc, char *argv[])
 
 	case 'd':
 	    dir = optarg;
+	    break;
+
+	case 'm':
+	    minsize = atoi(optarg);
 	    break;
 
 	case 'o':

@@ -19,6 +19,7 @@
   <arg choice='opt'>-c</arg>
   <arg choice='opt'>-C</arg>
   <arg choice='opt'>-d <replaceable>dir</replaceable></arg>
+  <arg choice='opt'>-m <replaceable>size</replaceable></arg>
   <arg choice='opt'>-o <replaceable>file</replaceable></arg>
   <arg choice='opt'>-r</arg>
   <arg choice='opt'>-s <replaceable>shredsize</replaceable></arg>
@@ -29,8 +30,8 @@
   <sbr/>
   <command>filterator</command>
   <arg choice='opt'>-d <replaceable>dir</replaceable></arg>
+  <arg choice='opt'>-m <replaceable>minsize</replaceable></arg>
   <arg choice='opt'>-n</arg>
-  <arg choice='opt'>-s <replaceable>minsize</replaceable></arg>
   <arg choice='opt'>-x</arg>
 </cmdsynopsis>
 
@@ -88,7 +89,10 @@ line.  The name of the resulting file is the argument name with
 <para>The <option>-o</option> directs output to a specified file. This
 may be used with <option>-c</option> to override the normal
 <filename>.scf</filename> convention, or simply as an alternative
-to ouput redirection when generating a final report.</para>
+to ouput redirection when generating a final report.  One advantage
+of <option>-o</option> is that the program won't create the output
+file until it is ready to write; thus, unlike shell redirects, it
+won't leave an empty file lying aeound if it aborts early.</para>
 
 <para>The <option>-d</option> option changes current directory to the
 specified tree before walking down each argument path to generate
@@ -100,6 +104,14 @@ in the report to be relative.</para>
 shred sizes are more sensitive to small code duplications, but produce
 correspondingly noisier output.  Larger ones will suppress both noise
 and small similarities.</para>
+
+<para>The <option>-m</option> option sets the minimum-sized span
+of lines that will be output.  By default this is zero; setting it
+to a value higher than the shred size will eliminate a lot of junk
+from the report.  These are two separate parameters because shred size
+controls how likely common segments are to not get recognized because
+of unshared things near them, while minimum span size defines the
+smallest features we want to see in the output report.</para>
 
 <para>The <option>-w</option> causes all whitespace in the file
 (including blank lines) to be ignored for comparison purposes (line
@@ -141,7 +153,7 @@ The noise test for shell files throws away Bourne-shell keywords</para>
 
 <para>The <option>-n</option> suppresses noise filtering.  The
 <option>-d</option> acts as it does for
-<application>comparator</application>.  The <option>-s</option> option
+<application>comparator</application>.  The <option>-m</option> option
 sets the minimum size of overlap to be reported. Setting this to a
 slightly larger number than the <application>comparator</application>
 shred size is a useful way to filter out spurious matches; thus, while

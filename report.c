@@ -365,6 +365,22 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
     {
 	int	i;
 
+	if (minsize)
+	{
+	    int	maxsize = 0;
+
+	    for (i=0; i < match->nmatches; i++)
+	    {
+		struct sorthash_t	*rp = match->matches+i;
+		int matchsize = rp->hash.end - rp->hash.start + 1;
+
+		if (matchsize >= maxsize)
+		    maxsize = matchsize;
+	    }
+	    if (maxsize < minsize)
+		continue;
+	}
+
 	for (i=0; i < match->nmatches; i++)
 	{
 	    struct sorthash_t	*rp = match->matches+i;
