@@ -295,7 +295,7 @@ byte.  For the default RXOR hash the data is 8 bytes; for MD5, it is
 <variablelist>
 <varlistentry>
 <term><emphasis>0x40</emphasis></term>
-<listitem><para>This chunk is deemed significant.</para></listitem>
+<listitem><para>This chunk is deemed insignificant.</para></listitem>
 </varlistentry>
 <varlistentry>
 <term><emphasis>0x01</emphasis></term>
