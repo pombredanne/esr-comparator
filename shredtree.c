@@ -3,7 +3,16 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <ftw.h>
+
+#if defined(__FreeBSD__)
+# include <sys/types.h>
+# include <sys/stat.h>
+# include <fts.h>
+# define FTW_F 1
+#else
+# include <ftw.h>
+#endif
+
 #include <errno.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -281,10 +290,30 @@ char **sorted_file_list(const char *tree, int *fc)
 /* generate a sorted list of files under the given tree */
 {
     char	**place, **list;
+#if defined(__FreeBSD__)
+    char *dirlist[2];
+    FTS *ftsptr;
+    FTSENT *entry;
+#endif
 
     /* make file list */
     file_count = 0;
+#if defined(__FreeBSD__)
+    dirlist[0]= tree; dirlist[1]= NULL;
+    ftsptr= fts_open(dirlist, FTS_LOGICAL, NULL);
+
+    /* process each entry that is a file */
+    while(1) {
+      entry= fts_read(ftsptr);
+      if (entry==NULL) break;
+      if (entry->fts_info==FTS_F) {
+	treewalker(entry->fts_accpath, entry->fts_statp, 1);
+      }
+    }
+    fts_close(ftsptr);
+#else
     ftw(tree, treewalker, 16);
+#endif
 
     /* now that we know the length, copy into an array */
     list = place = (char **)calloc(sizeof(char *), file_count);
