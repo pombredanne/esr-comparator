@@ -14,6 +14,7 @@ def shortreport(clique):
         rep += "%% %s:%d-%d: (%d matches)\n" % \
               (file, start, end, len(clique))
         rep += text
+    rep += 75 * "-" + "\n"
     return rep
 
 def longreport(clique):
@@ -25,6 +26,7 @@ def longreport(clique):
         else:
             rep += "%% %s:%d-%d:\n" % (file, start, end)
     rep += text
+    rep += 75 * "-" + "\n"
     return rep
 
 if __name__ == '__main__':
