@@ -91,6 +91,9 @@ def report_common(stats=1,list=1):
                               int(m.group(3)), int(m.group(4))))
         if line == '%%\n':
             for (file, start, end, length) in locations:
+                if start == 1 and end == length:
+                    print "%% %s:%d-%d: entire (%d matches)" % (file, start, end, len(locations))
+                    continue
                 if end - start + 1 < minsize:
                     continue
                 try:
@@ -131,7 +134,7 @@ def report_common(stats=1,list=1):
                         count += 1
                         lines += end - start + 1
                         if list:
-                            print "%% %s:%s-%s: (%d matches)" % (file, start, end, len(locations))
+                            print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(locations))
                             sys.stdout.write(text)
                     locations = []
                     break
