@@ -188,7 +188,7 @@ main(int argc, char *argv[])
 
     int status;
     char **place, **list, *dir = ".";
-    while ((status = getopt(argc, argv, "cdhs:w")) != EOF)
+    while ((status = getopt(argc, argv, "cd:hs:w")) != EOF)
     {
 	switch (status)
 	{
