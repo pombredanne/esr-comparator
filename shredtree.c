@@ -162,6 +162,15 @@ int shredfile(struct filehdr_t *file,
     }
     if (accepted && accepted < shredsize)
 	hook(emit_chunk(display, linenumber), file);
+    else if (accepted)
+	/*
+	 * What this is for is to include trailing C } lines in chunk
+	 * listings even though we're ignoring them for comparison 
+	 * purposes (in order not to be fooled by variance in indent
+	 * styles).  This is a kluge, but it means we will capture
+	 * entire C functions that differ only by brace placement.
+	 */
+	extend_current_chunk(linenumber);
 
     free(display);
     fclose(fp);

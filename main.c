@@ -88,13 +88,13 @@ void corehook(struct hash_t hash, struct filehdr_t *file)
     sort_count++;
 }
 
-void extend_current_chunk(limit)
-/* bump the end-line number on the last chunk, if there is one */
+void extend_current_chunk(linenum_t linenumber)
+/* set the end-line number on the last chunk, if there is one */
 {
     if (sort_count > 0)
-	sort_buffer[sort_count-1].hash.end++;
+	sort_buffer[sort_count-1].hash.end = linenumber;
     if (chunk_count > 0)
-	chunk_buffer[chunk_count-1].end++;
+	chunk_buffer[chunk_count-1].end = linenumber;
 }
 
 static void write_options(char *buf)

@@ -70,7 +70,7 @@ extern int shredsize, minsize;
 extern void report_time(char *legend, ...);
 struct filehdr_t *register_file(const char *file, linenum_t length);
 extern void corehook(struct hash_t hash, struct filehdr_t *file);
-extern void extend_current_chunk(int);
+extern void extend_current_chunk(linenum_t);
 extern void dump_array(const char *legend,
 		       struct sorthash_t *obarray, int hashcount);
 extern void dump_flags(const int flags, FILE *fp);

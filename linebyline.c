@@ -213,7 +213,7 @@ feature_t *analyzer_get(const struct filehdr_t *file, FILE *fp, linenum_t *linen
     char	buf[BUFSIZ];
     static feature_t	feature;
 
-    while(fgets(buf, sizeof(buf), fp) != NULL)
+    while (fgets(buf, sizeof(buf), fp) != NULL)
     {
 	int	braceline = 0;
 
@@ -233,18 +233,7 @@ feature_t *analyzer_get(const struct filehdr_t *file, FILE *fp, linenum_t *linen
 	    braceline = (*cp == '}');
 	}
 	if (!normalize(buf))
-	{
-	    /*
-	     * What this is for is to include trailing C } lines in chunk
-	     * listings even though we're ignoring them for comparison 
-	     * purposes (in order not to be fooled by variance in indent
-	     * styles).  This is a kluge, but it means we will capture
-	     * entire C functions that differ only by brace placement.
-	     */
-	    if (remove_braces && braceline)
-		extend_current_chunk(file->length);
 	    continue;
-	}
 
 	/* maybe we can get the file type from the first line? */
 	if (linecount == 1 && buf[0] == '#')
