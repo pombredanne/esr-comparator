@@ -34,7 +34,7 @@ struct sorthash_t
     char		*file;
 };
 
-static report_time(char *legend)
+static void report_time(char *legend)
 {
     static time_t mark_time;
     time_t endtime = time(NULL);
@@ -52,12 +52,40 @@ static report_time(char *legend)
     mark_time = endtime;
 }
 
-static void merge_hashes(int argc, char *argv[])
+static struct sorthash_t *obarray, *np;
+
+void init_intern(const int count)
+/* prepare an alllocation area of a given size */
+{
+    np=obarray=(struct sorthash_t *)calloc(sizeof(struct sorthash_t),count);
+}
+
+void file_intern(const char *file)
+/* stash the name of a file */
+{
+    struct item *new;
+
+    printf("Interning: %s\n", file);
+    new = (struct item *)malloc(sizeof(new));
+    new->file = strdup(file);
+    new->next = head;
+    head = new;
+}
+
+void hash_intern(const struct hash_t *chunk)
+{
+    printf("Chunk: %d, %d\n", chunk->start, chunk->end);
+    np->file = head->file;
+    np->hash = *chunk;
+    np++;
+}
+
+static long merge_hashes(int argc, char *argv[])
 /* merge hashes from specified files into an in-code list */
 {
     struct shif_t *shiflist, *sp;
     struct stat sb;
-    long total;
+    long total, hashcount = 0;
 
     /* set up metadata blocks for the hash files */
     shiflist = (struct shif_t *)calloc(sizeof(struct shif_t), argc);
@@ -130,9 +158,10 @@ static void merge_hashes(int argc, char *argv[])
     for (sp = shiflist; sp < shiflist + argc; sp++)
     {
 	stat(sp->name, &sb);
-	total += sb.st_size;
+	total += sb.st_size - ftell(sp->fp);
     }
     fprintf(stderr, "%ld bytes to be read.\n", total);
+    init_intern(total/sizeof(struct hash_t));	/* real work done here */
 
     /* read in all hashes */
     for (sp = shiflist; sp < shiflist + argc; sp++)
@@ -160,33 +189,27 @@ static void merge_hashes(int argc, char *argv[])
 		this.start = FROMNET(this.start);
 		this.end = FROMNET(this.end);
 		hash_intern(&this);		/* real work done here */
+		hashcount++;
 	    }
 	}
     }
+
+    return hashcount;
 }
 
-void file_intern(const char *file)
-/* stash the name of a file */
+int sortchunk(void *a, void *b)
+/* sort by hash */
 {
-    struct item *new;
-
-    printf("Interning: %s\n", file);
-    new = (struct item *)malloc(sizeof(new));
-    new->file = strdup(file);
-    new->next = head;
-    head = new;
-}
-
-void hash_intern(const struct hash_t *chunk)
-{
-    printf("Chunk: %d, %d\n", chunk->start, chunk->end);
+    return memcmp(((struct sorthash_t *)a)->hash.hash, 
+		  ((struct sorthash_t *)b)->hash.hash, 
+		  HASHSIZE);
 }
 
 main(int argc, char *argv[])
 {
     extern char	*optarg;	/* set by getopt */
     extern int	optind;		/* set by getopt */
-    int	status, filecount;
+    int	status, hashcount;
 
     while ((status = getopt(argc, argv, "dh")) != EOF)
     {
@@ -206,10 +229,12 @@ main(int argc, char *argv[])
     }
 
     report_time(NULL);
-    merge_hashes(argc - optind, argv + optind);
+    hashcount = merge_hashes(argc - optind, argv + optind);
     report_time("Hash merge done.");
 
-    /* list files (DEBUG ONLY) */
-    for (; head->next; head = head->next)
-	printf("I see: %s\n", head->file);
+    /* the magic CPU-eating moment; sort the whole thing */ 
+    qsort(obarray, hashcount, sizeof(struct sorthash_t), sortchunk);
+
+    for (np = obarray; np < obarray + hashcount; np++)
+	printf("%s:%d:%d\n", np->file, np->hash.start, np->hash.end);
 }
