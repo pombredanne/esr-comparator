@@ -30,7 +30,7 @@ class Shred:
         self.file = file
         self.start = start
         self.end = end
-    def fetch(self):
+    def dump(self):
         rfp = open(self.file)
         for i in range(self.start):
             rfp.readline()
@@ -39,11 +39,11 @@ class Shred:
             text += rfp.readline()
         rfp.close()
         return text
-    def linerange(self):
+    def __range(self):
         return range(self.start, self.end)
     def intersects(self, other):
         return self.file == other.file and \
-           self.start in other.linerange() or other.start in self.linerange()
+           self.start in other.__range() or other.start in self.__range()
     def merge(self, other):
         self.start = min(self.start, other.start)
         self.end   = max(self.end,   other.end)
@@ -239,6 +239,6 @@ if __name__ == '__main__':
         for (source, target) in matches:
             print source, "->", target
             if verbose:
-                sys.stdout.write(source.fetch())
+                sys.stdout.write(source.dump())
 
 # End
