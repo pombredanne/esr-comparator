@@ -139,6 +139,12 @@ shred size is a useful way to filter out spurious matches; thus, while
 5. The <option>-x</option> enables some debugging output.  It is for
 developers; if you need to understand it, read the code.</para>
 
+<para>Each <application>filterator</application> line beginning with %
+is the filename from which the following common span of lines is displayed 
+<application>filterator</application> displays each span of lines,
+unnormalized, from the first file in the clique of matches that it can
+find and open.</para>
+
 <para>Occasionally the <application>filterator</application> output
 looks as through the code has failed to properly merge two or more
 overlapping line ranges, When this happens, the ranges have different
