@@ -94,10 +94,10 @@ and small similarities.</para>
 (including blank lines) to be ignored for comparison purposes (line
 numbers in the output report will nevertheless be correct).</para>
 
-<para>The <option>-C</option> applies C-language-specific
-normalization; { and } characters are removed.  This is recommended
-for comparing C code; it prevents the comparison won't be fooled by
-differences in indent style.</para>
+<para>The <option>-C</option> implies <option>-w</option> and also
+applies C-language-specific normalization; { and } characters are
+removed.  This is recommended for comparing C code; it prevents the
+comparison from being fooled by differences in indent style.</para>
 
 <para>The <option>-x</option> enables some debugging output.  It
 is for developers; if you need to understand it, read the code.</para>
@@ -140,12 +140,14 @@ updates and other resources.</para>
 
 <refsect1 id='bugs'><title>LIMITATIONS</title>
 
-<para><application>comparator</application> does not attempt to
-do semantic analysis and catch relatively trivial changes like renaming of
-variables, etc.  This is because <application>comparator</application>
-is designed not as a tool to detect plagiarism of ideas (the subject
-of patent law), but as a tool to detect copying of the expression 
-of ideas (the subject of copyright law).</para>
+<para><application>comparator</application> does not attempt to do
+semantic analysis and catch relatively trivial changes like renaming
+of variables, etc.  This is because
+<application>comparator</application> is designed not as a tool to
+detect plagiarism of ideas (the subject of patent law), but as a tool
+to detect copying of the expression of ideas (the subject of copyright
+law). Normalizing the code in excessively clever ways would trespass
+into the territory of ideas and tend to produce false positives.</para>
 
 <para>The heuristic for eligible files can be fooled, though this
 is unlikely.</para>
