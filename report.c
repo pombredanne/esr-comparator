@@ -471,10 +471,7 @@ int line_count(const char *name)
     for (match = hitlist; match < hitlist + mergecount; match++)
 	for (i=0; i < match->nmatches; i++)
 	    if (!strncmp(name, match->matches[i].file->name, strlen(name)))
-	    {
 		count += match->matches[i].hash.end -  match->matches[i].hash.start + 1;
-		break;
-	    }
 
     return(count);
 }
