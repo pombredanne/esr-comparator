@@ -29,7 +29,7 @@ struct hash_t
     linenum_t   	start, end;
     unsigned char	hash[HASHSIZE];
 };
-#define HASHCMP(s, t)	memcmp((s)->hash.hash, (t)->hash.hash, HASHSIZE)
+#define SORTHASHCMP(s, t)	memcmp((s)->hash.hash, (t)->hash.hash, HASHSIZE)
 
 struct filehdr_t
 {

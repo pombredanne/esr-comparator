@@ -291,7 +291,7 @@ char **sorted_file_list(const char *tree, int *fc)
 static int sortchunk(const void *a, const void *b)
 /* sort by hash */
 {
-    int cmp = HASHCMP((struct sorthash_t *)a, (struct sorthash_t *)b);
+    int cmp = SORTHASHCMP((struct sorthash_t *)a, (struct sorthash_t *)b);
 
     /*
      * Using the file name as a secondary key implies that, later on when

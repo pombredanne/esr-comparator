@@ -130,7 +130,7 @@ static void write_scf(const char *tree, FILE *ofp)
 	exit(1);
     }
 
-    fputs("#SCF-A 1.1\n", ofp);
+    fputs("#SCF-A 2.0\n", ofp);
     fputs("Generator-Program: comparator 1.0\n", ofp);
     fputs("Hash-Method: MD5\n", ofp);
     write_options(buf);
@@ -355,7 +355,7 @@ void dump_array(const char *legend,
 {
     struct sorthash_t	*np;
 
-    fputs(legend, stderr);
+    fputs(legend, stdout);
     for (np = obarray; np < obarray + hashcount; np++)
     {
 	struct hash_t scratch;
@@ -617,7 +617,7 @@ main(int argc, char *argv[])
 	    dump_array("Consolidated hash list:\n", sort_buffer, sort_count);
 
 	/* now we're ready to emit the report */
-	puts("#SCF-B 1.1");
+	puts("#SCF-B 2.0");
 	printf("Hash-Method: %s\n", scflist->hash_method);
 	puts("Merge-Program: comparator " VERSION);
 	printf("Normalization: %s\n", scflist->normalization);

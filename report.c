@@ -219,8 +219,8 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
       * point to the same tree.  We'll discard those in the next
       * phase.  This costs less time than one might think; without it,
       * the clique detector in the next phase would have to do an
-      * extra HASHCMP per array slot to detect clique boundaries.  Net
-      * cost of this optimization is thus *one* HASHCMP per entry.
+      * extra SORTHASHCMP per array slot to detect clique boundaries.  Net
+      * cost of this optimization is thus *one* SORTHASHCMP per entry.
       * The benefit is that it kicks lots of shreds out, reducing the
       * total working set at the time we build match lists.  The idea
       * here is to avoid swapping, because typical data sets are so
@@ -229,12 +229,12 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
       *
       * The technique: first mark...
       */
-     if (HASHCMP(obarray, obarray+1))
+     if (SORTHASHCMP(obarray, obarray+1))
 	 obarray[0].hash.start = UNIQUE_FLAG;
      for (np = obarray+1; np < obarray + hashcount-1; np++)
-	 if (HASHCMP(np, np-1) && HASHCMP(np, np+1))
+	 if (SORTHASHCMP(np, np-1) && SORTHASHCMP(np, np+1))
 	     np->hash.start = UNIQUE_FLAG;
-     if (HASHCMP(obarray+hashcount-2, obarray+hashcount-1))
+     if (SORTHASHCMP(obarray+hashcount-2, obarray+hashcount-1))
 	 obarray[hashcount-1].hash.start = UNIQUE_FLAG;
      /* ...then sweep. */
      for (mp = np = obarray; np < obarray + hashcount; np++)
@@ -266,7 +266,7 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 	 /* count the number of hash matches */
 	 nmatches = 1;
 	 for (mp = np+1; mp < obarray + hashcount; mp++)
-	     if (HASHCMP(np, mp))
+	     if (SORTHASHCMP(np, mp))
 		 break;
 	     else
 		 nmatches++;
