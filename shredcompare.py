@@ -4,16 +4,16 @@
 #
 import os, sys, time, stat, getopt, bsddb, struct
 
-class SHIF:
-    "SHIF-A file metadata container."
+class SCF:
+    "SCF-A file metadata container."
     def __init__(self, name):
         self.name = name
         self.fp = open(name)
         self.comments = []
         self.hashcount = 0
         id = self.fp.readline()
-        if not id.startswith("#SHIF-A "):
-            sys.stderr.write("shredcompare: %s is not a SHIF-A file."%self.fp.name)
+        if not id.startswith("#SCF-A "):
+            sys.stderr.write("shredcompare: %s is not a SCF-A file."%self.fp.name)
             sys.exit(1)
         while True:
             line = self.fp.readline()
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     shiflist = []
     # Read input metadata
     for file in args:
-        shiflist.append(SHIF(file))
+        shiflist.append(SCF(file))
     # Metadata sanity check
     for i in range(len(args)-1):
         shiflist[i].compatible(shiflist[i+1])
@@ -239,7 +239,7 @@ if __name__ == '__main__':
     print "After sorting:", matches
     report_time("Reduction done")
     # OK, dump all matches.
-    print "#SHIF-B 1.0"
+    print "#SCF-B 1.0"
     print "Hash-Method: MD5"
     print "Normalization:", ",".join(shiflist[0].normalization)
     print "Merge-Program: shredcompare.py 1.0"

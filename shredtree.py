@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# shredtree -- generate hash list in SHIF-A format for a given source tree
+# shredtree -- generate hash list in SCF-A format for a given source tree
 
 import sys, os, os.path, re, md5, getopt, struct
 
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         elif opt == '-x':
             debug = True
     if args:
-        print "#SHIF-A 1.0"
+        print "#SCF-A 1.0"
         print "Generator-Program: shredtree.py 1.0"
         print "Hash-Method: MD5"
         print "Normalization: %s" % ",".join(normalization);
