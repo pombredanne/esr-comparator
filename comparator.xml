@@ -117,7 +117,7 @@ same line are ignored; also, block /* comments are retained, but the
 beginning /* and ending */ are ignored, In other files, all #
 comments are removed.</para>
 
-<pata>The option <option>-v</option> enables progress and timing
+<para>The option <option>-v</option> enables progress and timing
 messages to standard error.</para>
 
 <para>The <option>-x</option> enables some debugging output.  It
