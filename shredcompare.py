@@ -53,6 +53,7 @@ import sys, os, os.path, re, md5, getopt, time, cPickle
 
 shredsize = 5
 verbose = False
+mark_time = None
 ws = re.compile(r"\s+")
 
 class Range:
@@ -149,15 +150,17 @@ def shredcompare(tree1, tree2):
                 matches = matches[:j] + matches[j+1:]
     return matches
 
-def report_time():
+def report_time(legend=None):
     "Report time since start_time was set."
+    global mark_time
     endtime = time.time()
-    if verbose:
-        elapsed = endtime - starttime 
+    if mark_time and verbose:
+        elapsed = endtime - mark_time 
         hours = elapsed/3600; elapsed %= 3600
         minutes = elapsed/60; elapsed %= 60
         seconds = elapsed
-        print "%% Done in %dh, %dm, %ds" % (hours, minutes, seconds)
+        print "%% %s: %dh, %dm, %ds" % (legend, hours, minutes, seconds)
+    mark_time = endtime
 
 if __name__ == '__main__':
     try:
@@ -173,16 +176,17 @@ if __name__ == '__main__':
             verbose = True
         elif opt == '-h':
             makehash = val
-    starttime = time.time()
+    report_time()
     if makehash:
         shreds = shredtree(makehash)
         wfp = open(makehash + ".hash", "w")
+        report_time("Shred list complete.")
         cPickle.dump(shreds, wfp)
         wfp.close()
-        report_time()
+        report_time("Pickling cmplete")
     else:
         matches = shredcompare(args[0], args[1])
-        report_time()
+        report_time("Match list complete")
         for (source, target) in matches:
             print source, "->", target
             sys.stdout.write(source.fetch())
