@@ -82,7 +82,7 @@ class CommonReport:
         self.name = None
         if type(fp) == type(""):
             self.name = fp
-            self.fp = file(self.name)
+            self.fp = open(self.name)
         # Read the SCF header
         self.dir = dir
         self.hash_method = "RXOR"
