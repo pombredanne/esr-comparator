@@ -569,7 +569,7 @@ main(int argc, char *argv[])
 	/* now we're ready to emit the report */
 	puts("#SCF-B 1.1");
 	printf("Hash-Method: %s\n", scflist->hash_method);
-	puts("Merge-Program: comparator 1.0");
+	puts("Merge-Program: comparator " VERSION);
 	printf("Normalization: %s\n", scflist->normalization);
 	printf("Shred-Size: %d\n", scflist->shred_size);
 	puts("%%");
