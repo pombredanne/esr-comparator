@@ -289,7 +289,6 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
     report_time("%d range groups after removing unique hashes", hashcount);
     mergecount = collapse_ranges(hitlist, hashcount);
     report_time("%d range groups after merging", mergecount);
-    report_time("Reduction done");
 
     /*
      * A little extra effort so we can generate a sirted report.
