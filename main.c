@@ -552,14 +552,17 @@ main(int argc, char *argv[])
 	else if (compile_only)
 	{
 	    FILE	*ofp;
+	    char	*scf_out;	
 
-	    if (!outfile)
+	    if (outfile)
+		scf_out = outfile;
+	    else
 	    {
-		outfile  = alloca(strlen(source) + 4);
-		strcpy(outfile, source);
-		strcat(outfile, ".scf");
+		scf_out  = alloca(strlen(source) + 4);
+		strcpy(scf_out, source);
+		strcat(scf_out, ".scf");
 	    }
-	    ofp = redirect(outfile);
+	    ofp = redirect(scf_out);
 
 	    if (dir)
 	    {
