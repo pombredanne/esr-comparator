@@ -129,14 +129,6 @@ class CommonReport:
         self.cliques = filtered
         self.matches = len(filtered)
 
-    def filter_by_size(self, minsize):
-        "Throw out all common segments below a specified size."
-        self.cliquefilter(lambda file, start, end: end - start + 1 >= minsize)
-
-    def filter_by_filename(self, regexp):
-        "Filter by name of involved file."
-        self.cliquefilter(lambda file, start, end: regexp.search(file))
-
     def metadump(self, fp=sys.stdout, divider="%%\n", fmt=None):
         "Dump the header in a canonical format."
         fp.write("Filter-Program: filterator 1.0\n")
@@ -159,9 +151,28 @@ class CommonReport:
                     fp.write(fmt(file, start, end, self.files[file]))
                 fp.write(divider)
 
+    def preen(self):
+        "Fix the file properties of this report."
+        matches = {}
+        matchlines = {}
+        for tree in self.trees:
+            matches[tree] = matchlines[tree] = 0
+        for clique in self.cliques:
+            firstmatch = {}
+            for tree in self.trees:
+                firstmatch[tree] = 0
+            for (file, start, end) in clique:
+                properties = self.trees[file.split("/")[0]]
+                if not tree in firstmatch:
+                    properties['matches'] += 1
+                    firstmatch[tree] = True 
+                properties['matchlines'] += end - start + 1
+        self.matches = len(self.cliques)
+
     def dump(self, fp):
-        "Dump this in the same format as the input."
-        fp.write("#SCF-B\n")
+        "Dump in SCF-B format."
+        self.preen()
+        fp.write("#SCF-B 2.0\n")
         self.metadump(fp=fp, divider="%%\n",
                       fmt=lambda f,s,e, z: "%s:%d:%d:%d\n" % (f,s,e,z))
 
