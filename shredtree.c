@@ -164,7 +164,7 @@ main(int argc, char *argv[])
 
     int status;
     char *dir = ".";
-    while ((status = getopt(argc, argv, "cds:w")) != EOF)
+    while ((status = getopt(argc, argv, "cdhs:w")) != EOF)
     {
 	switch (status)
 	{
@@ -184,8 +184,16 @@ main(int argc, char *argv[])
 	    rws = 1;
 	    break;
 
+	case 'h':
 	default:
-	    fputs("usage: [-s shredsize] [-w] path", stderr);
+	    fprintf(stderr,"usage: shredtree [-c] [-s shredsize] [-w] path\n");
+	    fprintf(stderr,"  -c      = check .c, .h, and .txt files only.\n");
+	    fprintf(stderr,"  -d      = debug, display chunks in output.\n");
+	    fprintf(stderr,"  -h      = help (display this message).\n");
+	    fprintf(stderr,"  -s size = set shred size (default %d)\n",
+		    shredsize);
+	    fprintf(stderr,"  -w      = remove whitespace.\n");
+	    exit(0);
 	}
     }
 
