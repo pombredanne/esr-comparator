@@ -189,16 +189,19 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
       *
       * The technique: first mark...
       */
-     if (!HASHCMP(obarray, obarray+1))
+     if (HASHCMP(obarray, obarray+1))
 	 obarray[0].hash.start = UNIQUE_FLAG;
      for (np = obarray+1; np < obarray + hashcount-1; np++)
-	 if (!HASHCMP(np, np-1) && !HASHCMP(np, np+1))
+	 if (HASHCMP(np, np-1) && HASHCMP(np, np+1))
 	     np->hash.start = UNIQUE_FLAG;
-     if (!HASHCMP(obarray+hashcount-2, obarray+hashcount-1))
+     if (HASHCMP(obarray+hashcount-2, obarray+hashcount-1))
 	 obarray[hashcount-1].hash.start = UNIQUE_FLAG;
+     for (np = obarray; np < obarray + hashcount; np++)
+	 printf("%d ", np->hash.start);
+     putchar('\n');
      /* ...then sweep. */
      for (mp = np = obarray; np < obarray + hashcount; np++)
-	 if (np->hash.start != UNIQUE_FLAG && mp < np)
+	 if (np->hash.start != UNIQUE_FLAG)
 	     *mp++ = *np;
      /* now we get to reduce the memory footprint */
      report_time("Compaction reduced %d shreds to %d", 
