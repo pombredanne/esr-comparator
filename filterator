@@ -150,7 +150,7 @@ if __name__ == '__main__':
         sys.stderr.write("usage: filterator [-d dir] [-n] [-s size] [-x]\n")
         sys.exit(2)
     nofilter = debug = 0
-    minsize = 0
+    minsize = 5
     linecounts = {}
     for (opt, val) in optlist:
         if opt == '-d':

@@ -131,10 +131,12 @@ The noise test for shell files throws away Bourne-shell keywords</para>
 <para>The <option>-n</option> suppresses noise filtering.  The
 <option>-d</option> acts as it does for
 <application>comparator</application>.  The <option>-s</option> option
-sets the minimum size of overlap to be reported; setting this to a
+sets the minimum size of overlap to be reported. Setting this to a
 slightly larger number than the <application>comparator</application>
-shred size may be a useful way to filter out spurious matches. The
-<option>-x</option> enables some debugging output.  It is for
+shred size is a useful way to filter out spurious matches; thus, while
+<application>comparator</application> defaults to a shred size of 3,
+<application>filterator</application> defaults to a minimum size of
+5. The <option>-x</option> enables some debugging output.  It is for
 developers; if you need to understand it, read the code.</para>
 
 <para>Occasionally the <application>filterator</application> output
