@@ -73,7 +73,7 @@ static int eligible(const char *file)
 
 typedef struct
 {
-    char	*line;
+    char	*feature;
     linenum_t  	start;
     flag_t	flags;
 }
@@ -82,29 +82,29 @@ shred;
 static struct hash_t emit_chunk(shred *display, int linecount) 
 /* emit chunk corresponding to current display */
 {
-    int  		i, firstline;
+    int  		i, firstindex;
     struct hash_t	out;
 
     /* build completed chunk onto end of array */
     out.flags = 0;
     hash_init();
-    firstline = shredsize;
+    firstindex = shredsize;
     for (i = shredsize - 1; i >= 0; i--)
-	if (display[i].line)
-	    firstline = i;
-    firstline = display[firstline].start;
+	if (display[i].feature)
+	    firstindex = i;
+    firstindex = display[firstindex].start;
     if (debug)
-	fprintf(stderr, "Chunk at line %d:\n", firstline);
+	fprintf(stderr, "Chunk at line %d:\n", firstindex);
     for (i = 0; i < shredsize; i++)
-	if (display[i].line)
+	if (display[i].feature)
 	{
 	    if (debug)
-		fprintf(stderr, "%d (%02x): '%s'\n", i, display[i].flags, display[i].line);
-	    hash_update(display[i].line, strlen(display[i].line));
+		fprintf(stderr, "%d (%02x): '%s'\n", i, display[i].flags, display[i].feature);
+	    hash_update(display[i].feature, strlen(display[i].feature));
 	    out.flags |= display[i].flags;
 	}
     hash_complete(&out.hash);
-    out.start = firstline;
+    out.start = firstindex;
     out.end = linecount;
 
     return(out);
@@ -139,13 +139,13 @@ int shredfile(struct filehdr_t *file,
 
     display = (shred *)calloc(sizeof(shred), shredsize);
 
-    linenumber = accepted=0;
+    linenumber = accepted = 0;
     while ((feature = analyzer_get(file, fp, &linenumber)))
     {
 	accepted++;
 
 	/* create new shred */
-	display[shredsize-1].line = feature->text;
+	display[shredsize-1].feature = feature->text;
 	display[shredsize-1].start = linenumber;
 	display[shredsize-1].flags = feature->flags;
 
@@ -154,10 +154,10 @@ int shredfile(struct filehdr_t *file,
 	    hook(emit_chunk(display, linenumber), file);
 
 	/* shreds in progress are shifted down */
-	analyzer_free(display[0].line);
+	analyzer_free(display[0].feature);
 	for (i=1; i < shredsize; i++)
 	    display[i-1] = display[i];
-	display[shredsize-1].line = NULL;
+	display[shredsize-1].feature = NULL;
 	display[shredsize-1].flags = 0;
     }
     if (accepted && accepted < shredsize)
