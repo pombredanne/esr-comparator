@@ -359,7 +359,7 @@ main(int argc, char *argv[])
     extern char	*optarg;	/* set by getopt */
     extern int	optind;		/* set by getopt */
 
-    int status, file_only, compile_only, nonuniques;
+    int status, file_only, compile_only;
     struct scf_t	*scf;
     char *dir, *outfile;
     struct sorthash_t *mp, *np;
@@ -587,18 +587,15 @@ main(int argc, char *argv[])
 	if (!HASHCMP(sort_buffer+sort_count-2, sort_buffer+sort_count-1))
 	    sort_buffer[sort_count-1].hash.start = UNIQUE_FLAG;
 	/* ...then sweep. */
-	nonuniques = 0;
-	for (mp = np = sort_buffer+1; np < sort_buffer + sort_count-1; np++)
+	for (mp = np = sort_buffer; np < sort_buffer + sort_count; np++)
 	    if (np->hash.start != UNIQUE_FLAG && mp < np)
-	    {
-		*mp = *np;
-		nonuniques++;
-	    }
-	sort_buffer = (struct sorthash_t *)realloc(sort_buffer, 
-			       sizeof(struct sorthash_t)* nonuniques);
+		*mp++ = *np;
+	/* now we get to reduce the memory footprint */
 	report_time("Compaction reduced %d entries to %d", 
-		    sort_count, nonuniques);
-	sort_count = nonuniques;
+		    sort_count, mp - sort_buffer);
+	sort_count = mp - sort_buffer;
+	sort_buffer = (struct sorthash_t *)realloc(sort_buffer, 
+			       sizeof(struct sorthash_t)* sort_count);
 
 	if (debug)
 	{
