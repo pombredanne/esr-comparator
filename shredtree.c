@@ -41,7 +41,7 @@ static int eligible(const char *file)
 #define endswith(suff)	!strcmp(suff, file + strlen(file) - strlen(suff))
     if (endswith(".c") || endswith(".h") || endswith(".html"))
 	return(1);
-    else if (endswith(".o"))
+    else if (endswith(".o") || endswith("~"))
 	return(0);
 #undef endswith
     else
