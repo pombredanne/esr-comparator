@@ -116,23 +116,13 @@ class ShredTree:
         fp = open(file)
         lines = map(self.__smash_whitespace, fp.readlines())
         fp.close()
-        for i in range(len(lines)):
+        for i in range(len(lines)-shredsize):
             if self.__is_line_relevant(lines[i]):
                 m = md5.new()
-                need = self.shredsize
-                j = 0
-                try:
-                    while need > 0:
-                        if i + j >= len(lines):
-                            raise EOFError
-                        if self.__is_line_relevant(lines[i+j]):
-                            m.update(lines[i+j])
-                            need -= 1
-                        j += 1
-                    # Merging shreds into a dict automatically suppresses dups.
-                    self.shreds[m.digest()] = Shred(file, i, i + j)
-                except EOFError:
-                    pass
+                for j in range(self.shredsize):
+                    m.update(lines[i+j])
+                # Merging shreds into a dict automatically suppresses duplicates.
+                self.shreds[m.digest()] = Shred(file, i, i + self.shredsize)
     def __eligible(self, file):
         "Is a file eligible for comparison?"
         return filter(lambda x: file.endswith(x), ('.c','h','.y','.l','.txt'))
