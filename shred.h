@@ -31,7 +31,7 @@ struct sorthash_t
 };
 
 /* control bits, meant to be set at startup */
-extern int c_only;
+extern int c_normalization;
 extern int rws;
 extern int debug;
 extern int shredsize;

@@ -5,7 +5,7 @@ VERS=1.1
 CODE    = shredtree.c shred.h report.c main.c md5.c md5.h filterator
 DOCS    = README comparator.xml scf-standard.xml COPYING
 EXTRAS  = shredtree.py shredcompare.py
-TEST    = test1 test2 test3 test4
+TEST    = test1
 SOURCES = $(CODE) $(DOCS) $(EXTRAS) $(TEST) comparator.spec Makefile
 CFLAGS=-g
 
@@ -33,10 +33,12 @@ comparator.html: comparator.xml
 scf-standard.html: scf-standard.xml
 	xmlto html-nochunks scf-standard.xml
 
-test-a: comparator
-	@comparator test1 test2
-test-b: comparator
-	@comparator test3 test4
+test1: comparator
+	@comparator -w -C -d test test1-a test1-b
+test2: comparator
+	@comparator -w -C -d test test2-a test2-b
+test3: comparator
+	@comparator -w -C -d test test3-a test3-b
 
 install: comparator.1 uninstall
 	install -m 755 -o 0 -g 0 -d $(ROOT)/usr/bin/

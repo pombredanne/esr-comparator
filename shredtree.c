@@ -11,7 +11,7 @@
 #include "shred.h"
 
 /* control bits, meant to be set at startup */
-int c_only = 0;
+int c_normalization = 0;
 int rws = 0;
 int shredsize = 3;
 
@@ -74,6 +74,15 @@ static int normalize(char *buf)
 
 	for (tp = sp = buf; *sp; sp++)
 	    if (*sp != ' ' && *sp != '\t' && *sp != '\n')
+		*tp++ = *sp;
+	*tp = '\0';
+    }
+    if (c_normalization)	/* strip whitespace, ignore blank lines */
+    {
+	char *tp, *sp;
+
+	for (tp = sp = buf; *sp; sp++)
+	    if (*sp != '{' && *sp != '}')
 		*tp++ = *sp;
 	*tp = '\0';
     }

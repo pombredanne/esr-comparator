@@ -21,6 +21,7 @@
   <arg choice='opt'>-o <replaceable>file</replaceable></arg>
   <arg choice='opt'>-s <replaceable>shredsize</replaceable></arg>
   <arg choice='opt'>-w</arg>
+  <arg choice='opt'>-C</arg>
   <arg choice='opt'>-x</arg>
   <arg choice='plain' rep='repeat'>path</arg>
   <sbr/>
@@ -91,9 +92,12 @@ and small similarities.</para>
 
 <para>The <option>-w</option> causes all whitespace in the file
 (including blank lines) to be ignored for comparison purposes (line
-numbers in the output report will nevertheless be correct).  This is
-recommended for comparing C code; among other things it means the
-comparison won't be fooled by differences in indent style.</para>
+numbers in the output report will nevertheless be correct).</para>
+
+<para>The <option>-C</option> applies C-language-specific
+normalization; { and } characters are removed.  This is recommended
+for comparing C code; it prevents the comparison won't be fooled by
+differences in indent style.</para>
 
 <para>The <option>-x</option> enables some debugging output.  It
 is for developers; if you need to understand it, read the code.</para>

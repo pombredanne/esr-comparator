@@ -342,12 +342,16 @@ main(int argc, char *argv[])
 
     compile_only = file_only = 0;
     dir = outfile = NULL;
-    while ((status = getopt(argc, argv, "cd:ho:s:wx")) != EOF)
+    while ((status = getopt(argc, argv, "cCd:ho:s:wx")) != EOF)
     {
 	switch (status)
 	{
 	case 'c':
 	    compile_only = 1;
+	    break;
+
+	case 'C':
+	    c_normalization = 1;
 	    break;
 
 	case 'd':
@@ -524,12 +528,12 @@ main(int argc, char *argv[])
 	sort_hashes(sort_buffer, sort_count);
 	report_time("Sort done");
 
-#ifdef DEBUG
 	if (debug)
 	{
 	    puts("Chunk list before reduction.");
-	    dump_array(obarray, hashcount, NULL);
+	    dump_array(sort_buffer, sort_count, NULL);
 	}
+#ifdef DEBUG
 #endif /* DEBUG */
 
 	emit_report(sort_buffer, sort_count);
