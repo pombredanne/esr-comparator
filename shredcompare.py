@@ -98,7 +98,7 @@ def merge_hashes(fp, dict):
         dict[hashval] = oldval + file + "\t" + `start` + "\t" + `end` + "\n"
         hashcount += 1
         if hashcount % 10000 == 0:
-            sys.stderr.write("%02.2f%% read.\n" % (fp.tell() / (total * 0.01)))
+            sys.stderr.write("\b\b\b%02.0f%%" % (fp.tell() / (total * 0.01)))
     return True
 
 def item_factory(db):
@@ -156,7 +156,7 @@ if __name__ == '__main__':
     for i in range(len(args)-1):
         shiflist[i].compatible(shiflist[i+1])
     # Compute amount of data to be read
-    total = sum(map(filesize, args))
+    total = sum(map(lambda x: filesize(x.name) - x.fp.tell(), shiflist))
     sys.stderr.write("%d bytes of data to be read\n" % total)
     # Read in the filecounts, though this implementation won't use them.
     for shif in shiflist:
@@ -164,8 +164,10 @@ if __name__ == '__main__':
     # Read in all hashes
     hashdict = bsddb.hashopen(None, 'c')
     for shif in shiflist:
+        sys.stderr.write("Reading...   ")
         while merge_hashes(shif.fp, hashdict):
             continue
+        sys.stderr.write("\b\b\b100%...done\n")
     report_time("Hash merge done, %d entries" % hashcount)
     # Nuke all unique hashes
     nonuniques = 0
