@@ -32,8 +32,6 @@ struct hash_t
     hashval_t		hash;
     flag_t		flags;
 #define INSIGNIFICANT	0x40	/* pure syntax in  a programming language */
-#define C_CODE		0x01	/* identified as C code */
-#define SHELL_CODE	0x02	/* identified as shell code */
 #define CATEGORIZED	0x03	/* we can significance-test this */
 #define INTERNAL_FLAG	0x80	/* internal use only */
 };
@@ -71,6 +69,10 @@ struct analyzer_t	/* structure describing a feature analyzer */
     void (*free)(const char *);
     void (*dump)(char *);
 };
+
+/* mode bits for controlling the analyzer */
+#define C_CODE		0x01	/* identified as C code */
+#define SHELL_CODE	0x02	/* identified as shell code */
 
 /* control bits, meant to be set at startup */
 extern int verbose, debug, nofilter;
