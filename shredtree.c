@@ -187,6 +187,7 @@ main(int argc, char *argv[])
     extern int	optind;		/* set by getopt */
 
     int status;
+    u_int32_t	netfilecount;
     char **place, **list, *dir = ".";
     while ((status = getopt(argc, argv, "cd:hs:w")) != EOF)
     {
@@ -244,6 +245,9 @@ main(int argc, char *argv[])
     /* the objective -- sort */
     qsort(list, filecount, sizeof(char *), stringsort);
 
+    /* generate the list */
+    netfilecount = htonl(filecount);
+    fwrite(&netfilecount, sizeof(u_int32_t), 1, stdout);
     for (place = list; place < list + filecount; place++)
 	shredfile(*place);
 

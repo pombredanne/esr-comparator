@@ -86,11 +86,11 @@ def merge_hashes(fp, dict):
         return False
     file = file.strip()
     # Record count comes right after the filename
-    (record_count,) = struct.unpack("!i", fp.read(4))
+    (record_count,) = struct.unpack("!H", fp.read(2))
     while record_count > 0:
         record_count -= 1
         # 4 bytes of start line number + 4 of end line number + 16 of MD5 hash
-        (start, end, hashval) = struct.unpack("!ii16s", fp.read(24))
+        (start, end, hashval) = struct.unpack("!HH16s", fp.read(20))
         if dict.has_key(hashval):
             oldval = dict[hashval]
         else:
@@ -155,6 +155,9 @@ if __name__ == '__main__':
     # Compute amount of data to be read
     total = sum(map(filesize, args))
     sys.stderr.write("%d bytes of data to be read\n" % total)
+    # Read in the filecounts, though this implementation won't use them.
+    for shif in shiflist:
+        shif.fp.read(struct.calcsize("!i"))
     # Read in all hashes
     hashdict = bsddb.hashopen(None, 'c')
     for shif in shiflist:

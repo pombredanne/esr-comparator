@@ -32,7 +32,7 @@ def emit_chunk(display, file, linecount):
         if debug:
             sys.stderr.write(`line[0]` + "\n")
         m.update(line[0])
-    return struct.pack("!ii", startline, linecount) + m.digest()
+    return struct.pack("!HH", startline, linecount) + m.digest()
 
 def shredfile(file):
     "Emit shred tuples corresponding to a specified file."
@@ -67,7 +67,7 @@ def shredfile(file):
 	outdata += emit_chunk(display, file, linecount)
         chunk_count += 1
     # Write the actual data
-    sys.stdout.write(file + "\n" + struct.pack("!i", chunk_count) + outdata)
+    sys.stdout.write(file + "\n" + struct.pack("!H", chunk_count) + outdata)
 
 if __name__ == '__main__':
     try:
@@ -116,6 +116,7 @@ if __name__ == '__main__':
                 if eligible(fullpath):
                     filenames.append(fullpath)
         filenames.sort()
+        sys.stdout.write(struct.pack("!i", len(filenames)))
         for path in filenames:
             shredfile(path)
 # End

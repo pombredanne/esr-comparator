@@ -134,7 +134,7 @@ main(int argc, char *argv[])
 
     /* compute total data to be read, we'll use this for the progress meter */
     total = 0;
-    for (sp = shiflist; sp < shiflist + filecount-1; sp++)
+    for (sp = shiflist; sp < shiflist + filecount; sp++)
     {
 	stat(sp->name, &sb);
 	total += sb.st_size;
@@ -142,4 +142,7 @@ main(int argc, char *argv[])
     fprintf(stderr, "%ld bytes to be read.\n", total);
 
     /* read in all hashes */
+    for (sp = shiflist; sp < shiflist + filecount; sp++)
+    {
+    }
 }
