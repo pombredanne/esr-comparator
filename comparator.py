@@ -24,6 +24,7 @@ class CommonReport:
         self.hash_method = "RXOR"
         self.merge_program = None
         self.filtering = None
+        self.matches = None
         id = self.fp.readline()
         if not id.startswith("#SCF-B "):
             raise ComparatorException("input is not a SCF-B file.\n")
@@ -83,6 +84,8 @@ class CommonReport:
         # We're done, clean up
         if self.name:
             self.fp.close()
+        if len(self.cliques) != self.matches:
+            raise ComparatorException("Matches field not equal to clique count.")
 
     def extract_text(self, clique):
         "Return text corresponding to the given clique."
@@ -124,6 +127,7 @@ class CommonReport:
                 properties['matches'] -= 1
                 properties['matchlines'] -= end - start + 1
         self.cliques = filtered
+        self.matches = len(filtered)
 
     def filter_by_size(self, minsize):
         "Throw out all common segments below a specified size."
@@ -133,7 +137,7 @@ class CommonReport:
         "Filter by name of involved file."
         self.cliquefilter(lambda file, start, end: regexp.search(file))
 
-    def metadump(self, fp=sys.stdout, divider="%%n", fmt=None):
+    def metadump(self, fp=sys.stdout, divider="%%\n", fmt=None):
         "Dump the header in a canonical format."
         fp.write("Filter-Program: filterator 1.0\n")
         fp.write("Hash-Method: RXOR\n")
@@ -142,8 +146,6 @@ class CommonReport:
         fp.write("Normalization: %s\n" % self.normalization)
         fp.write("Shred-Size: %d\n" %  self.shredsize)
         fp.write("Filtering: %s\n" %  self.filtering)
-        #if minsize:
-        #    fp.write("Minimum-Size: %d\n" % minsize)
         fp.write(divider)
         for tree in self.trees:
             rep = tree + ":"
