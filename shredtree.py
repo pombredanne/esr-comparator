@@ -5,7 +5,7 @@
 import sys, os, os.path, re, md5, getopt
 import shred
 
-ws = re.compile(r"[ \t\n]+")
+whitespace = re.compile(r"[ \t\n]+")
 
 def eligible(file):
     "Is a file eligible for comparison?"
@@ -20,7 +20,7 @@ def eligible(file):
 
 def normalize(line):
     if ws:
-        return ws.sub('', line)
+        return whitespace.sub('', line)
     else:
         return line
 
