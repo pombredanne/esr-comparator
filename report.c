@@ -311,7 +311,18 @@ struct match_t *reduce_matches(int localdups)
 int sortchunk(void *a, void *b)
 /* sort by hash */
 {
-    return HASHCMP((struct sorthash_t *)a, (struct sorthash_t *)b);
+    int cmp = HASHCMP((struct sorthash_t *)a, (struct sorthash_t *)b);
+
+    /*
+     * Using the file name as a secondary key implies that, later on when
+     * we use sort adjacency to build a duplicates list, the duplicates
+     * will be ordered by filename -- thus, implicitly, by tree of origin.
+     */
+    if (cmp)
+	return(cmp);
+    else
+	return(strcmp(((struct sorthash_t *)a)->file,
+		      ((struct sorthash_t *)b)->file));
 }
 
 main(int argc, char *argv[])
