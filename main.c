@@ -130,10 +130,8 @@ static void write_scf(const char *tree, FILE *ofp)
 		       this.hash[14], 
 		       this.hash[15],
 		       *place, this.start, this.end);
-#ifdef NON_NATIVE
 	    this.start = TONET(this.start);
 	    this.end   = TONET(this.end);
-#endif /* NON_NATIVE */
 	    fwrite(&this.start, sizeof(linenum_t), 1, ofp);
 	    fwrite(&this.end,   sizeof(linenum_t), 1, ofp);
 	    fwrite(&this.hash,  sizeof(char), HASHSIZE, ofp);
@@ -176,10 +174,8 @@ void merge_scf(const char *name, FILE *fp)
 	    fread(&this.start, sizeof(linenum_t), 1, fp);
 	    fread(&this.end,  sizeof(linenum_t), 1, fp);
 	    fread(this.hash, sizeof(char), HASHSIZE, fp);
-#ifdef NON_NATIVE
 	    this.start = FROMNET(this.start);
 	    this.end = FROMNET(this.end);
-#endif /* NON_NATIVE */
 	    corehook(this, name);
 	    hashcount++;
 	    if (hashcount % 10000 == 0)
