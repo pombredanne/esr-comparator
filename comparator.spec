@@ -44,7 +44,7 @@ cp comparator.py "$RPM_BUILD_ROOT"${pylib}
 %{_libdir}/python*/site-packages/comparator.py
 
 %changelog
-* Tue Mar  9 2004 Eric S. Raymond <esr@snark.thyrsus.com> 2.4-1
+* Thu Mar 11 2004 Eric S. Raymond <esr@snark.thyrsus.com> 2.4-1
 - Fixed strtok() bug apparently introduced by C library change.
   Added -n, -f, and -F options to filterator.
 
