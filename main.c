@@ -291,6 +291,11 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
 
 	/* read in the SCF metadata block and add it to the in-core list */
 	scf->fp   = fopen(scf->name, "r");
+	if (!scf->fp)
+	{
+	    fprintf(stderr, "comparator: file %s, %s", scf->name, strerror(errno));
+	    exit(1);
+	}
 	fgets(buf, sizeof(buf), scf->fp);
 	if (strncmp(buf, "#SCF-A 2.0", 9))
 	{
@@ -494,16 +499,7 @@ main(int argc, char *argv[])
 	scflist = scf;
 
 	if (is_scf_file(source))
-	{
-	    if (dir)
-	    {
-		olddir = getcwd(NULL, 0);	/* may fail off Linux */
-		chdir(dir);
-	    }
 	    init_scf(source, scf, 1);
-	    if (dir)
-		chdir(olddir);
-	}
 	else if (compile_only)
 	{
 	    FILE	*ofp;
