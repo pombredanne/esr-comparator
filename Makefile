@@ -31,9 +31,9 @@ comparator.html: comparator.xml
 	xmlto html-nochunks comparator.xml
 
 test-a: comparator
-	comparator test1 test2
+	@comparator test1 test2
 test-b: comparator
-	comparator test3 test4
+	@comparator test3 test4
 
 install: comparator.1 uninstall
 	install -m 755 -o 0 -g 0 -d $(ROOT)/usr/bin/
