@@ -1,9 +1,9 @@
 # Makefile for the comparator/filterator tools
 
-VERS=1.0
+VERS=1.1
 
 CODE    = shredtree.c shred.h report.c main.c md5.c md5.h filterator
-DOCS    = README comparator.xml scf-standard.xml
+DOCS    = README comparator.xml scf-standard.xml COPYING
 EXTRAS  = shredtree.py shredcompare.py
 TEST    = test1 test2 test3 test4
 SOURCES = $(CODE) $(DOCS) $(EXTRAS) $(TEST) comparator.spec Makefile
