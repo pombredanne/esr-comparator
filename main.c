@@ -22,7 +22,7 @@ struct scf_t
     char	*generator_program;
     struct scf_t *next;
 };
-static struct scf_t dummy_scf, *scf_head = &dummy_scf;
+static struct scf_t dummy_scf, *scflist = &dummy_scf;
 
 static int chunk_count, sort_count;
 static struct hash_t *chunk_buffer;
@@ -282,8 +282,8 @@ static void init_scf(char *file)
     }
 
     new->name = strdup(file);
-    new->next = scf_head;
-    scf_head = new;
+    new->next = scflist;
+    scflist = new;
 }
 
 static void dump_array(struct sorthash_t *obarray, 
@@ -497,7 +497,7 @@ main(int argc, char *argv[])
     }
 
     /* if there were no SCFs, create a dummy one */
-    if (scf_head == &dummy_scf)
+    if (scflist == &dummy_scf)
     {
 	char	buf[BUFSIZ];
 
@@ -520,7 +520,7 @@ main(int argc, char *argv[])
     else
     {
 	/* consistency checks on the SCFs */
-	for (scf = scf_head; scf->next->next; scf = scf->next)
+	for (scf = scflist; scf->next->next; scf = scf->next)
 	{
 	    if (strcmp(scf->normalization, scf->next->normalization))
 	    {
@@ -547,7 +547,7 @@ main(int argc, char *argv[])
 	}
 
 	/* finish reading in all SCFs */
-	for (scf = scf_head; scf->next; scf = scf->next)
+	for (scf = scflist; scf->next; scf = scf->next)
 	{
 	    read_scf(scf);
 	    fclose(scf->fp);
@@ -565,10 +565,10 @@ main(int argc, char *argv[])
 
 	/* now we're ready to emit the report */
 	puts("#SCF-B 1.0");
-	printf("Hash-Method: %s\n", scf_head->hash_method);
+	printf("Hash-Method: %s\n", scflist->hash_method);
 	puts("Merge-Program: comparator 1.0");
-	printf("Normalization: %s\n", scf_head->normalization);
-	printf("Shred-Size: %d\n", scf_head->shred_size);
+	printf("Normalization: %s\n", scflist->normalization);
+	printf("Shred-Size: %d\n", scflist->shred_size);
 	puts("%%");
 
 	report_time("Hash merge done, %d shreds", sort_count);
