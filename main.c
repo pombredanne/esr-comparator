@@ -363,7 +363,7 @@ main(int argc, char *argv[])
     extern char	*optarg;	/* set by getopt */
     extern int	optind;		/* set by getopt */
 
-    int status, file_only, compile_only;
+    int status, file_only, compile_only, argcount;
     struct scf_t	*scf;
     char *dir, *outfile;
     struct sorthash_t *np;
@@ -416,7 +416,8 @@ main(int argc, char *argv[])
 	sort_count = 0;
     }
 
-    if ((argc - optind) == 0)
+    argcount = (argc - optind);
+    if (argcount == 0)
 	usage();
 
     report_time(NULL);
@@ -431,7 +432,7 @@ main(int argc, char *argv[])
     }
 
     /* special case if user gave exactly one tree */
-    if (!compile_only && optind == argc - 1)
+    if (!compile_only && argcount == 1)
     {
 	write_scf(argv[optind], stdout);
 	exit(0);
