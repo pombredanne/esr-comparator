@@ -30,7 +30,7 @@ struct sorthash_t
     char		*file;
 };
 
-struct shif_t
+struct scif_t
 {
     char	*name;
     FILE	*fp;
@@ -50,11 +50,11 @@ extern int shredsize;
 /* shredtree.c functions */
 extern char **sorted_file_list(const char *, int *);
 extern void shredfile(const char *, void (*hook)(struct hash_t, const char *));
-extern struct shif_t *init_merge(int argc, char *argv[]);
-extern struct sorthash_t *merge_hashes(struct shif_t *shif, int shiflen, 
+extern struct scif_t *init_merge(int argc, char *argv[]);
+extern struct sorthash_t *merge_hashes(struct scif_t *scif, int sciflen, 
 				       int *count);
 extern void sort_hashes(struct sorthash_t *hashlist, int hashcount);
-extern void emit_report(struct shif_t *, 
+extern void emit_report(struct scif_t *, 
 			struct sorthash_t *obarray, int hashcount);
 extern void report_time(char *legend, ...);
 

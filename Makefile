@@ -19,6 +19,6 @@ clean:
 	rm -f comparator shredtree.o md5.o shredcompare.o TEST1 TEST2
 
 test-a: comparator
-	comparator -e -c test1 test2
+	comparator test1 test2
 test-b: comparator
-	comparator -e -c test3 test4
+	comparator test3 test4

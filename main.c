@@ -48,7 +48,7 @@ static void generate_shredfile(const char *tree, FILE *ofp)
 
     list = sorted_file_list(tree, &file_count);
 
-    fputs("#SHIF-A 1.0\n", ofp);
+    fputs("#SCIF-A 1.0\n", ofp);
     fputs("Generator-Program: comparator 1.0\n", ofp);
     fputs("Hash-Method: MD5\n", ofp);
     fprintf(ofp, "Normalization: %s\n", rws ? "remove_whitespace" : "none");
@@ -125,27 +125,19 @@ main(int argc, char *argv[])
     extern char	*optarg;	/* set by getopt */
     extern int	optind;		/* set by getopt */
 
-    int status, file_only, exec_direct;
+    int status, file_only, compile_only;
 
-    exec_direct = file_only = 0;
-    while ((status = getopt(argc, argv, "cd:efhs:w")) != EOF)
+    compile_only = file_only = 0;
+    while ((status = getopt(argc, argv, "cd:hs:w")) != EOF)
     {
 	switch (status)
 	{
 	case 'c':
-	    c_only = 1;
+	    compile_only = 1;
 	    break;
 
 	case 'd':
 	    chdir(optarg);
-	    break;
-
-	case 'e':
-	    exec_direct = 1;
-	    break;
-
-	case 'f':
-	    file_only = 1;
 	    break;
 
 	case 's':
@@ -162,10 +154,9 @@ main(int argc, char *argv[])
 
 	case 'h':
 	default:
-	    fprintf(stderr,"usage: shredtree [-c] [-d dir ] [-s shredsize] [-w] [-x] path\n");
-	    fprintf(stderr,"  -c      = check .c, .h, and .txt files only.\n");
+	    fprintf(stderr,"usage: shredtree [-c] [-d dir ] [-h] [-s shredsize] [-w] [-x] path\n");
+	    fprintf(stderr,"  -c      = generate SCIF files\n");
 	    fprintf(stderr,"  -d dir  = change directory before digesting.\n");
-	    fprintf(stderr,"  -e      = pass structures in core\n");
 	    fprintf(stderr,"  -h      = help (display this message).\n");
 	    fprintf(stderr,"  -s size = set shred size (default %d)\n",
 		    shredsize);
@@ -175,11 +166,11 @@ main(int argc, char *argv[])
 	}
     }
 
-    if (file_only)
+    if (compile_only)
 	generate_shredfile(argv[optind], stdout);
-    else if (exec_direct)
+    else
     {
-	struct shif_t	localblock;
+	struct scif_t	localblock;
 
 	localblock.hash_method = "MD5";
 	localblock.normalization = rws ? "remove_whitespace" : "none";
@@ -193,22 +184,25 @@ main(int argc, char *argv[])
 	report_time("Sort done");
 	emit_report(&localblock, sort_buffer, sort_count);	
     }
+
+#if 0
     else
     {
 	int	hashcount;
 	struct sorthash_t *obarray;
-	struct shif_t	*shiflist;
+	struct scif_t	*sciflist;
 
 	report_time(NULL);
-	shiflist = init_merge(argc-optind, argv+optind);
-	obarray = merge_hashes(shiflist, argc-optind, &hashcount);
+	sciflist = init_merge(argc-optind, argv+optind);
+	obarray = merge_hashes(sciflist, argc-optind, &hashcount);
 	report_time("Hash merge done, %d entries", hashcount);
 	sort_hashes(obarray, hashcount);
 	report_time("Sort done");
-	emit_report(shiflist, obarray, hashcount);
+	emit_report(sciflist, obarray, hashcount);
     }
-    exit(0);
+#endif /* FOO */
 
+    exit(0);
 }
 
 /* main.c ends here */

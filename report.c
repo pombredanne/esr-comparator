@@ -19,7 +19,7 @@ struct item
 dummy_item;
 static struct item *head = &dummy_item;
 
-static struct shif_t *shiflist;
+static struct scif_t *sciflist;
 
 struct range_t
 {
@@ -50,23 +50,23 @@ static void file_intern(const char *file)
     head = new;
 }
 
-struct shif_t *init_merge(int argc, char *argv[])
+struct scif_t *init_merge(int argc, char *argv[])
 {
-    struct shif_t *sp;
+    struct scif_t *sp;
 
     /* set up metadata blocks for the hash files */
-    shiflist = (struct shif_t *)calloc(sizeof(struct shif_t), argc);
-    for (sp = shiflist; sp < shiflist + argc; sp++)
+    sciflist = (struct scif_t *)calloc(sizeof(struct scif_t), argc);
+    for (sp = sciflist; sp < sciflist + argc; sp++)
     {
 	char	buf[BUFSIZ];
 
-	sp->name = strdup(argv[sp - shiflist]);
+	sp->name = strdup(argv[sp - sciflist]);
 	sp->fp   = fopen(sp->name, "r");
 	fgets(buf, sizeof(buf), sp->fp);
-	if (strncmp(buf, "#SHIF-A ", 8))
+	if (strncmp(buf, "#SCIF-A ", 8))
 	{
 	    fprintf(stderr, 
-		    "shredcompare: %s is not a SHIF-A file.", 
+		    "shredcompare: %s is not a SCIF-A file.", 
 		    sp->name);
 	    exit(1);
 	}
@@ -94,9 +94,9 @@ struct shif_t *init_merge(int argc, char *argv[])
     }
 
     /* consistency checks */
-    for (sp = shiflist; sp < shiflist + argc-1; sp++)
+    for (sp = sciflist; sp < sciflist + argc-1; sp++)
     {
-	struct shif_t	*next = sp + 1;
+	struct scif_t	*next = sp + 1;
 
 	if (strcmp(sp->normalization, next->normalization))
 	{
@@ -122,13 +122,13 @@ struct shif_t *init_merge(int argc, char *argv[])
 	}
     }
 
-    return(shiflist);
+    return(sciflist);
 }
 
-struct sorthash_t *merge_hashes(struct shif_t *shiflist, int shiflen, int *count)
+struct sorthash_t *merge_hashes(struct scif_t *sciflist, int sciflen, int *count)
 /* merge hashes from specified files into an in-code list */
 {
-    struct shif_t *sp;
+    struct scif_t *sp;
     long total;
     struct sorthash_t *obarray;
     int hashcount;
@@ -136,7 +136,7 @@ struct sorthash_t *merge_hashes(struct shif_t *shiflist, int shiflen, int *count
 
     /* compute total data to be read, we'll use this for the progress meter */
     total = 0;
-    for (sp = shiflist; sp < shiflist + shiflen; sp++)
+    for (sp = sciflist; sp < sciflist + sciflen; sp++)
     {
 	stat(sp->name, &sb);
 	total += sb.st_size - ftell(sp->fp);
@@ -151,7 +151,7 @@ struct sorthash_t *merge_hashes(struct shif_t *shiflist, int shiflen, int *count
 
     /* read in all hashes */
     hashcount = 0;
-    for (sp = shiflist; sp < shiflist + shiflen; sp++)
+    for (sp = sciflist; sp < sciflist + sciflen; sp++)
     {
 	u_int32_t	sectcount;
 
@@ -414,7 +414,7 @@ static int sortmatch(void *a, void *b)
     return(0);
 }
 
-void emit_report(struct shif_t *shif, 
+void emit_report(struct scif_t *scif, 
 		 struct sorthash_t *obarray, int hashcount)
 {
     struct match_t *hitlist, *sorted, *match;
@@ -446,11 +446,11 @@ void emit_report(struct shif_t *shif,
     hitlist = reduce_matches(obarray, hashcount);
     report_time("Reduction done");
 
-    puts("#SHIF-B 1.0");
-    printf("Hash-Method: %s\n", shif->hash_method);
+    puts("#SCIF-B 1.0");
+    printf("Hash-Method: %s\n", scif->hash_method);
     puts("Merge-Program: comparator 1.0");
-    printf("Normalization: %s\n", shif->normalization);
-    printf("Shred-Size: %d\n", shif->shred_size);
+    printf("Normalization: %s\n", scif->normalization);
+    printf("Shred-Size: %d\n", scif->shred_size);
     puts("%%");
 
     /* we go through a little extra effort to emit a sorted list */

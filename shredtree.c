@@ -32,15 +32,36 @@ static int file_count;
  *
  *************************************************************************/
 
+#define MIN_PRINTABLE	0.9
+
 static int eligible(const char *file)
 /* is the specified file eligible to be compared? */ 
 {
+    /* fast check for the most common suffixes */
 #define endswith(suff)	!strcmp(suff, file + strlen(file) - strlen(suff))
-    if (c_only)
-	return endswith(".c") || endswith(".h") || endswith(".txt");
-    else
+    if (endswith(".c") || endswith(".h") || endswith(".html"))
 	return(1);
+    else if (endswith(".o"))
+	return(0);
 #undef endswith
+    else
+    {
+	FILE	*fp = fopen(file, "r");
+	char	buf[BUFSIZ], *cp;
+	int	printable;
+
+	if (!fp || !fgets(buf, sizeof(buf)-1, fp))
+	    return(0);
+	fclose(fp);
+
+	/* count printables */
+	for (cp = buf; *cp; cp++)
+	    if (isascii(*cp))
+		printable++;
+
+	/* are we over the critical percentage? */
+	return (printable/strlen(buf) >= MIN_PRINTABLE);
+    }
 }
 
 static int normalize(char *buf)
