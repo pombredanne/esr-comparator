@@ -7,6 +7,8 @@ with a filtering postprecessor, filterator.
 Besides the production C code, the distribution also includes 
 working Python versions.  These were used to prototype the concept.
 
+If yiou want to write a new normalizer, see normalizer.c
+
 The document scf-standard.xml describes file interchange formata
 for programs that wish to interoperate with comparator.
 
