@@ -103,7 +103,7 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 /* collapse together overlapping ranges in the hit list */
 { 
     struct match_t *sp, *tp;
-    int removed = 0;
+    int spancount, removed = 0;
 
     /*
      * For two matches to be eligible for merger, all their filenames must
@@ -134,52 +134,64 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 #endif /* DEBUG */
 
     /* time to merge overlapping shreds */
+    spancount = 0;
+    for (sp = reduced; sp < reduced + nonuniques; sp++, spancount--)
+    {
+	int remaining;
+
+	if (spancount <= 0)
+	{
+	    spancount = 0;
+	    for (tp = sp + 1; 
+		 !compare_files(sp, tp) && tp < reduced + nonuniques; 
+		 tp++)
+		spancount++;
+	}
+
+	for (tp = sp + 1, remaining = spancount; remaining--; tp++)
+	{
+#ifdef DEBUG
+	    printf("Trying merge of %d into %d\n", tp-reduced, sp-reduced);
+#endif /* DEBUG */
+	    /* neither must have been deleted */
+	    if (!sp->nmatches || !tp->nmatches)
+	    {
+#ifdef DEBUG
+		printf("Null match pointer: %d=%p, %d=%p\n", 
+		       sp-reduced, sp->matches, tp-reduced, tp->matches);
+#endif /* DEBUG */
+
+		continue;
+	    }
+
+	    /* attempt the merge */
+	    if (merge_ranges(tp->matches, sp->matches, sp->nmatches))
+	    {		 
+#ifdef DEBUG
+		struct sorthash_t	*rp;
+
+		printf("*** Merged %d into %d\n", tp-reduced, sp-reduced);
+		for (rp=sp->matches; rp < sp->matches+sp->nmatches; rp++)
+		    printf("%s:%d:%d\n",rp->file->name,rp->hash.start,rp->hash.end);
+#endif /* DEBUG */
+		removed++;
+		sp->nmatches = 0;
+	    }
+	}
+    }
+
+#ifdef DEBUG
     for (sp = reduced; sp < reduced + nonuniques; sp++)
     {
-	 for (tp = sp + 1; !compare_files(sp, tp) && tp < reduced + nonuniques; tp++)
-	 {
-#ifdef DEBUG
-	     printf("Trying merge of %d into %d\n", tp-reduced, sp-reduced);
-#endif /* DEBUG */
-	     /* neither must have been deleted */
-	     if (!sp->nmatches || !tp->nmatches)
-	     {
-#ifdef DEBUG
-		 printf("Null match pointer: %d=%p, %d=%p\n", 
-			sp-reduced, sp->matches, tp-reduced, tp->matches);
+	struct sorthash_t	*rp;
+
+	printf("Clique beginning at %d (%d):\n", sp - reduced, sp->nmatches);
+	for (rp = sp->matches; rp < sp->matches + sp->nmatches; rp++)
+	    printf("%s:%d:%d\n",  rp->file->name, rp->hash.start, rp->hash.end);
+    }
 #endif /* DEBUG */
 
-		 continue;
-	     }
-
-	     /* attempt the merge */
-	     if (merge_ranges(tp->matches, sp->matches, sp->nmatches))
-	     {		 
-#ifdef DEBUG
-		 struct sorthash_t	*rp;
-
-		 printf("*** Merged %d into %d\n", tp-reduced, sp-reduced);
-		 for (rp=sp->matches; rp < sp->matches+sp->nmatches; rp++)
-		     printf("%s:%d:%d\n",rp->file->name,rp->hash.start,rp->hash.end);
-#endif /* DEBUG */
-		 removed++;
-		 sp->nmatches = 0;
-	     }
-	 }
-     }
-
-#ifdef DEBUG
-     for (sp = reduced; sp < reduced + nonuniques; sp++)
-     {
-	 struct sorthash_t	*rp;
-
-	 printf("Clique beginning at %d (%d):\n", sp - reduced, sp->nmatches);
-	 for (rp = sp->matches; rp < sp->matches + sp->nmatches; rp++)
-	     printf("%s:%d:%d\n",  rp->file->name, rp->hash.start, rp->hash.end);
-     }
-#endif /* DEBUG */
-
-     return(nonuniques - removed);
+    return(nonuniques - removed);
 }
 
 struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
