@@ -139,6 +139,12 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
     {
 	int remaining;
 
+	/*
+	 * This optimization drastically reduces the number of compare_files
+	 * calls.  The continue condition in the inner loop below would 
+	 * otherwise involve one every time for O(n**2) calls; this reduces
+	 * the number to O(n).
+	 */
 	if (spancount <= 0)
 	{
 	    spancount = 0;
