@@ -59,6 +59,8 @@ class CommonReport:
 
     def read_matches(self):
         # Now read the common-segment stuff
+        if self.cliques:
+            return
         self.files = {}
         locations = []
         while 1:
@@ -81,8 +83,7 @@ class CommonReport:
 
     def extract_text(self, clique):
         "Return text corresponding to the given clique."
-        if self.matches and not self.cliques:
-            self.read_matches()
+        self.read_matches()
         text = None
         if self.dir:
             olddir = os.getcwd()
@@ -109,8 +110,7 @@ class CommonReport:
 
     def filter_by_size(self, minsize):
         "Throw out all common segments below a specified size."
-        if self.matches and not self.cliques:
-            self.read_matches()
+        self.read_matches()
         filtered = []
         for clique in self.cliques:
             for (file, start, end) in clique:
