@@ -1,13 +1,12 @@
 # Makefile for the comparator/filterator tools
 
-VERS=0.1
+VERS=1.0
 
-CODE    = shredtree.c report.c main.c md5.c md5.h filterator
+CODE    = shredtree.c shred.h report.c main.c md5.c md5.h filterator
 DOCS    = README comparator.xml
 EXTRAS  = shredtree.py shredcompare.py
 TEST    = test1 test2 test3 test4
-SOURCES = $(CODE) $(DOCS) $(EXTRAS) $(TEST)
-
+SOURCES = $(CODE) $(DOCS) $(EXTRAS) $(TEST) comparator.spec Makefile
 CFLAGS=-g
 
 all: comparator comparator.1
@@ -58,6 +57,6 @@ dist: comparator-$(VERS).tar.gz
 
 RPMROOT=/usr/src/redhat
 rpm: dist
-	rpmbuild -ta comparator-$(VERS).tar.gz
+	rpmbuild --define 'version $(VERS)' -ta comparator-$(VERS).tar.gz
 	cp $(RPMROOT)/RPMS/*/comparator-$(VERS)*.rpm .
 	cp $(RPMROOT)/SRPMS/comparator-$(VERS)*.src.rpm .
