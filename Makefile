@@ -51,8 +51,8 @@ regress:
 	    else \
 		echo "Test $${n} from trees failed."; \
 	    fi; \
-	    comparator -C -d test -c test$${n}-a >test$${n}-a.scf; \
-	    comparator -C -d test -c test$${n}-b >test$${n}-b.scf; \
+	    comparator -C -d test -c test$${n}-a >test$${n}-a.scf 2>/dev/null; \
+	    comparator -C -d test -c test$${n}-b >test$${n}-b.scf 2>/dev/null; \
 	    comparator -C test$${n}-a.scf test$${n}-b.scf >test/out$${n}.log 2>/dev/null;\
 	    rm test$${n}-a.scf test$${n}-b.scf; \
 	    if diff -u test/out$${n}.good test/out$${n}.log; \

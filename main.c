@@ -92,6 +92,8 @@ void extend_current_chunk(void)
 {
     if (sort_count > 0)
 	sort_buffer[sort_count-1].hash.end++;
+    if (chunk_count > 0)
+	chunk_buffer[chunk_count-1].end++;
 }
 
 static void write_options(char *buf)
