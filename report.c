@@ -104,11 +104,12 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int hashcount)
 {
      static struct match_t dummy; 
      struct match_t *reduced = &dummy, *sp, *tp;
-     unsigned int retry, nonuniques;
+     unsigned int retry, nonuniques, progress;
      struct sorthash_t *np;
 
      /* build list of hashes with more than one range associated with */
-     nonuniques = 0;
+     nonuniques = progress = 0;
+     fprintf(stderr, "%% Extracting duplicates...   ");
      for (np = obarray; np < obarray + hashcount; np++)
      {
 	 if (np < obarray + hashcount - 1 && !HASHCMP(np, np+1))
@@ -116,6 +117,9 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int hashcount)
 	     struct match_t *new;
 	     int i, heterogenous, nmatches;
 	     struct sorthash_t *mp;
+
+	     if (!debug && progress++ % 10000 == 0)
+		 fprintf(stderr, "\b\b\b%02.0f%%", progress / (hashcount * 0.01));
 
 	     /* count the number of hash matches */
 	     nmatches = 1;
@@ -161,6 +165,7 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int hashcount)
 	}
      }
      free(obarray);
+     fprintf(stderr, "\b\b\b100%% done.");
 
      report_time("%d range groups after removing unique hashes", nonuniques);
 
