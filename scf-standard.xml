@@ -25,7 +25,7 @@
        <revremark>
 	 Interpretation of normalization line changed.
        </revremark>
-  </revision>
+   </revision>
    <revision>
       <revnumber>2.0</revnumber>
       <date>2003-12-15</date>
@@ -200,8 +200,8 @@ able to describe what reduction and filtering steps were performed.</para>
 <sect1><title>File Formats</title>
 
 <para>The remainder of this document describes file formats to fill
-these needs.  These formats will be known as SCF (source Comparison
-Interchange Format) files, pronounced "skiff".</para>
+these needs.  These formats will be known as SCF (Source Comparison
+interchange Format) files, pronounced "skiff".</para>
 
 <para>Each format consists of four sections: an identification line,
 metadata, hash data, and (optionally) a statistics trailer.  The
