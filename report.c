@@ -31,9 +31,6 @@ struct shif_t
 };
 static struct shif_t *shiflist;
 
-static struct sorthash_t *obarray, *np;
-static int hashcount;
-
 struct range_t
 {
     char	*file;
@@ -52,16 +49,6 @@ struct match_t
 dummy_match;
 static struct match_t *reduced = &dummy_match;
 
-static void init_intern(const int count)
-/* prepare an alllocation area of a given size */
-{
-    np=obarray=(struct sorthash_t *)calloc(sizeof(struct sorthash_t),count);
-    if (!np)
-    {
-	fprintf(stderr, "shredcompare: insufficient memory\n");
-    }
-}
-
 static void file_intern(const char *file)
 /* stash the name of a file */
 {
@@ -76,9 +63,6 @@ static void file_intern(const char *file)
 void hash_intern(const struct hash_t *chunk)
 /* enter a has into the in-core array */
 {
-     np->file = head->file;
-     np->hash = *chunk;
-     np++;
 }
 
 struct sorthash_t *merge_hashes(int argc, char *argv[], int *count)
@@ -87,6 +71,8 @@ struct sorthash_t *merge_hashes(int argc, char *argv[], int *count)
     struct shif_t *sp;
     struct stat sb;
     long total;
+    struct sorthash_t *obarray;
+    int hashcount;
 
     /* set up metadata blocks for the hash files */
     shiflist = (struct shif_t *)calloc(sizeof(struct shif_t), argc);
@@ -163,7 +149,14 @@ struct sorthash_t *merge_hashes(int argc, char *argv[], int *count)
 	stat(sp->name, &sb);
 	total += sb.st_size - ftell(sp->fp);
     }
-    init_intern(total/sizeof(struct hash_t));	/* real work done here */
+
+    obarray=(struct sorthash_t *)calloc(sizeof(struct sorthash_t),
+					   total/sizeof(struct hash_t));
+    if (!obarray)
+    {
+	fprintf(stderr, "shredcompare: insufficient memory\n");
+	exit(1);
+    }
 
     /* read in all hashes */
     hashcount = 0;
@@ -192,7 +185,8 @@ struct sorthash_t *merge_hashes(int argc, char *argv[], int *count)
 		fread(&this, sizeof(struct hash_t), 1, sp->fp);
 		this.start = FROMNET(this.start);
 		this.end = FROMNET(this.end);
-		hash_intern(&this);		/* real work done here */
+		obarray[hashcount].file = head->file;
+		obarray[hashcount].hash = this;
 		hashcount++;
 		sp->hashcount++;
 		if (hashcount % 10000 == 0)
@@ -288,12 +282,13 @@ static int sametree(const char *s, const char *t)
     return (sn == tn) && !strncmp(s, t, sn); 
 }
 
-struct match_t *reduce_matches(void)
+struct match_t *reduce_matches(struct sorthash_t *obarray, int hashcount)
 /* assemble list of duplicated hashes */
 {
      static struct match_t dummy; 
      struct match_t *reduced = &dummy, *sp, *tp;
      unsigned int retry, nonuniques;
+     struct sorthash_t *np;
 
      /* build list of hashes with more than one range associated with */
      nonuniques = 0;
@@ -456,7 +451,7 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
 	       np->file, np->hash.start, np->hash.end);
 #endif /* ODEBUG */
 
-    hitlist = reduce_matches();
+    hitlist = reduce_matches(obarray, hashcount);
     report_time("Reduction done");
 
     puts("#SHIF-B 1.0");

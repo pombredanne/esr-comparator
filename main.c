@@ -74,7 +74,7 @@ static void generate_shredfile(const char *tree, FILE *ofp)
     }
 }
 
-static void generate_shredlist(const int argc, const char *argv[])
+static void generate_shredlist(int argc, char *argv[])
 /* generate an in-core list of sorthash structures */
 {
     int	i, file_count;
@@ -119,10 +119,10 @@ main(int argc, char *argv[])
     extern char	*optarg;	/* set by getopt */
     extern int	optind;		/* set by getopt */
 
-    int status, file_only;
+    int status, file_only, exec_direct;
 
-    file_only = 0;
-    while ((status = getopt(argc, argv, "cd:fhs:w")) != EOF)
+    exec_direct = file_only = 0;
+    while ((status = getopt(argc, argv, "cd:efhs:w")) != EOF)
     {
 	switch (status)
 	{
@@ -130,12 +130,16 @@ main(int argc, char *argv[])
 	    c_only = 1;
 	    break;
 
-	case 'f':
-	    file_only = 1;
-	    break;
-
 	case 'd':
 	    chdir(optarg);
+	    break;
+
+	case 'e':
+	    exec_direct = 1;
+	    break;
+
+	case 'f':
+	    file_only = 1;
 	    break;
 
 	case 's':
@@ -155,6 +159,7 @@ main(int argc, char *argv[])
 	    fprintf(stderr,"usage: shredtree [-c] [-d dir ] [-s shredsize] [-w] [-x] path\n");
 	    fprintf(stderr,"  -c      = check .c, .h, and .txt files only.\n");
 	    fprintf(stderr,"  -d dir  = change directory before digesting.\n");
+	    fprintf(stderr,"  -e      = pass structures in core\n");
 	    fprintf(stderr,"  -h      = help (display this message).\n");
 	    fprintf(stderr,"  -s size = set shred size (default %d)\n",
 		    shredsize);
@@ -166,6 +171,15 @@ main(int argc, char *argv[])
 
     if (file_only)
 	generate_shredfile(argv[optind], stdout);
+    else if (exec_direct)
+    {
+	report_time(NULL);
+	generate_shredlist(argc-optind, argv+optind);
+	report_time("Hash merge done, %d entries", sort_count);
+	sort_hashes(sort_buffer, sort_count);
+	report_time("Sort done");
+	emit_report(sort_buffer, sort_count);	
+    }
     else
     {
 	int	hashcount;
