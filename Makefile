@@ -1,4 +1,4 @@
-# Makefile for the comparator tool
+# Makefile for the comparator/filterator tools
 
 VERS=0.1
 
