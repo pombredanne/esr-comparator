@@ -23,13 +23,14 @@ typedef u_int32_t	linenum_t;
 /* use this to hold total line count of the entire source tree set */
 typedef u_int32_t	linecount_t;
 
-#define HASHSIZE	16
+#include "hash.h"
+
 struct hash_t
 {
     linenum_t   	start, end;
-    unsigned char	hash[HASHSIZE];
+    hashval_t		hash;
 };
-#define SORTHASHCMP(s, t)	memcmp((s)->hash.hash, (t)->hash.hash, HASHSIZE)
+#define SORTHASHCMP(s, t) hash_compare((s)->hash.hash, (t)->hash.hash)
 
 struct filehdr_t
 {
