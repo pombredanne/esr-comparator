@@ -17,7 +17,7 @@
 #
 # This is alpha software. There is a bug in the implementation,
 # somewhere in the logic for merging matching ranges before report
-# generation, that sometimes garbages the last number in the
+# generation, that very occasionally garbages the last number in the
 # target-tree range.  I haven't fixed it yet because I haven't found a
 # way to produce a test load that reproduces it that is smaller that
 # the entire Linux 2.6.o and Sysem V kernels.
