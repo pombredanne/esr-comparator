@@ -201,7 +201,7 @@ void read_scf(const char *name, FILE *fp)
 		fprintf(stderr,"\b\b\b%02.0f%%",(ftell(fp) / (sb.st_size * 0.01)));
 	}
     }
-    fprintf(stderr, "\b\b\b100%%...done, %d entries\n", hashcount);
+    fprintf(stderr, "\b\b\b100%%...done, %d shreds\n", hashcount);
 }
 
 static void merge_tree(char *tree)
@@ -226,7 +226,7 @@ static void merge_tree(char *tree)
 	if (!debug && !(i++ % 100))
 	    fprintf(stderr, "\b\b\b%02.0f%%", i / (file_count * 0.01));
     }
-    fprintf(stderr, "\b\b\b100%%...done, %d files, %d entries.\n", 
+    fprintf(stderr, "\b\b\b100%%...done, %d files, %d shreds.\n", 
 	    file_count, sort_count - old_entry_count);
     free(list);
 }
@@ -562,7 +562,7 @@ main(int argc, char *argv[])
 	printf("Shred-Size: %d\n", scf_head->shred_size);
 	puts("%%");
 
-	report_time("Hash merge done, %d entries", sort_count);
+	report_time("Hash merge done, %d shreds", sort_count);
 	sort_hashes(sort_buffer, sort_count);
 	report_time("Sort done");
 
@@ -591,7 +591,7 @@ main(int argc, char *argv[])
 	    if (np->hash.start != UNIQUE_FLAG && mp < np)
 		*mp++ = *np;
 	/* now we get to reduce the memory footprint */
-	report_time("Compaction reduced %d entries to %d", 
+	report_time("Compaction reduced %d shreds to %d", 
 		    sort_count, mp - sort_buffer);
 	sort_count = mp - sort_buffer;
 	sort_buffer = (struct sorthash_t *)realloc(sort_buffer, 
