@@ -4,7 +4,7 @@
 #
 import sys, comparator, re
 
-def reporthook(clique):
+def shortreport(clique):
     rep = ""
     (file, start, end, text) = state.extract_text(clique)
     if start == 1 and end == state.files[file]:
@@ -14,6 +14,17 @@ def reporthook(clique):
         rep += "%% %s:%d-%d: (%d matches)\n" % \
               (file, start, end, len(clique))
         rep += text
+    return rep
+
+def longreport(clique):
+    rep = ""
+    (tfile, tstart, tend, text) = state.extract_text(clique)
+    for (file, start, end) in clique:
+        if start == 1 and end == state.files[file]:
+            rep += "%% %s:%d-%d: (entire)\n" % (file, start, end)
+        else:
+            rep += "%% %s:%d-%d:\n" % (file, start, end)
+    rep += text
     return rep
 
 if __name__ == '__main__':
@@ -54,7 +65,7 @@ if __name__ == '__main__':
             state.cliquefilter(lambda file, start, end: file in matchfiles)
         try:
             if expand:
-                state.metadump(sys.stdout, (75 * '-')+"\n", reporthook, {"Minimum-Size":minsize})
+                state.metadump(sys.stdout, (75 * '-')+"\n", longreport, {"Minimum-Size":minsize})
             else:
                 state.dump(sys.stdout)
         except (KeyboardInterrupt, IOError):
