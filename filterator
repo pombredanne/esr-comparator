@@ -54,7 +54,7 @@ if __name__ == '__main__':
             state.filter_by_size(minsize)
         try:
             report_common(state)
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, IOError):
             pass
     except comparator.ComparatorException, e:
         sys.stderr.write("filterator: " + e.message + "\n")
