@@ -11,8 +11,8 @@
 #include "shred.h"
 
 /* control bits, meant to be set at startup */
-int c_normalization = 0;
-int rws = 0;
+int remove_braces = 0;
+int remove_whitespace = 0;
 int shredsize = 3;
 
 struct item
@@ -68,7 +68,7 @@ static int eligible(const char *file)
 static int normalize(char *buf)
 /* normalize a buffer in place, return 0 if it should be skipped */
 {
-    if (rws)		/* strip whitespace, ignore blank lines */
+    if (remove_whitespace)	/* strip whitespace, ignore blank lines */
     {
 	char *tp, *sp;
 
@@ -77,7 +77,7 @@ static int normalize(char *buf)
 		*tp++ = *sp;
 	*tp = '\0';
     }
-    if (c_normalization)	/* strip whitespace, ignore blank lines */
+    if (remove_braces)		/* strip C statement brackets */
     {
 	char *tp, *sp;
 

@@ -84,10 +84,10 @@ static void write_scf(const char *tree, FILE *ofp)
     fputs("Generator-Program: comparator 1.0\n", ofp);
     fputs("Hash-Method: MD5\n", ofp);
     buf[0] = '\0';
-    if (rws)
+    if (remove_whitespace)
 	strcat(buf, "remove-whitespace,");
-    if (c_normalization)
-	strcat(buf, "c-normalization,");
+    if (remove_braces)
+	strcat(buf, "remove-braces,");
     if (buf[0])
 	buf[strlen(buf)-1] = '\0';
     else
@@ -361,7 +361,7 @@ main(int argc, char *argv[])
 	    break;
 
 	case 'C':
-	    c_normalization = 1;
+	    remove_braces = 1;
 	    break;
 
 	case 'd':
@@ -377,7 +377,7 @@ main(int argc, char *argv[])
 	    break;
 
 	case 'w':
-	    rws = 1;
+	    remove_whitespace = 1;
 	    break;
 
 	case 'x':
@@ -475,8 +475,19 @@ main(int argc, char *argv[])
     /* if there were no SCFs, create a dummy one */
     if (scf_head == &dummy_scf)
     {
+	char	buf[BUFSIZ];
+
 	dummy_scf.hash_method = "MD5";
-	dummy_scf.normalization = rws ? "remove_whitespace" : "none";
+	buf[0] == '\0';
+	if (remove_whitespace)
+	    strcat(buf, "remove-whitespace,");
+	if (remove_braces)
+	    strcat(buf, "remove-braces,");
+	if (buf[0])
+	    buf[strlen(buf)-1] = '\0';
+	else
+	    strcpy(buf, "none");
+	dummy_scf.normalization = strdup(buf);
 	dummy_scf.shred_size = shredsize;
 	dummy_scf.generator_program = "comparator 1.0";
     }
