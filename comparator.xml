@@ -194,14 +194,18 @@ collections of Linux and Unix source trees running into the tens of
 millions of lines, you are very unlikely to ever see this.  There is
 no possibility of false negatives.</para>
 
-<para>This program handles a maximum of 65536 lines per file.  A full
-integer line-number range would increase working-set size by
-20%.</para>
+<para>The design of this program accepts some size limits to get high
+performance in the typical case.  The RXOR hash function's performance
+will degrade, possibly leading to comparison errors, on shreds of 512
+or more characters.  Also, comparison will handle maximum of 65536
+lines per file (you will be warned if if this limit is exceeded).  A
+full integer line-number range would increase working-set size by
+33%.</para>
 
 <para>You will get spurious results if you mix
-<filename>.scf</filename> files with different shred sizes or
-normalizations, or with settings for these that conflict with the
-command-line options you have in effect for shredding source-code
+<filename>.scf</filename> files with different hash methods, shred
+sizes or normalizations, or with settings for these that conflict with
+the command-line options you have in effect for shredding source-code
 trees.  The program does some sanity checking but will not prevent you
 from shooting yourself in the foot.</para>
 
