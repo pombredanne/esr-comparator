@@ -132,7 +132,7 @@ static void write_scf(const char *tree, FILE *ofp)
 
     netfile_count = htonl(file_count);
     fwrite(&netfile_count, sizeof(linecount_t), 1, ofp);
-    fprintf(stderr, "%% Reading %s...   ", tree);
+    fprintf(stderr, "%% Reading tree %s...    ", tree);
     progress = totalchunks = 0;
     for (place = list; place < list + file_count; place++)
     {
@@ -208,7 +208,7 @@ static void read_scf(struct scf_t *scf)
     struct stat sb;
 
     stat(scf->name, &sb);
-    fprintf(stderr, "%% Reading hash list %s...   ", scf->name);
+    fprintf(stderr, "%% Reading hash list %s...    ", scf->name);
     fread(&filecount, sizeof(linecount_t), 1, scf->fp);
     filecount = ntohl(filecount);
     while (filecount--)
@@ -265,7 +265,7 @@ static int merge_tree(char *tree)
 	exit(1);
     }
     i = 0;
-    fprintf(stderr, "reading...   ");
+    fprintf(stderr, "reading...    ");
     for (place = list; place < list + file_count; place++)
     {
 	struct filehdr_t *filep = register_file(*place, 0);
