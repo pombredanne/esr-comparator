@@ -49,10 +49,10 @@ uninstall:
 	rm -f ${ROOT}/usr/share/man/man1/comparator.1
 
 comparator-$(VERS).tar.gz: $(SOURCES) comparator.1
-	@ls $(SOURCES) comparator.1 | sed s:^:comparator-$(VERS)/: >MANIFEST
-	@(cd ..; ln -s comparator comparator-$(VERS))
+	find $(SOURCES) comparator.1 -type f | sed "s:^:comparator-$(VERS)/:" >MANIFEST
+	(cd ..; ln -s comparator comparator-$(VERS))
 	(cd ..; tar -czvf comparator/comparator-$(VERS).tar.gz `cat comparator/MANIFEST`)
-	@(cd ..; rm comparator-$(VERS))
+	(cd ..; rm comparator-$(VERS))
 
 dist: comparator-$(VERS).tar.gz
 
