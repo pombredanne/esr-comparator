@@ -42,7 +42,7 @@ static int file_count;
 static int eligible(const char *file)
 /* is the specified file eligible to be compared? */ 
 {
-    if (strstr(file, "CVS") || strstr(file,"RCS") || strstr(file,"SCCS"))
+    if (strstr(file, "CVS") || strstr(file,"RCS") || strstr(file,"SCCS") || strstr(file, ".svn"))
 	return(0);
     /* fast check for the most common suffixes */
 #define endswith(suff)	!strcmp(suff, file + strlen(file) - strlen(suff))
