@@ -200,6 +200,10 @@ and their semantics, and the format of the data section.  Some metadata
 tags are optional, but it is recommended that they always be written out.
 Metadata tags short be written out in ASCII sort order of the tag.</para>
 
+<para>In the format descriptions, a 'ushort' is a two-byte unsigned
+integer in network byte order; a 'uint' is a four-byte unsigned
+integer in network byte order.</para>
+
 <para>The ordering rules give every data-set a canonical form so that
 operations like diff(1) or comm(1) can give meaningful results.</para>
 
@@ -259,27 +263,27 @@ may include the following:</para>
 </varlistentry>
 </variablelist>
 
-<para>The data section consists of 4-byte integer file count in network byte
-order, followed by a series of file sections.  Each section consists
-of a filename line, terminated by a newline, followed by a count of
-shreds expressed as a four-byte integer in network byte order,
-followed by a sequence of shred records.  The length of the data
-section is drtivable from the data lengths.</para>
+<para>The data section consists of a uint file count, followed by a
+series of file sections.  Each section consists of a filename line,
+terminated by a newline, followed by a ushort filename line length,
+followed by a ushort shred count, followed by a sequence of shred
+records.  The length of the data section is drtivable from the data
+lengths.</para>
 
-<para>A shred record consists of two integers in network byte order
-(start and end line numbers) followed by a fixed-length block of hash
-data.  For the default MD5 hash the data is 16 bytes.</para>
+<para>A shred record consists of ushorts (start and end line numbers)
+followed by a fixed-length block of hash data.  For the default MD5
+hash the data is 16 bytes.</para>
 
 <para>Shreds should be ordered by start line number.  Empty files should be
 skipped, and nonempty files should always have at least one shred.
 Files should be listed in sort order by name.</para>
 
 <para>This format has a statistics trailer.  At level 1.1 it consists
-of a single 4-byte unsigned integer in network order, a count of lines 
-for the associated source tree.</para>
+of a single uint, a count of lines for the associated source
+tree.</para>
 
 <para>This unpleasant binary format has been chosen to make processing as
-fast as possible, because shred data sets are quite large in holding
+fast as possible, because shred data sets are quite large and holding
 down I/O is an important consideration.</para>
 </sect2>
 
