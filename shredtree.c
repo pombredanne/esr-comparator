@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include "md5.h"
+#include "shred.h"
 
 static int c_only = 0;
 static int rws = 0;
@@ -25,17 +26,6 @@ struct item
 dummy;
 static struct item *head = &dummy;
 
-/*
- * This code depends on the assumption that this structure has 
- * no leading, trailing, or internal padding and takes up exactly
- * 24 bytes of contiguous sequential memory. This should be the 
- * case on all modern word-addressible machines.
- */
-struct hash_t
-{
-    u_int32_t	start, end;
-    char	hash[16];
-};
 static struct hash_t *outbuf;
 
 static int eligible(const char *file)
@@ -120,7 +110,8 @@ void shredfile(const char *file)
 {
     FILE *fp;
     char buf[BUFSIZ];
-    int i, linecount, accepted, net_chunks;
+    int i, linecount, accepted;
+    linenum_t	net_chunks;
     shred *display;
 
     if ((fp = fopen(file, "r")) == NULL)
@@ -161,7 +152,7 @@ void shredfile(const char *file)
 
     /* the actual output */
     puts(file);
-    fwrite((char *)&net_chunks, sizeof(u_int32_t), 1, stdout);
+    fwrite((char *)&net_chunks, sizeof(linenum_t), 1, stdout);
     fwrite(outbuf, sizeof(struct hash_t), chunk_count, stdout);
 
     free(display);
