@@ -341,7 +341,7 @@ struct match_t *reduce_matches(void)
 	     /* if all these matches are within the same tree, toss them */
 	     heterogenous = 0;
 	     for (i = 0; i < nmatches; i++)
-		 if (sametree(np[i].file, np[(i+1) % nmatches].file))
+		 if (!sametree(np[i].file, np[(i+1) % nmatches].file))
 		     heterogenous++;
 	     if (!heterogenous)
 		 continue;
