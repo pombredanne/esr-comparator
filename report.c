@@ -106,7 +106,7 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
     int removed = 0;
 
     /*
-     * For two matches to be eligible for merger, all the filenames
+     * For two matches to be eligible for merger, all their filenames must
      * match pairwise.  If there are no such matches, these chunks are
      * completely irrelevant to each other.  It might be that for some
      * values of i the filenames are equal and for others not.  In
@@ -135,7 +135,7 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 
      /* time to merge overlapping shreds */
      for (sp = reduced; sp < reduced + nonuniques; sp++)
-	 for (tp = sp + 1; tp < reduced + nonuniques; tp++)
+	 for (tp = sp + 1; !compare_files(sp, tp); tp++)
 	 {
 #ifdef DEBUG
 	     printf("Trying merge of %d into %d\n", tp-reduced, sp-reduced);
