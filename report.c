@@ -298,7 +298,7 @@ main(int argc, char *argv[])
     reduced = reduce_matches(local_duplicates);
     report_time("Reduction done.");
 
-    for (; reduced; reduced = reduced->next)
+    for (; reduced->next; reduced = reduced->next)
     {
 	int	i;
 
