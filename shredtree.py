@@ -3,7 +3,6 @@
 # shredtree -- generate hash list in SHIF-A format for a given source tree
 
 import sys, os, os.path, re, md5, getopt
-import shred
 
 whitespace = re.compile(r"[ \t\n]+")
 
