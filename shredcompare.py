@@ -2,7 +2,7 @@
 #
 # shredcompare -- find common cliques in shred lists
 #
-import os, sys, time, stat, getopt, bsddb
+import os, sys, time, stat, getopt, bsddb, struct
 
 class SHIF:
     "SHIF-A file metadata container."
@@ -81,22 +81,25 @@ hashcount = total = 0
 def merge_hashes(fp, dict):
     "Read and merge hashes corresponding to one file."
     global hashcount
-    file = fp.readline().rstrip()
-    while True:
-        line = fp.readline()
-        if not line:
-            return False
-        if not line.strip():
-            return True
-        (start, end, hashval) = line.split()
+    file = fp.readline()
+    if not file:
+        return False
+    file = file.strip()
+    # Record count comes right after the filename
+    (record_count,) = struct.unpack("!i", fp.read(4))
+    while record_count > 0:
+        record_count -= 1
+        # 4 bytes of start line number + 4 of end line number + 16 of MD5 hash
+        (start, end, hashval) = struct.unpack("!ii16s", fp.read(24))
         if dict.has_key(hashval):
             oldval = dict[hashval]
         else:
             oldval = ""
-        dict[hashval] = oldval + file + "\t" + start + "\t" + end + "\n"
+        dict[hashval] = oldval + file + "\t" + `start` + "\t" + `end` + "\n"
         hashcount += 1
         if hashcount % 10000 == 0:
             sys.stderr.write("%02.2f%% read.\n" % (fp.tell() / (total * 0.01)))
+    return True
 
 def item_factory(db):
     "Hide the ugliness that is sequential DB access in a generator."

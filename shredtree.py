@@ -2,7 +2,7 @@
 #
 # shredtree -- generate hash list in SHIF-A format for a given source tree
 
-import sys, os, os.path, re, md5, getopt
+import sys, os, os.path, re, md5, getopt, struct
 
 whitespace = re.compile(r"[ \t\n]+")
 
@@ -23,21 +23,23 @@ def normalize(line):
     else:
         return line
 
-def emit_chunk(display, linecount):
-    m = md5.new()
+def emit_chunk(display, file, linecount):
+    startline = display[0][1]
+    if debug:
+        sys.stderr.write("%% %s:%d-%d\n" % (file, startline, linecount))
+    m = md5.new()    
     for line in display:
         if debug:
-            print `line[0]`
+            sys.stderr.write(`line[0]` + "\n")
         m.update(line[0])
-    print "%d\t%d\t%s" % (display[0][1], linecount, m.hexdigest())
+    return struct.pack("!ii", startline, linecount) + m.digest()
 
 def shredfile(file):
     "Emit shred tuples corresponding to a specified file."
-    print file
     fp = open(file, "r")
     display = []
-
-    accepted = linecount = 0;
+    outdata = ""
+    chunk_count = accepted = linecount = 0;
     while True:
         line = fp.readline()
         if not line:
@@ -53,7 +55,8 @@ def shredfile(file):
 
 	# flush completed chunk
         if accepted >= shredsize:
-	    emit_chunk(display, linecount)
+	    outdata += emit_chunk(display, file, linecount)
+            chunk_count += 1
 
 	# shreds in progress are shifted down */
         if len(display) >= shredsize:
@@ -61,8 +64,10 @@ def shredfile(file):
 
     fp.close()
     if linecount < shredsize:
-	emit_chunk(display, linecount)
-    print ""
+	outdata += emit_chunk(display, file, linecount)
+        chunk_count += 1
+    # Write the actual data
+    sys.stdout.write(file + "\n" + struct.pack("!i", chunk_count) + outdata)
 
 if __name__ == '__main__':
     try:
@@ -91,7 +96,7 @@ if __name__ == '__main__':
             shredsize = int(val)
         elif opt == '-w':
             ws = True
-        elif opt == '-d':
+        elif opt == '-x':
             debug = True
     if args:
         print "#SHIF-A 1.0"

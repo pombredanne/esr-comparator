@@ -6,13 +6,16 @@
 #include <ftw.h>
 #include <errno.h>
 #include <alloca.h>
+#include <netinet/in.h>
+#include <sys/types.h>
 #include "md5.h"
 
 static int c_only = 0;
 static int rws = 0;
 static int debug = 0;
 static int shredsize = 5;
-static int filecount;
+
+static int filecount, chunk_count;
 
 struct item
 {
@@ -20,7 +23,20 @@ struct item
     struct item *next;
 }
 dummy;
-struct item *head = &dummy;
+static struct item *head = &dummy;
+
+/*
+ * This code depends on the assumption that this structure has 
+ * no leading, trailing, or internal padding and takes up exactly
+ * 24 bytes of contiguous sequential memory. This should be the 
+ * case on all modern word-addressible machines.
+ */
+struct hash_t
+{
+    u_int32_t	start, end;
+    char	hash[16];
+};
+static struct hash_t *outbuf;
 
 static int eligible(const char *file)
 /* is the specified file eligible to be compared? */ 
@@ -61,54 +77,42 @@ static void emit_chunk(shred *display, int linecount)
 {
     struct md5_ctx	ctx;
     int  		i, firstline;
-    unsigned char hash[32], *cp;
+    unsigned char	*cp;
 
     if (debug)
     {
 	for (i = 0; i < shredsize; i++)
 	    if (display[i].line)
 	    {
-		putchar('\'');
+		fputc('\'', stderr);
 		for (cp = display[i].line; *cp; cp++)
 		    if (*cp == '\n')
-			fputs("\\n", stdout);
+			fputs("\\n", stderr);
 		    else if (*cp == '\t')
-			fputs("\\t", stdout);
+			fputs("\\t", stderr);
 		    else
-			putchar(*cp);
-		putchar('\'');
-	        putchar('\n');
+			fputc(*cp, stderr);
+		fputc('\'', stderr);
+	        fputc('\n', stderr);
 	    }    
     }
 
-    /* flush completed chunk */
+    outbuf = (struct hash_t *)realloc(outbuf, 
+				      sizeof(struct hash_t) * (chunk_count+1));
+
+    /* build completed chunk onto end of array */
     md5_init_ctx(&ctx);
     for (i = 0; i < shredsize; i++)
 	if (display[i].line)
 	    md5_process_bytes(display[i].line, strlen(display[i].line), &ctx);
-    md5_finish_ctx(&ctx, (void *)hash);
+    md5_finish_ctx(&ctx, (void *)&outbuf[chunk_count].hash);
     for (i = shredsize - 1; i >= 0; i--)
 	if (display[i].line)
 	    firstline = i;
-    fprintf(stdout, 
-	    "%d\t%d\t%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", 
-	    display[firstline].number, linecount, 
-	    hash[0],
-	    hash[1],
-	    hash[2],
-	    hash[3],
-	    hash[4],
-	    hash[5],
-	    hash[6],
-	    hash[7],
-	    hash[8],
-	    hash[9],
-	    hash[10],
-	    hash[11],
-	    hash[12],
-	    hash[13],
-	    hash[14],
-	    hash[15]);
+    firstline = display[firstline].number;
+    outbuf[chunk_count].start = htonl(firstline);
+    outbuf[chunk_count].end = htonl(linecount);
+    chunk_count++;
 }
 
 void shredfile(const char *file)
@@ -116,7 +120,7 @@ void shredfile(const char *file)
 {
     FILE *fp;
     char buf[BUFSIZ];
-    int i, linecount, accepted;
+    int i, linecount, accepted, net_chunks;
     shred *display;
 
     if ((fp = fopen(file, "r")) == NULL)
@@ -127,10 +131,9 @@ void shredfile(const char *file)
     }
 
     display = (shred *)calloc(sizeof(shred), shredsize);
+    outbuf = (struct hash_t *)calloc(sizeof(struct hash_t), 1);
 
-    puts(file);
-
-    accepted = linecount = 0;
+    accepted = linecount = chunk_count = 0;
     while(fgets(buf, sizeof(buf), fp) != NULL)
     {
 	linecount++;
@@ -154,9 +157,15 @@ void shredfile(const char *file)
     }
     if (linecount < shredsize)
 	emit_chunk(display, linecount);
+    net_chunks = htonl(chunk_count);
 
-    puts("");
+    /* the actual output */
+    puts(file);
+    fwrite((char *)&net_chunks, sizeof(u_int32_t), 1, stdout);
+    fwrite(outbuf, sizeof(struct hash_t), chunk_count, stdout);
+
     free(display);
+    free(outbuf);
     fclose(fp);
 }
 
