@@ -273,12 +273,25 @@ static int sortmatch(const void *a, const void *b)
 {
     struct sorthash_t *s = ((struct match_t *)a)->matches;
     struct sorthash_t *t = ((struct match_t *)b)->matches;
+    int i;
 
-    int cmp = strcmp(s->file->name, t->file->name);
-    if (cmp)
-	return(cmp);
-    else
-	return(s->hash.start - t->hash.start);
+    /* first sort by file */
+    for (i = 0; i < ((struct match_t *)a)->nmatches; i++)
+    {
+	int cmp = strcmp(s[i].file->name, t[i].file->name);
+
+	if (cmp)
+	    return(cmp);
+    }
+
+    /* then sort by start line number */
+    for (i = 0; i < ((struct match_t *)a)->nmatches; i++)
+    {
+	int cmp = s->hash.start - t->hash.start;
+
+	if (cmp)
+	    return(cmp);
+    }
 
     return(0);
 }
