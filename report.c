@@ -15,8 +15,7 @@ struct match_t
 {
     int            nmatches;
     struct sorthash_t *matches;
-}
-dummy_match;
+};
 
 static int merge_ranges(struct sorthash_t *p, 
 			struct sorthash_t *q,
