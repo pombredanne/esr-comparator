@@ -212,6 +212,7 @@ static void merge_tree(char *tree)
 
     old_entry_count = sort_count;
     file_count = 0;
+    fprintf(stderr, "%% Scanning tree %s...", tree);
     list = sorted_file_list(tree, &file_count);
     if (!file_count)
     {
@@ -219,7 +220,7 @@ static void merge_tree(char *tree)
 	exit(1);
     }
     i = 0;
-    fprintf(stderr, "%% Reading tree %s...   ", tree);
+    fprintf(stderr, "reading...   ");
     for (place = list; place < list + file_count; place++)
     {
 	shredfile(*place, corehook);
