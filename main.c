@@ -55,8 +55,6 @@ static void filehook(struct hash_t hash, const char *file)
     chunk_buffer = (struct hash_t *)realloc(chunk_buffer, 
 				      sizeof(struct hash_t) * (chunk_count+1));
     
-    hash.start = TONET(hash.start);
-    hash.end   = TONET(hash.end);
     chunk_buffer[chunk_count++] = hash;
 }
 
@@ -72,7 +70,7 @@ void corehook(struct hash_t hash, const char *file)
     sort_count++;
 }
 
-static void generate_shredfile(const char *tree, FILE *ofp)
+static void write_scf(const char *tree, FILE *ofp)
 /* generate shred file for given tree */
 {
     char	**place, **list;
@@ -93,6 +91,7 @@ static void generate_shredfile(const char *tree, FILE *ofp)
     for (place = list; place < list + file_count; place++)
     {
 	linenum_t	net_chunks;
+	struct hash_t	*np;
 
 	/* shredfile adds data to chunk_buffer */
 	chunk_buffer = (struct hash_t *)calloc(sizeof(struct hash_t), 1);
@@ -104,32 +103,40 @@ static void generate_shredfile(const char *tree, FILE *ofp)
 	fputc('\n', ofp);
 	net_chunks = TONET(chunk_count);
 	fwrite((char *)&net_chunks, sizeof(linenum_t), 1, ofp);
-	fwrite(chunk_buffer, sizeof(struct hash_t), chunk_count, ofp);
 	if (debug)
-	{
-	    struct hash_t	*np;
 	    fprintf(stderr, "Chunks for %s:\n", *place);
-	    for (np = chunk_buffer; np < chunk_buffer + chunk_count; np++)
+	for (np = chunk_buffer; np < chunk_buffer + chunk_count; np++)
+	{
+	    struct hash_t	this = np[0];
+
+	    if (debug)
 		fprintf(stderr,
-			"%d: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x %s:%d:%d\n", 
+		       "%d: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x %s:%d:%d\n", 
 		       np-chunk_buffer, 
-		       np->hash[0], 
-		       np->hash[1], 
-		       np->hash[2], 
-		       np->hash[3], 
-		       np->hash[4], 
-		       np->hash[5], 
-		       np->hash[6], 
-		       np->hash[7], 
-		       np->hash[8], 
-		       np->hash[9], 
-		       np->hash[10], 
-		       np->hash[11], 
-		       np->hash[12], 
-		       np->hash[13], 
-		       np->hash[14], 
-		       np->hash[15],
-		       *place, FROMNET(np->start), FROMNET(np->end));
+		       this.hash[0], 
+		       this.hash[1], 
+		       this.hash[2], 
+		       this.hash[3], 
+		       this.hash[4], 
+		       this.hash[5], 
+		       this.hash[6], 
+		       this.hash[7], 
+		       this.hash[8], 
+		       this.hash[9], 
+		       this.hash[10], 
+		       this.hash[11], 
+		       this.hash[12], 
+		       this.hash[13], 
+		       this.hash[14], 
+		       this.hash[15],
+		       *place, this.start, this.end);
+#ifdef NON_NATIVE
+	    this.start = TONET(this.start);
+	    this.end   = TONET(this.end);
+#endif /* NON_NATIVE */
+	    fwrite(&this.start, sizeof(linenum_t), 1, ofp);
+	    fwrite(&this.end,   sizeof(linenum_t), 1, ofp);
+	    fwrite(&this.hash,  sizeof(char), HASHSIZE, ofp);
 	}
 	free(chunk_buffer);
     }
@@ -154,17 +161,26 @@ void merge_scf(const char *name, FILE *fp)
 
 	fgets(buf, sizeof(buf), fp);
 	*strchr(buf, '\n') = '\0';
+	/*
+	 * This isn't freed anywhere before end of execution.
+	 * That's a potential memory leak if this routine is misapplied
+	 */
+	name = strdup(buf);
+
 	fread(&chunks, sizeof(linenum_t), 1, fp);
 	chunks = FROMNET(chunks);
-
 	while (chunks--)
 	{
 	    struct hash_t	this;
 
-	    fread(&this.hash, sizeof(struct hash_t), 1, fp);
+	    fread(&this.start, sizeof(linenum_t), 1, fp);
+	    fread(&this.end,  sizeof(linenum_t), 1, fp);
+	    fread(this.hash, sizeof(char), HASHSIZE, fp);
+#ifdef NON_NATIVE
 	    this.start = FROMNET(this.start);
 	    this.end = FROMNET(this.end);
-	    corehook(this, buf);
+#endif /* NON_NATIVE */
+	    corehook(this, name);
 	    hashcount++;
 	    if (hashcount % 10000 == 0)
 		fprintf(stderr,"\b\b\b%02.0f%%",(ftell(fp) / (sb.st_size * 0.01)));
@@ -366,7 +382,7 @@ main(int argc, char *argv[])
     /* special case if user gave exactly one tree */
     if (!compile_only && optind == argc - 1)
     {
-	generate_shredfile(argv[optind], stdout);
+	write_scf(argv[optind], stdout);
 	exit(0);
     }
 
@@ -397,7 +413,7 @@ main(int argc, char *argv[])
 		olddir = getcwd(NULL, 0);	/* may fail off Linux */
 		chdir(dir);
 	    }
-	    generate_shredfile(source, ofp);
+	    write_scf(source, ofp);
 	    if (dir)
 		chdir(olddir);
 	    fclose(ofp);
