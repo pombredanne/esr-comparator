@@ -304,6 +304,11 @@ almost ridiculously fast on machines with enough core (the author has
 observed speeds of up to two million lines of code compared per minute
 on a 1.8GHz Intel box), but machines with small memories will thrash
 their guts out as the VM subsystem tries to cope.</para>
+
+<para>Comparing a directory to itself will show no similarities.  This
+is because the algorithm ignores matching shreds from within a
+single directory, and it only knows which directory a shred came from
+by relative pathname.</para>
 </refsect1>
 </refentry>
 
