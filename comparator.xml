@@ -136,6 +136,13 @@ updates and other resources.</para>
 
 <refsect1 id='bugs'><title>LIMITATIONS</title>
 
+<para><application>comparator</application> does not attempt to
+do semantic analysis and catch relatively trivial changes like renaming of
+variables, etc.  This is because <application>comparator</application>
+is designed not as a tool to detect plagiarism of ideas (the subject
+of patent law), but as a tool to detect copying of the expression 
+of ideas (the subject of copyright law).</para>
+
 <para>The heuristic for eligible files can be fooled, though this
 is unlikely.</para>
 
