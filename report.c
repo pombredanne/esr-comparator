@@ -68,7 +68,7 @@ static int merge_ranges(struct sorthash_t *p,
 	/*
 	 * The insignificance bit in the merged range should be cleared
 	 * if the range being merged in is significant.  This is important;
-	 * it means that significance propagates as spabs merge.
+	 * it means that significance propagates as spans merge.
 	 */
 	p[i].hash.flags &=~ q[i].hash.flags;
 	q[i].hash.flags = INTERNAL_FLAG;	/* used only in debug code */
