@@ -209,3 +209,17 @@ class CommonReport:
                 raise ComparatorException("couldn't extracrt file text")
         self.cliques = filtered
 
+class CommonStatistics:
+    "Statistical information from a report."
+    def __init__(self, report):
+        self.chunks = report.segment_count()
+        self.trees = []
+        for (tree, totallines) in report.trees.items():
+            lines = report.line_count(tree)
+            self.trees.append((tree, lines, totallines))
+
+    def __str__(self):
+        rep = "%d overlaps\n" % self.chunks
+        for (tree, lines, total) in self.trees:
+            rep += "%s:%d:%d\n" % (tree, lines, total)
+        return rep

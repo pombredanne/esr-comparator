@@ -64,10 +64,7 @@ if __name__ == '__main__':
             state.filter_by_significance()
 
         if stats:
-            print "%d overlaps" % state.segment_count()
-            for (tree, totallines) in state.trees.items():
-                lines = state.line_count(tree)
-                print "%s:%d:%d" % (tree, lines, state.trees[tree])
+            sys.stdout.write(str(comparator.CommonStatistics(state)))
         else:
             report_common(state)
     except comparator.ComparatorException, e:
