@@ -47,16 +47,17 @@ class CommonReport:
             elif tag == "Filtering":
                 self.filtering = value
         # Read file properties
-        self.trees = {}
+        self.trees = []
         while 1:
             line = self.fp.readline()
             if not line or line == '%%\n':
                 break
             (tree, properties) = line.split(":")
-            self.trees[tree] = {}
+            propdict = {}
             for assignment in properties.split(", "):
                 (property, value) = assignment.split("=")
-                self.trees[tree][property.strip()] = int(value)
+                propdict[property.strip()] = int(value)
+            self.trees.append([tree, propdict])
         self.cliques = []
         # Reading the clique data is slow, so we only do it
         # on demand.
@@ -123,58 +124,72 @@ class CommonReport:
                     filtered.append(clique)
                     break
             else:
-                properties = self.trees[file.split("/")[0]]
+                for (treename, properties) in self.trees:
+                    if treename == file.split("/")[0]:
+                        break
                 properties['matches'] -= 1
                 properties['matchlines'] -= end - start + 1
         self.cliques = filtered
         self.matches = len(filtered)
 
-    def metadump(self, fp=sys.stdout, divider="%%\n", fmt=None):
+    def metadump(self, fp=sys.stdout, divider="%%\n", fmt=None, moredict={}):
         "Dump the header in a canonical format."
+        fp.write("Filtering: %s\n" %  self.filtering)
         fp.write("Filter-Program: filterator 1.0\n")
         fp.write("Hash-Method: RXOR\n")
+        fp.write("Matches: %d\n" %  self.matches)
         if self.merge_program:
             fp.write("Merge-Program: %s\n" % self.merge_program)
         fp.write("Normalization: %s\n" % self.normalization)
         fp.write("Shred-Size: %d\n" %  self.shredsize)
-        fp.write("Filtering: %s\n" %  self.filtering)
+        for (key, value) in moredict.items():
+            fp.write("%s: %d\n" %  (key, value))
         fp.write(divider)
-        for tree in self.trees:
-            rep = tree + ":"
-            for (key, value) in self.trees[tree].items():
-                rep += " %s=%s," % (key, value)
+        for (treename, properties) in self.trees:
+            rep = treename + ":"
+            keys = properties.keys()
+            keys.sort()
+            for key in keys:
+                rep += " %s=%s," % (key, properties[key])
             fp.write(rep[:-1] + "\n")
         fp.write(divider)
         if fmt:
             for clique in self.cliques:
-                for (file, start, end) in clique:
-                    fp.write(fmt(file, start, end, self.files[file]))
-                fp.write(divider)
+                fp.write(fmt(clique))
 
     def preen(self):
         "Fix the file properties of this report."
         matches = {}
         matchlines = {}
-        for tree in self.trees:
-            matches[tree] = matchlines[tree] = 0
+        for (treename, dummy) in self.trees:
+            matches[treename] = matchlines[treename] = 0
         for clique in self.cliques:
             firstmatch = {}
-            for tree in self.trees:
-                firstmatch[tree] = 0
+            for (treename, dummy) in self.trees:
+                firstmatch[treename] = 0
             for (file, start, end) in clique:
-                properties = self.trees[file.split("/")[0]]
-                if not tree in firstmatch:
+                for (treename, properties) in self.trees:
+                    if treename == file.split("/")[0]:
+                        break
+                if not treename in firstmatch:
                     properties['matches'] += 1
                     firstmatch[tree] = True 
                 properties['matchlines'] += end - start + 1
         self.matches = len(self.cliques)
 
+    def cliquedump(self, clique):
+        "Dump a clique in a form identical to the input one."
+        rep = ""
+        for (file, start, end) in clique:
+            rep += "%s:%d:%d:%d\n" % (file, start, end, self.files[file])
+        rep += "%%\n"
+        return rep
+
     def dump(self, fp):
         "Dump in SCF-B format."
         self.preen()
         fp.write("#SCF-B 2.0\n")
-        self.metadump(fp=fp, divider="%%\n",
-                      fmt=lambda f,s,e, z: "%s:%d:%d:%d\n" % (f,s,e,z))
+        self.metadump(fp=fp, fmt=self.cliquedump)
 
 # Property flags
 C_CODE		= 0x01
