@@ -87,10 +87,14 @@ static void generate_shredlist(int argc, char *argv[])
     for (i = 0; i < argc; i++)
     {
 	char	**place, **list;
+	int	oldcount;
 
+	oldcount = sort_count;
+	fprintf(stderr, "%% Reading %s...", argv[i]);
 	list = sorted_file_list(argv[i], &file_count);
 	for (place = list; place < list + file_count; place++)
 	    shredfile(*place, corehook);
+	fprintf(stderr, "%d entries\n", sort_count - oldcount);
 	free(list);
     }
 }
