@@ -195,7 +195,7 @@ def shredcompare(tree1, tree2, shredsize, verbose):
                 # Toss them out if they don't intersect
                 if not (matches[j][0].intersects(matches[i][0]) and \
                 	matches[j][1].intersects(matches[i][1])):
-                    print "alpha and beta don't intersect"
+                    #print "alpha and beta don't intersect"
                     continue
                 # Merge lower chunk into upper; delete lower
                 #print "Found a merge:", matches[j], matches[i]
