@@ -2,7 +2,7 @@
 #
 # shredcompare -- find common cliques in shred lists
 #
-import getopt, sys, binascii
+import getopt, sys, bsddb
 
 class SHIF:
     "SHIF-A file metadata container."
@@ -85,13 +85,21 @@ def merge_hashes(fp, dict):
             return False
         if not line.strip():
             return True
-        (start, end, hash) = line.split()
-        start = int(start)
-        end = int(end)
-        hash = binascii.unhexlify(hash)
-        if hash not in dict:
-            dict[hash] = []
-        dict[hash].append((file, start, end))
+        (start, end, hashval) = line.split()
+        if dict.has_key(hashval):
+            oldval = dict[hashval]
+        else:
+            oldval = ""
+        dict[hashval] = oldval + file + "\t" + start + "\t" + end + "\n"
+
+def item_factory(db):
+    "Hide the ugliness that is sequential DB access in a generator."
+    yield db.first()
+    while True:
+        try:
+            yield db.next()
+        except:
+            yield None
 
 if __name__ == '__main__':
     try:
@@ -117,13 +125,18 @@ if __name__ == '__main__':
     for i in range(len(args)-1):
         shiflist[i].compatible(shiflist[i+1])
     # Read in all hashes
-    hashdict = {}
+    hashdict = bsddb.hashopen(None, 'c')
     for shif in shiflist:
         while merge_hashes(shif.fp, hashdict):
             continue
     # Nuke all unique hashes
-    for (key, matches) in hashdict.items():
-        if len(matches) == 1:
+    db_cursor = item_factory(hashdict)
+    while True:
+        item = db_cursor.next()
+        if not item:
+            break
+        (key, match) = item
+        if match.count("\n") == 1:
             del hashdict[key]
     # Maybe nuke all match sets that don't cross a tree boundary
     if not local_duplicates:
@@ -132,8 +145,19 @@ if __name__ == '__main__':
     # going to want to do logic on them.  We deferred it this long
     # to lower memory usage.
     matches = []
-    for clique in hashdict.values():
-        matches.append(map(lambda x: Shred(x[0], x[1], x[2]), clique))
+    db_cursor = item_factory(hashdict)
+    while True:
+        item = db_cursor.next()
+        if not item:
+            break
+        (key, match) = item
+        # Decode the multiline strings we had to create to get around
+        # the bsddb key and value constraint.
+        match = map(lambda x: x.split("\t"), match.rstrip().split("\n"))
+        match = map(lambda x: Shred(x[0], int(x[1]), int(x[2])), match)
+        matches.append(match)
+    # We're done with the database file.
+    hashdict.close()
     # Merge overlapping ranges if possible.
     # This is O(n**2) in the number of matching chunks.
     # Should performance ever become a problem, break this up into
