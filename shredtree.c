@@ -218,6 +218,9 @@ static char **sorted_file_list(const char *tree)
 
     /* the objective -- sort */
     qsort(list, file_count, sizeof(char *), stringsort);
+
+    /* caller is responsible for freeing this */
+    return(list);
 }
 
 void generate_shredfile(const char *tree, FILE *ofp)
