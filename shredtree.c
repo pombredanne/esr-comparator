@@ -98,9 +98,15 @@ static struct hash_t emit_chunk(shred *display, int linecount)
 
     /* build completed chunk onto end of array */
     md5_init_ctx(&ctx);
+    if (debug)
+	fprintf(stderr, "Chunk:\n");
     for (i = 0; i < shredsize; i++)
 	if (display[i].line)
+	{
+	    if (debug)
+		fprintf(stderr, "%d: '%s'\n", i, display[i].line);
 	    md5_process_bytes(display[i].line, strlen(display[i].line), &ctx);
+	}
     md5_finish_ctx(&ctx, (void *)&out.hash);
     for (i = shredsize - 1; i >= 0; i--)
 	if (display[i].line)
