@@ -11,12 +11,15 @@
 #include "md5.h"
 #include "shred.h"
 
+/* control bits, meant to be set at startup */
 static int c_only = 0;
 static int rws = 0;
 static int debug = 0;
 static int shredsize = 5;
 
-static int filecount, chunk_count;
+/* globally visible data; chunk_buffer should be a malloc area set by the caller */
+static int file_count, chunk_count;
+static struct hash_t *chunk_buffer;
 
 struct item
 {
@@ -25,8 +28,6 @@ struct item
 }
 dummy;
 static struct item *head = &dummy;
-
-static struct hash_t *chunk_buffer;
 
 static int eligible(const char *file)
 /* is the specified file eligible to be compared? */ 
@@ -122,7 +123,7 @@ static void shredfile(const char *file)
 
     display = (shred *)calloc(sizeof(shred), shredsize);
 
-    accepted = linecount = chunk_count = 0;
+    accepted = linecount = 0;
     while(fgets(buf, sizeof(buf), fp) != NULL)
     {
 	linecount++;
@@ -162,7 +163,7 @@ int treewalker(const char *file, const struct stat *sb, int flag)
         new->file = strdup(file);
 	new->next = head;
 	head = new;
-	filecount++;
+	file_count++;
     }
     return(0);
 }
@@ -177,7 +178,7 @@ static void generate_shredfile(const char *tree, FILE *ofp)
 /* generate shred file for given tree */
 {
     char	**place, **list;
-    u_int32_t	netfilecount;
+    u_int32_t	netfile_count;
 
     fputs("#SHIF-A 1.0\n", ofp);
     fputs("Generator-Program: shredtree 1.0\n", ofp);
@@ -190,22 +191,23 @@ static void generate_shredfile(const char *tree, FILE *ofp)
     ftw(tree, treewalker, 16);
 
     /* now that we know the length, copy into an array */
-    list = place = (char **)calloc(sizeof(char *), filecount);
+    list = place = (char **)calloc(sizeof(char *), file_count);
     for (; head->next; head = head->next)
 	*place++ = head->file;
 
     /* the objective -- sort */
-    qsort(list, filecount, sizeof(char *), stringsort);
+    qsort(list, file_count, sizeof(char *), stringsort);
 
     /* generate the list */
-    netfilecount = htonl(filecount);
-    fwrite(&netfilecount, sizeof(u_int32_t), 1, ofp);
-    for (place = list; place < list + filecount; place++)
+    netfile_count = htonl(file_count);
+    fwrite(&netfile_count, sizeof(u_int32_t), 1, ofp);
+    for (place = list; place < list + file_count; place++)
     {
 	linenum_t	net_chunks;
 
 	/* shredfile adds data to chunk_buffer */
 	chunk_buffer = (struct hash_t *)calloc(sizeof(struct hash_t), 1);
+	chunk_count = 0;
 	shredfile(*place);
 
 	/* the actual output */
@@ -224,7 +226,6 @@ main(int argc, char *argv[])
     extern int	optind;		/* set by getopt */
 
     int status;
-    char *dir = ".";
     while ((status = getopt(argc, argv, "cd:hs:w")) != EOF)
     {
 	switch (status)
