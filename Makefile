@@ -5,7 +5,8 @@
 
 VERS=1.6
 
-CODE    = shredtree.c shred.h report.c main.c md5.c md5.h filterator
+CODE    = shredtree.c shred.h report.c hash.c main.c md5.c md5.h hash.h \
+		filterator hashgen.py
 DOCS    = README NEWS comparator.xml scf-standard.xml COPYING
 EXTRAS  = shredtree.py shredcompare.py
 TEST    = test
@@ -15,14 +16,19 @@ LDFLAGS =
 
 all: comparator comparator.1
 
-main.o: main.c shred.h
+main.o: main.c shred.h hash.h
 	$(CC) -DVERSION=\"$(VERS)\" -c $(CFLAGS) main.c 
-shredtree.o: shredtree.c shred.h
+hash.o: hash.c hash.h
+	$(CC) -c $(CFLAGS) hash.c 
+shredtree.o: shredtree.c shred.h hash.h
 	$(CC) -c $(CFLAGS) shredtree.c 
-report.o: report.c shred.h
+report.o: report.c shred.h hash.h
 	$(CC) -c $(CFLAGS) report.c 
-comparator: main.o shredtree.o md5.o report.o
-	$(CC) $(CFLAGS) main.o shredtree.o md5.o report.o $(LDFLAGS) -o comparator
+comparator: main.o hash.o shredtree.o md5.o report.o
+	$(CC) $(CFLAGS) main.o hash.o shredtree.o md5.o report.o $(LDFLAGS) -o comparator
+
+hash.c: hashgen.py
+	python hashgen.py >hash.c
 
 clean:
 	rm -f comparator shredtree.o md5.o report.o main.o *~
