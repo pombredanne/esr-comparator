@@ -20,10 +20,17 @@ struct hash_t
 };
 #define HASHCMP(s, t)	memcmp((s)->hash.hash, (t)->hash.hash, HASHSIZE)
 
+struct filehdr_t
+{
+    char	*name;
+    linenum_t	length;
+    struct filehdr_t *next;
+};
+
 struct sorthash_t
 {
     struct hash_t	hash;
-    char		*file;
+    struct filehdr_t	*file;
 };
 
 /* control bits, meant to be set at startup */
@@ -35,14 +42,16 @@ extern int shredsize;
 
 /* main.c functions */
 extern void report_time(char *legend, ...);
-extern void corehook(struct hash_t hash, const char *file);
+struct filehdr_t *register_file(const char *file, linenum_t length);
+extern void corehook(struct hash_t hash, struct filehdr_t *file);
 extern void extend_current_chunk(void);
 extern void dump_array(const char *legend,
 		       struct sorthash_t *obarray, int hashcount);
 
 /* shredtree.c functions */
 extern char **sorted_file_list(const char *, int *);
-extern int shredfile(const char *, void (*hook)(struct hash_t, const char *));
+extern int shredfile(struct filehdr_t *, 
+		     void (*hook)(struct hash_t, struct filehdr_t *));
 extern void sort_hashes(struct sorthash_t *hashlist, int hashcount);
 
 /* shredcompare.c functions */

@@ -330,9 +330,9 @@ of count lines followed by a %%\n section marker. Each linecount line
 consists of two colon-separated fields, a tree name and a line count.</para>
 
 <para>Each range set consists of two or more ranges followed by a line
-containing a %%\n section marker.  A range is represented as three
-tab-separated fields: filename, start line, and end line.  Line
-numbers are 1-origin.</para>
+containing a %%\n section marker.  A range is represented as four
+tab-separated fields: filename, start line, end line, and length of
+file in lines.  Line numbers are 1-origin.</para>
 
 <para>The natural sort order for range sets is by filename, then by
 start line, then by end line.  Ranges within range sets should be

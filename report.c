@@ -36,7 +36,7 @@ static int merge_ranges(struct sorthash_t *p,
      * segments of text, which is the only case we are interested in.
      */
     for (i = 0; i < nmatches; i++)
-	if (strcmp(p[i].file, q[i].file))
+	if (strcmp(p[i].file->name, q[i].file->name))
 	{
 #ifdef DEBUG
 	    printf("File mismatch\n");
@@ -234,7 +234,7 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 	 /* if all these matches are within the same tree, toss them */
 	 heterogenous = 0;
 	 for (i = 0; i < nmatches; i++)
-	     if (!sametree(np[i].file, np[(i+1) % nmatches].file))
+	     if (!sametree(np[i].file->name, np[(i+1) % nmatches].file->name))
 		 heterogenous++;
 	 if (!heterogenous)
 	     continue;
@@ -276,7 +276,7 @@ static int sortmatch(const void *a, const void *b)
     struct sorthash_t *s = ((struct match_t *)a)->matches;
     struct sorthash_t *t = ((struct match_t *)b)->matches;
 
-    int cmp = strcmp(s->file, t->file);
+    int cmp = strcmp(s->file->name, t->file->name);
     if (cmp)
 	return(cmp);
     else
@@ -315,7 +315,11 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
 	{
 	    struct sorthash_t	*rp = match->matches+i;
 
-	    printf("%s:%d:%d\n",  rp->file, rp->hash.start, rp->hash.end);
+	    printf("%s:%d:%d:%d\n", 
+		   rp->file->name, 
+		   rp->hash.start, rp->hash.end,
+		   rp->file->length
+		);
 	}
 	printf("%%%%\n");
     }

@@ -156,8 +156,8 @@ static struct hash_t emit_chunk(shred *display, int linecount)
     return(out);
 }
 
-int shredfile(const char *file, 
-		      void (*hook)(struct hash_t, const char *))
+int shredfile(struct filehdr_t *file, 
+		      void (*hook)(struct hash_t, struct filehdr_t *))
 /* emit hash section for specified file */
 {
     FILE *fp;
@@ -165,7 +165,7 @@ int shredfile(const char *file,
     int i, linecount, accepted;
     shred *display;
 
-    if ((fp = fopen(file, "r")) == NULL)
+    if ((fp = fopen(file->name, "r")) == NULL)
     {
 	fprintf(stderr, "shredtree: couldn't open %s, error %d\n",
 		file, errno);
@@ -294,8 +294,8 @@ static int sortchunk(const void *a, const void *b)
     if (cmp)
 	return(cmp);
     else
-	return(strcmp(((struct sorthash_t *)a)->file,
-		      ((struct sorthash_t *)b)->file));
+	return(strcmp(((struct sorthash_t *)a)->file->name,
+		      ((struct sorthash_t *)b)->file->name));
 }
 
 void sort_hashes(struct sorthash_t *hashlist, int hashcount)

@@ -24,9 +24,22 @@ struct scf_t
 };
 static struct scf_t dummy_scf, *scflist = &dummy_scf;
 
+static struct filehdr_t dummy_filehdr, *filelist = &dummy_filehdr;
+
 static int chunk_count, sort_count;
 static struct hash_t *chunk_buffer;
 static struct sorthash_t *sort_buffer;
+
+struct filehdr_t *register_file(const char *file, linenum_t length)
+/* register a file and its line count into the in-core list */
+{
+    struct filehdr_t	*new = (struct filehdr_t *)malloc(sizeof(struct filehdr_t));
+    new->name = strdup(file);
+    new->length = length;
+    new->next = filelist;
+    filelist = new;
+    return(new);
+}
 
 static int is_scf_file(const char *file)
 /* is the specified file an SCF hash list? */
@@ -52,7 +65,7 @@ static int is_scf_file(const char *file)
  * can get quite large.
  */
 
-static void filehook(struct hash_t hash, const char *file)
+static void filehook(struct hash_t hash, struct filehdr_t *file)
 /* hook to store only hashes */
 {
     chunk_buffer = (struct hash_t *)realloc(chunk_buffer, 
@@ -62,14 +75,14 @@ static void filehook(struct hash_t hash, const char *file)
 }
 
 
-void corehook(struct hash_t hash, const char *file)
+void corehook(struct hash_t hash, struct filehdr_t *file)
 /* hook to store hash and file */
 {
     sort_buffer = (struct sorthash_t *)realloc(sort_buffer, 
 				      sizeof(struct sorthash_t) * (sort_count+1));
     
     sort_buffer[sort_count].hash = hash;
-    sort_buffer[sort_count].file = (char *)file;
+    sort_buffer[sort_count].file = file;
     sort_count++;
 }
 
@@ -85,7 +98,7 @@ static void write_scf(const char *tree, FILE *ofp)
 {
     char	**place, **list;
     int		file_count, progress, totalchunks;
-    u_int32_t	netfile_count, totallines = 0;
+    u_int32_t	netfile_count, lines, totallines = 0;
     char	buf[BUFSIZ];
 
     list = sorted_file_list(tree, &file_count);
@@ -114,17 +127,23 @@ static void write_scf(const char *tree, FILE *ofp)
     progress = totalchunks = 0;
     for (place = list; place < list + file_count; place++)
     {
-	linenum_t	net_chunks;
+	linenum_t	net_chunks, lines;
 	struct hash_t	*np;
+	struct filehdr_t	*filep;
 
 	/* shredfile adds data to chunk_buffer */
 	chunk_buffer = (struct hash_t *)calloc(sizeof(struct hash_t), 1);
 	chunk_count = 0;
-	totallines += shredfile(*place, filehook);
+	filep = register_file(*place, 0);
+	lines = shredfile(filep, filehook);
+	filep->length = lines;
 
 	/* the actual output */
 	fputs(*place, ofp);
 	fputc('\n', ofp);
+	totallines += lines;
+	lines = TONET(lines);
+	fwrite((char *)&lines, sizeof(linenum_t), 1, ofp);
 	net_chunks = TONET(chunk_count);
 	fwrite((char *)&net_chunks, sizeof(linenum_t), 1, ofp);
 	if (debug)
@@ -186,15 +205,15 @@ static void read_scf(struct scf_t *scf)
     while (filecount--)
     {
 	char	buf[BUFSIZ];
-	linenum_t	chunks;
+	linenum_t	lines, chunks;
+	struct filehdr_t	*filehdr;
 
 	fgets(buf, sizeof(buf), scf->fp);
 	*strchr(buf, '\n') = '\0';
-	/*
-	 * This isn't freed anywhere before end of execution.
-	 * That's a potential memory leak if this routine is misapplied
-	 */
-	scf->name = strdup(buf);
+
+	fread(&lines, sizeof(linenum_t), 1, scf->fp);
+	lines = FROMNET(lines);
+	filehdr = register_file(buf, lines);
 
 	fread(&chunks, sizeof(linenum_t), 1, scf->fp);
 	chunks = FROMNET(chunks);
@@ -207,7 +226,7 @@ static void read_scf(struct scf_t *scf)
 	    fread(this.hash, sizeof(char), HASHSIZE, scf->fp);
 	    this.start = FROMNET(this.start);
 	    this.end = FROMNET(this.end);
-	    corehook(this, scf->name);
+	    corehook(this, filehdr);
 	    hashcount++;
 	    if (!debug && hashcount % 10000 == 0)
 		fprintf(stderr,"\b\b\b%02.0f%%",(ftell(scf->fp) / (sb.st_size * 0.01)));
@@ -239,7 +258,11 @@ static int merge_tree(char *tree)
     fprintf(stderr, "reading...   ");
     for (place = list; place < list + file_count; place++)
     {
-	totallines += shredfile(*place, corehook);
+	struct filehdr_t *filep = register_file(*place, 0);
+	linenum_t lines = shredfile(filep, corehook);
+
+	filep->length = lines; 
+	totallines += lines;
 	if (!debug && !(i++ % 100))
 	    fprintf(stderr, "\b\b\b%02.0f%%", i / (file_count * 0.01));
     }
@@ -341,7 +364,7 @@ void dump_array(const char *legend,
 	       scratch.hash[13], 
 	       scratch.hash[14], 
 	       scratch.hash[15],
-	       np->file, scratch.start, scratch.end);
+	       np->file->name, scratch.start, scratch.end);
     }
 }
 
