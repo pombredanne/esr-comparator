@@ -158,7 +158,7 @@ void shredfile(const char *file,
 	    display[i-1] = display[i];
 	display[shredsize-1].line = NULL;
     }
-    if (linecount < shredsize)
+    if (accepted < shredsize)
 	hook(emit_chunk(display, linecount), file);
 
     free(display);
