@@ -315,9 +315,10 @@ void report_time(char *legend, ...)
 
 static void usage(void)
 {
-    fprintf(stderr,"usage: shredtree [-c] [-d dir ] [-s shredsize] [-w] [-x] path...\n");
+    fprintf(stderr,"usage: shredtree [-c] [-d dir ] [-o file] [-s shredsize] [-w] [-x] path...\n");
     fprintf(stderr,"  -c      = generate SCF files\n");
     fprintf(stderr,"  -d dir  = change directory before digesting.\n");
+    fprintf(stderr,"  -o file = write to the specified file.\n");
     fprintf(stderr,"  -s size = set shred size (default %d)\n", shredsize);
     fprintf(stderr,"  -w      = remove whitespace.\n");
     fprintf(stderr,"  -x      = debug, display chunks in output.\n");
@@ -331,11 +332,11 @@ main(int argc, char *argv[])
 
     int status, file_only, compile_only;
     struct scf_t	*scf;
-    char *dir;
+    char *dir, *outfile;
 
     compile_only = file_only = 0;
-    dir = NULL;
-    while ((status = getopt(argc, argv, "cd:hs:wx")) != EOF)
+    dir = outfile = NULL;
+    while ((status = getopt(argc, argv, "cd:ho:s:wx")) != EOF)
     {
 	switch (status)
 	{
@@ -345,6 +346,10 @@ main(int argc, char *argv[])
 
 	case 'd':
 	    dir = optarg;
+	    break;
+
+	case 'o':
+	    outfile = optarg;
 	    break;
 
 	case 's':
@@ -374,6 +379,17 @@ main(int argc, char *argv[])
 	usage();
 
     report_time(NULL);
+
+    if (outfile)
+    {
+	FILE	*ofp;
+
+	if (freopen(outfile, "w", stdout) == NULL)
+	{
+	    perror("comparator");
+	    exit(1);
+	}
+    }
 
     /* special case if user gave exactly one tree */
     if (!compile_only && optind == argc - 1)
