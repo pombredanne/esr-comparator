@@ -6,7 +6,7 @@
 VERS=2.2
 
 CODE    = shredtree.c shred.h report.c hash.c linebyline.c main.c \
-		hash.h hashtab.h \
+		hash.h hashtab.h normalizer.c \
 		filterator comparator.py 
 SCRIPTS = hashgen.py setup.py
 DOCS    = README NEWS comparator.xml scf-standard.xml COPYING
