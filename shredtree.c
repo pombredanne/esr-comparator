@@ -148,7 +148,7 @@ void shredfile(const char *file)
     }
     if (linecount < shredsize)
 	emit_chunk(display, linecount);
-    net_chunks = htonl(chunk_count);
+    net_chunks = TONET(chunk_count);
 
     /* the actual output */
     puts(file);
