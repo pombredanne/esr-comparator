@@ -85,7 +85,7 @@ class CommonReport:
         # We're done, clean up
         if self.name:
             self.fp.close()
-        if len(self.cliques) != self.matches:
+        if self.matches and len(self.cliques) != self.matches:
             raise ComparatorException("Matches field not equal to clique count.")
 
     def extract_text(self, clique):
