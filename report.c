@@ -76,7 +76,7 @@ static void report_time(char *legend, ...)
 
 	va_start(ap, legend);
 	vsprintf(buf, legend, ap);
-	fprintf(stderr, "%% %s: %%dh %dm %ds\n", buf, hours, minutes, seconds);
+	fprintf(stderr, "%% %s: %dh %dm %ds\n", buf, hours, minutes, seconds);
     }
     mark_time = endtime;
 }
