@@ -357,8 +357,9 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
      * Compact the match list in order to cut the n log n qsort time
      */
     for (copy = match = hitlist; match < hitlist + hashcount; match++)
-	if (match->nmatches && copy < match)
+	if (match->nmatches > 0 && copy < match)
 	    *copy++ = *match;
+    mergecount = (copy - hitlist);
     qsort(hitlist, mergecount, sizeof(struct match_t), sortmatch);
 
     for (match = hitlist; match < hitlist + mergecount; match++)
