@@ -215,9 +215,14 @@ all cliques for which no assocoated filename matches the regexp.  This
 might be useful if you want to see a common-segment report only for
 files with a particular extension such as .h or .S.</para>
 
+<para>The -F option takes an argument which is a file containing
+a list of filenames.  Any clique that does not contain one of these
+filenames is discarded.</para>
+
 <para>The -n option suppresses code listing, so that an SCF-B output
 is produced instead.  You can use this to filter common-segment
-reports with -m and -f options of the tool.</para>
+reports with -m, -f, and -F options of the tool and then hand-filter
+them for junk before generating a listing.</para>
 
 <para>Each <application>filterator</application> line beginning with %
 is the filename from which the following common span of lines is displayed 

@@ -20,20 +20,25 @@ if __name__ == '__main__':
     # Main line begins here
     import getopt
     try:
-        (optlist, args) = getopt.getopt(sys.argv[1:], 'd:f:m:n')
+        (optlist, args) = getopt.getopt(sys.argv[1:], 'd:f:F:m:n')
     except getopt.GetoptError:
-        sys.stderr.write("usage: filterator [-n] [-d dir] [-m size] [-f filter]\n")
+        sys.stderr.write("usage: filterator [-n] [-d dir] [-m size] [-f filter] [-F matchfile]\n")
         sys.exit(2)
     dir = None
     filter = None
     minsize = 5
     expand = True
+    matchfiles = []
     linecounts = {}
     for (opt, val) in optlist:
         if opt == '-d':
             dir = val
         elif opt == '-f':
             filter = re.compile(val)
+        elif opt == '-F':
+            fp = open(val, "r")
+            matchfiles = map(lambda x: x.strip(), fp.readlines())
+            fp.close()
         elif opt == '-m':
             minsize = int(val)
         elif opt == '-n':
@@ -45,6 +50,8 @@ if __name__ == '__main__':
             state.cliquefilter(lambda file,start,end: end-start+1 >= minsize)
         if filter:
             state.cliquefilter(lambda file, start, end: filter.search(file))
+        if matchfiles:
+            state.cliquefilter(lambda file, start, end: file in matchfiles)
         try:
             if expand:
                 state.metadump(sys.stdout, (75 * '-')+"\n", reporthook, {"Minimum-Size":minsize})
