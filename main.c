@@ -15,6 +15,7 @@ int verbose, debug, minsize;
 struct scf_t
 {
     char	*name;
+    char	*file;
     FILE	*fp;
     u_int32_t	totallines;
     char	*normalization;
@@ -135,6 +136,7 @@ static void write_scf(const char *tree, FILE *ofp)
     fputs("Hash-Method: " HASHMETHOD "\n", ofp);
     write_options(buf);
     fprintf(ofp, "Normalization: %s\n", buf);
+    fprintf(ofp, "Root: %s\n", tree);
     fprintf(ofp, "Shred-Size: %d\n", shredsize);
     fputs("%%\n", ofp);
 
@@ -201,9 +203,9 @@ static void read_scf(struct scf_t *scf)
     int hashcount = 0;
     struct stat sb;
 
-    stat(scf->name, &sb);
+    stat(scf->file, &sb);
     if (verbose)
-	fprintf(stderr, "%% Reading hash list %s...    ", scf->name);
+	fprintf(stderr, "%% Reading hash list %s...    ", scf->file);
     fread(&filecount, sizeof(linecount_t), 1, scf->fp);
     filecount = ntohl(filecount);
     while (filecount--)
@@ -284,16 +286,16 @@ static int merge_tree(char *tree)
 static void init_scf(char *file, struct scf_t *scf, const int readfile)
 /* add to the in-core list of sorthash structures from a SCF file */
 {
-    scf->name = strdup(file);
+    scf->file = strdup(file);
     if (readfile)
     {
 	char	buf[BUFSIZ];
 
 	/* read in the SCF metadata block and add it to the in-core list */
-	scf->fp   = fopen(scf->name, "r");
+	scf->fp   = fopen(scf->file, "r");
 	if (!scf->fp)
 	{
-	    fprintf(stderr, "comparator: file %s, %s", scf->name, strerror(errno));
+	    fprintf(stderr, "comparator: file %s, %s", scf->file, strerror(errno));
 	    exit(1);
 	}
 	fgets(buf, sizeof(buf), scf->fp);
@@ -301,7 +303,7 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
 	{
 	    fprintf(stderr, 
 		    "comparator: %s is not a SCF-A file.\n", 
-		    scf->name);
+		    scf->file);
 	    exit(1);
 	}
 	while (fgets(buf, sizeof(buf), scf->fp) != NULL)
@@ -324,6 +326,8 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
 		scf->hash_method = strdup(value);
 	    else if (!strcmp(buf, "Generator-Program"))
 		scf->generator_program = strdup(value);
+	    else if (!strcmp(buf, "Root"))
+		scf->name = strdup(value);
 	}
     }
     else
@@ -335,6 +339,7 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
 	scf->normalization = strdup(buf);
 	scf->shred_size = shredsize;
 	scf->generator_program = "comparator " VERSION;
+	scf->name = strdup(file);
     }
 }
 
@@ -550,7 +555,7 @@ main(int argc, char *argv[])
 	{
 	    fprintf(stderr, 
 		    "comparator: hash method %s of %s is not compiled in.\n",
-		    scf->hash_method, scf->name);
+		    scf->hash_method, scf->file);
 	    exit(1);
 	}
 
@@ -564,14 +569,14 @@ main(int argc, char *argv[])
 	{
 	    fprintf(stderr, 
 		    "comparator: normalizations of %s and %s don't match\n",
-		    scf->name, scf->next->name);
+		    scf->file, scf->next->file);
 	    exit(1);
 	}
 	else if (scf->shred_size != scf->next->shred_size)
 	{
 	    fprintf(stderr, 
 		    "comparator: shred sizes of %s and %s don't match\n",
-		    scf->name, scf->next->name);
+		    scf->file, scf->next->file);
 	    exit(1);
 
 	}
@@ -582,7 +587,7 @@ main(int argc, char *argv[])
 	if (scf->fp)
 	{
 	    read_scf(scf);
-	    scf->name[strlen(scf->name) - strlen(".scf")] = '\0';
+	    scf->file[strlen(scf->file) - strlen(".scf")] = '\0';
 	    fclose(scf->fp);
 	}
 

@@ -251,6 +251,12 @@ may include the following:</para>
 </varlistentry>
 
 <varlistentry>
+<term><emphasis>Root</emphasis>: (mandatory)</term>
+<listitem><para>The root name of the tree this SCF file
+represents.</para></listitem>
+</varlistentry>
+
+<varlistentry>
 <term><emphasis>Shred-Size</emphasis>: (mandatory)</term>
 <listitem><para>The shred size as a decimal integer.</para></listitem>
 </varlistentry>
