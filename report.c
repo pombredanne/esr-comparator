@@ -353,7 +353,7 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
     report_time("%d range groups after merging", mergecount);
 
     /*
-     * A little extra effort so we can generate a sirted report.
+     * A little extra effort so we can generate a sorted report.
      * Compact the match list in order to cut the n log n qsort time
      */
     for (copy = match = hitlist; match < hitlist + hashcount; match++)
