@@ -23,14 +23,12 @@ static int merge_ranges(struct sorthash_t *p,
 /* merge p into q, if the ranges in the match are compatible */
 {
     int	i, mc, overlap;
+    
     /*
      * The general problem: you have two lists of shreds, of the same
      * lengths.  Within each list, all shreds have the same hash.
      * Within the lists, the shreds are sorted in filename order.
      * 
-     */
-
-    /*
      * There are two possible overlap cases.  Either the start line of
      * each range in p is within the corresponding range in q or
      * vice-versa.  If we know all pairs of shreds intersect, we
@@ -42,12 +40,16 @@ static int merge_ranges(struct sorthash_t *p,
     for (i = 0; i < nmatches; i++)
 	if (p[i].hash.start >= q[i].hash.start && p[i].hash.start <= q[i].hash.end)
 	    mc++;
+	else
+	    break;
     if (mc == nmatches)
 	overlap = 1;
     mc = 0;
     for (i = 0; i < nmatches; i++)
 	if (q[i].hash.start >= p[i].hash.start && q[i].hash.start <= p[i].hash.end)
 	    mc++;
+	else
+	    break;
     if (mc == nmatches)
 	overlap = 1;
     if (!overlap)
