@@ -8,6 +8,8 @@
 #
 #	http://theinquirer.net/?article=10061
 #
+# In this implementation, blank lines are ignored.
+#
 # The -h option supports building a cache containing the shred list
 # for a tree you specify.  This is strictly a speed hack.  If your
 # tree is named `foo', the file will be named `foo.hash'.  On your
@@ -20,7 +22,7 @@
 # generation, that very occasionally garbages the last number in the
 # target-tree range.  I haven't fixed it yet because I haven't found a
 # way to produce a test load that reproduces it that is smaller that
-# the entire Linux 2.6.o and Sysem V kernels.
+# the entire Linux 2.6.0 and Sysem V kernels.
 
 import sys, os, os.path, re, md5, getopt, time, cPickle
 
@@ -114,13 +116,23 @@ class ShredTree:
         fp = open(file)
         lines = map(self.__smash_whitespace, fp.readlines())
         fp.close()
-        for i in range(len(lines)-shredsize):
+        for i in range(len(lines)):
             if self.__is_line_relevant(lines[i]):
                 m = md5.new()
-                for j in range(self.shredsize):
-                    m.update(lines[i+j])
-                # Merging shreds into a dict automatically suppresses duplicates.
-                self.shreds[m.digest()] = Shred(file, i, i + self.shredsize)
+                need = self.shredsize
+                j = 0
+                try:
+                    while need > 0:
+                        if i + j >= len(lines):
+                            raise EOFError
+                        if self.__is_line_relevant(lines[i+j]):
+                            m.update(lines[i+j])
+                            need -= 1
+                        j += 1
+                    # Merging shreds into a dict automatically suppresses dups.
+                    self.shreds[m.digest()] = Shred(file, i, i + j)
+                except EOFError:
+                    pass
     def __eligible(self, file):
         "Is a file eligible for comparison?"
         return filter(lambda x: file.endswith(x), ('.c','h','.y','.l','.txt'))
