@@ -189,9 +189,9 @@ static void merge_tree(char *tree)
 /* add to the in-core list of sorthash structures from a tree */
 {
     char	**place, **list;
-    int	oldcount, file_count;
+    int	old_entry_count, file_count, i;
 
-    oldcount = sort_count;
+    old_entry_count = sort_count;
     file_count = 0;
     list = sorted_file_list(tree, &file_count);
     if (!file_count)
@@ -199,10 +199,16 @@ static void merge_tree(char *tree)
 	fprintf(stderr, "comparator: couldn't open %s\n", tree);
 	exit(1);
     }
-    fprintf(stderr, "%% Reading tree %s...", tree);
+    i = 0;
+    fprintf(stderr, "%% Reading tree %s...   ", tree);
     for (place = list; place < list + file_count; place++)
+    {
 	shredfile(*place, corehook);
-    fprintf(stderr, "%d entries\n", sort_count - oldcount);
+	if (!(i++ % 100))
+	    fprintf(stderr, "\b\b\b%02.0f%%", i / (file_count * 0.01));
+    }
+    fprintf(stderr, "\b\b\b100%%...done, %d files, %d entries.\n", 
+	    file_count, sort_count - old_entry_count);
     free(list);
 }
 
@@ -404,7 +410,16 @@ main(int argc, char *argv[])
 	char	*olddir, *source = argv[optind];
 
 	if (is_scf_file(source))
+	{
+	    if (dir)
+	    {
+		olddir = getcwd(NULL, 0);	/* may fail off Linux */
+		chdir(dir);
+	    }
 	    init_scf(source);
+	    if (dir)
+		chdir(olddir);
+	}
 	else if (compile_only)
 	{
 	    char	*outfile = alloca(strlen(source) + 4);
@@ -431,7 +446,16 @@ main(int argc, char *argv[])
 	    fclose(ofp);
 	}
 	else
+	{
+	    if (dir)
+	    {
+		olddir = getcwd(NULL, 0);	/* may fail off Linux */
+		chdir(dir);
+	    }
 	    merge_tree(source);
+	    if (dir)
+		chdir(olddir);
+	}
     }
 
     /* if there were no SCFs, create a dummy one */
