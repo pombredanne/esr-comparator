@@ -245,6 +245,8 @@ static int merge_tree(char *tree)
 static void init_scf(char *file, struct scf_t *scf)
 /* add to the in-core list of sorthash structures from a SCF file */
 {
+    if (file)
+    {
     char	buf[BUFSIZ];
 
     /* read in the SCF metadata block and add it to the in-core list */
@@ -278,6 +280,27 @@ static void init_scf(char *file, struct scf_t *scf)
 	    scf->hash_method = strdup(value);
 	else if (!strcmp(buf, "Generator-Program"))
 	    scf->generator_program = strdup(value);
+    }
+    }
+    else
+    {
+	char	buf[BUFSIZ];
+
+	scf->hash_method = "MD5";
+	buf[0] = '\0';
+	if (remove_whitespace)
+	    strcat(buf, "remove-whitespace, ");
+	if (remove_comments)
+	    strcat(buf, "remove-comments, ");
+	if (remove_braces)
+	    strcat(buf, "remove-braces, ");
+	if (buf[0])
+	    buf[strlen(buf)-1] = '\0';
+	else
+	    strcpy(buf, "none");
+	scf->normalization = strdup(buf);
+	scf->shred_size = shredsize;
+	scf->generator_program = "comparator " VERSION;
     }
 }
 
@@ -497,25 +520,7 @@ main(int argc, char *argv[])
 
     /* if there were no SCFs, create a dummy one */
     if (scflist == &dummy_scf)
-    {
-	char	buf[BUFSIZ];
-
-	scflist->hash_method = "MD5";
-	buf[0] = '\0';
-	if (remove_whitespace)
-	    strcat(buf, "remove-whitespace, ");
-	if (remove_comments)
-	    strcat(buf, "remove-comments, ");
-	if (remove_braces)
-	    strcat(buf, "remove-braces, ");
-	if (buf[0])
-	    buf[strlen(buf)-1] = '\0';
-	else
-	    strcpy(buf, "none");
-	scflist->normalization = strdup(buf);
-	scflist->shred_size = shredsize;
-	scflist->generator_program = "comparator " VERSION;
-    }
+	init_scf(NULL, &dummy_scf);
     else
     {
 	/* consistency checks on the SCFs */
