@@ -224,7 +224,7 @@ int shredfile(struct filehdr_t *file,
 	    display[i-1] = display[i];
 	display[shredsize-1].line = NULL;
     }
-    if (accepted < shredsize)
+    if (accepted && accepted < shredsize)
 	hook(emit_chunk(display, linecount), file);
 
     free(display);
