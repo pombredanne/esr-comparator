@@ -3,7 +3,7 @@
 VERS=1.3
 
 CODE    = shredtree.c shred.h report.c main.c md5.c md5.h filterator
-DOCS    = README comparator.xml scf-standard.xml COPYING
+DOCS    = README NEWS comparator.xml scf-standard.xml COPYING
 EXTRAS  = shredtree.py shredcompare.py
 TEST    = test
 SOURCES = $(CODE) $(DOCS) $(EXTRAS) $(TEST) comparator.spec Makefile
@@ -19,7 +19,7 @@ shredtree.o: shredtree.c shred.h
 report.o: report.c shred.h
 	$(CC) -c $(CFLAGS) report.c 
 comparator: main.o shredtree.o md5.o report.o
-	$(CC) main.o shredtree.o md5.o report.o $(LDFLAGSx) -o comparator
+	$(CC) $(CFLAGS) main.o shredtree.o md5.o report.o $(LDFLAGS) -o comparator
 
 clean:
 	rm -f comparator shredtree.o md5.o report.o main.o *~
