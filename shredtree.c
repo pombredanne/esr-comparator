@@ -223,8 +223,8 @@ int shredfile(struct filehdr_t *file,
 	     * styles).  This is a kluge, but it means we will capture
 	     * entire C functions that differ only by brace placement.
 	     */
-	    if (remove_braces && braceline && linecount < file->length)
-		extend_current_chunk();
+	    if (remove_braces && braceline)
+		extend_current_chunk(file->length);
 	    continue;
 	}
 	accepted++;

@@ -88,7 +88,7 @@ void corehook(struct hash_t hash, struct filehdr_t *file)
     sort_count++;
 }
 
-void extend_current_chunk(void)
+void extend_current_chunk(limit)
 /* bump the end-line number on the last chunk, if there is one */
 {
     if (sort_count > 0)
