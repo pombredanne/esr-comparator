@@ -67,9 +67,9 @@ def shredfile(file):
 
 if __name__ == '__main__':
     try:
-        (optlist, args) = getopt.getopt(sys.argv[1:], 'cdhs:w')
+        (optlist, args) = getopt.getopt(sys.argv[1:], 'cd:hs:wx')
     except getopt.GetoptError:
-        sys.stderr.write("usage: shredtree [-c] [-d] [-w] [-s shredsize] tree\n")
+        sys.stderr.write("usage: shredtree [-c] [-d dir] [-w] [-s shredsize] tree\n")
         sys.exit(2)
     shredsize = 5
     ws = debug = c_only = False
@@ -77,20 +77,23 @@ if __name__ == '__main__':
         if opt == '-c':
             c_only = True
         elif opt == '-d':
-            debug = True
+            os.chdir(optarg);
         elif opt == '-h':
 	    sys.stderr.write("usage: shredtree [-c] [-s size] [-w] path\n");
 	    sys.stderr.write(" -c      = do .c, .h, and .txt files only.\n");
-	    sys.stderr.write(" -d      = debug, display chunks in output.\n");
+            sys.stderr.write(" -d      = go to directory before digesting\n");
 	    sys.stderr.write(" -h      = help (display this message).\n");
 	    sys.stderr.write(" -s size = set shred size (default %d)\n",
 		    shredsize);
 	    sys.stderr.write(" -w      = remove whitespace.\n");
+	    sys.stderr.write(" -x      = debug, display chunks in output.\n");
 	    sys.exit(0);
         elif opt == '-s':
             shredsize = int(val)
         elif opt == '-w':
             ws = True
+        elif opt == '-d':
+            debug = True
     if args:
         print "#SHIF-A 1.0"
         print "Generator-Program: shredtree.py 1.0"

@@ -197,7 +197,7 @@ main(int argc, char *argv[])
 	    break;
 
 	case 'd':
-	    debug = 1;
+	    chdir(optarg);
 	    break;
 
 	case 's':
@@ -208,12 +208,17 @@ main(int argc, char *argv[])
 	    rws = 1;
 	    break;
 
+	case 'x':
+	    debug = 1;
+	    break;
+
 	case 'h':
 	default:
-	    fprintf(stderr,"usage: shredtree [-c] [-s shredsize] [-w] path\n");
+	    fprintf(stderr,"usage: shredtree [-c] [-d dir ] [-s shredsize] [-w] [-x] path\n");
 	    fprintf(stderr,"  -c      = check .c, .h, and .txt files only.\n");
-	    fprintf(stderr,"  -d      = debug, display chunks in output.\n");
+	    fprintf(stderr,"  -d dir  = change directory before digesting.\n");
 	    fprintf(stderr,"  -h      = help (display this message).\n");
+	    fprintf(stderr,"  -x      = debug, display chunks in output.\n");
 	    fprintf(stderr,"  -s size = set shred size (default %d)\n",
 		    shredsize);
 	    fprintf(stderr,"  -w      = remove whitespace.\n");
