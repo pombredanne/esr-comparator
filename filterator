@@ -98,5 +98,6 @@ if __name__ == '__main__':
                     locations = []
                     break
                 except IOError:
-                    pass
+                    sys.stderr.write("filterator: can't open %s\n" % file)
+                    sys.exit(0)
     print "%d overlaps." % count
