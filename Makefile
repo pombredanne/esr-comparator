@@ -52,12 +52,12 @@ scf-standard.html: scf-standard.xml
 OPTS="-N line-oriented, remove-braces, remove-whitespace"
 makeregress:
 	@for n in 1 2 3; do \
-	    comparator $(OPTS) -d test test$${n}-a test$${n}-b >test/out$${n}.good;\
+	    comparator $(OPTS) -d test test$${n}-a test$${n}-b | grep -v 'Merge-Program' >test/out$${n}.good;\
 	done
 
 regress:
 	@for n in 1 2 3; do \
-	    comparator $(OPTS) -d test test$${n}-a test$${n}-b >test/out$${n}.log;\
+	    comparator $(OPTS) -d test test$${n}-a test$${n}-b | grep -v 'Merge-Program' >test/out$${n}.log;\
 	    if diff -c test/out$${n}.good test/out$${n}.log; \
 	    then \
 		echo "Test $${n} from trees passed."; \
