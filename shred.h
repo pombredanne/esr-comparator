@@ -17,7 +17,8 @@ typedef u_int32_t	linenum_t;
 #define TONET		htonl
 #define FROMNET		ntohl
 #endif
-#define UNIQUE_FLAG	(linenum_t)-1	/* 2s-complement assumption */
+#define MAX_LINENUM	(linenum_t)-1	/* 2s-complement assumption */
+#define UNIQUE_FLAG	MAX_LINENUM	/* 2s-complement assumption */
 
 /* use this to hold total line count of the entire source tree set */
 typedef u_int32_t	linecount_t;
