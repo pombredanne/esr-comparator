@@ -7,7 +7,8 @@ VERS=2.0
 
 CODE    = shredtree.c shred.h report.c hash.c main.c md5.c md5.h \
 		hash.h hashtab.h \
-		filterator hashgen.py
+		filterator 
+SCRIPTS = hashgen.py setup.py
 DOCS    = README NEWS comparator.xml scf-standard.xml COPYING
 EXTRAS  = shredtree.py shredcompare.py
 TEST    = test
@@ -77,11 +78,13 @@ install: comparator.1 uninstall
 	install -m 755 -o 0 -g 0 filterator $(ROOT)/usr/bin/filterator
 	install -m 755 -o 0 -g 0 -d $(ROOT)/usr/share/man/man1/
 	install -m 755 -o 0 -g 0 comparator.1 $(ROOT)/usr/share/man/man1/comparator.1
+	python setup.py install
 
 uninstall:
 	rm -f ${ROOT}/usr/bin/comparator 
 	rm -f ${ROOT}/usr/bin/filterator 
 	rm -f ${ROOT}/usr/share/man/man1/comparator.1
+	#python setup.py uninstall
 
 comparator-$(VERS).tar.gz: $(SOURCES) comparator.1
 	find $(SOURCES) comparator.1 -type f | sed "s:^:comparator-$(VERS)/:" >MANIFEST
