@@ -522,7 +522,7 @@ main(int argc, char *argv[])
 	usage();
 
     report_time(NULL);
-    analyzer_init();
+    linebyline.init();
 
     /* special case if user gave exactly one tree */
     if (!compile_only && argcount == 1)

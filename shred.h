@@ -39,25 +39,33 @@ struct hash_t
 };
 #define SORTHASHCMP(s, t) hash_compare((s)->hash.hash, (t)->hash.hash)
 
-struct filehdr_t
+struct filehdr_t	/* file/attributes structure describing input source */
 {
     char	*name;
     linenum_t	length;
     struct filehdr_t *next;
 };
 
-struct sorthash_t
+struct sorthash_t	/* in-core hash with pointer to input source */
 {
     struct hash_t	hash;
     struct filehdr_t	*file;
 };
 
-typedef struct
+typedef struct		/* structure describing an input feature */
 {
     char	*text;
     int		flags;
 }
 feature_t;
+
+struct analyzer_t	/* structure describing a feature analyzer */
+{
+    void (*init)(void);
+    void (*mode)(int);
+    feature_t *(*get)(const struct filehdr_t *, FILE *, linenum_t *);
+    void (*free)(const char *);
+};
 
 /* control bits, meant to be set at startup */
 extern int remove_braces;
@@ -81,12 +89,8 @@ extern int shredfile(struct filehdr_t *,
 		     void (*hook)(struct hash_t, struct filehdr_t *));
 extern void sort_hashes(struct sorthash_t *hashlist, int hashcount);
 
-/* linebyline.c functions */
-extern void analyzer_init(void);
-extern void analyzer_mode(int);
-extern feature_t *analyzer_get(const struct filehdr_t *,
-			       FILE *, linenum_t *linenumber);
-extern void analyzer_free(const char *);
+/* linebyline.c feature analyzer */
+struct analyzer_t linebyline;
 
 /* shredcompare.c functions */
 extern int merge_compare(struct sorthash_t *obarray, int hashcount);

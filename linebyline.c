@@ -260,6 +260,15 @@ void analyzer_free(const char *text)
     free(text);
 }
 
+/* our method table */
+struct analyzer_t linebyline =
+{
+    init: analyzer_init,
+    mode: analyzer_mode,
+    get:  analyzer_get,
+    free: analyzer_free,
+};
+
 #ifdef TEST
 int main(int argc, char *argv[])
 {

@@ -130,17 +130,17 @@ int shredfile(struct filehdr_t *file,
 
     /* deduce what filtering type we should use */
 #define endswith(suff) !strcmp(suff,file->name+strlen(file->name)-strlen(suff))
-    analyzer_mode(0);
+    linebyline.mode(0);
     if (endswith(".c") || endswith(".h"))
-	analyzer_mode(C_CODE);
+	linebyline.mode(C_CODE);
     else if (endswith(".sh"))
-	analyzer_mode(SHELL_CODE);
+	linebyline.mode(SHELL_CODE);
 #undef endswith
 
     display = (shred *)calloc(sizeof(shred), shredsize);
 
     linenumber = accepted = 0;
-    while ((feature = analyzer_get(file, fp, &linenumber)))
+    while ((feature = linebyline.get(file, fp, &linenumber)))
     {
 	accepted++;
 
@@ -154,7 +154,7 @@ int shredfile(struct filehdr_t *file,
 	    hook(emit_chunk(display, linenumber), file);
 
 	/* shreds in progress are shifted down */
-	analyzer_free(display[0].feature);
+	linebyline.free(display[0].feature);
 	for (i=1; i < shredsize; i++)
 	    display[i-1] = display[i];
 	display[shredsize-1].feature = NULL;
