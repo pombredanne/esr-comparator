@@ -33,6 +33,8 @@
   <arg choice='opt'>-m <replaceable>minsize</replaceable></arg>
   <arg choice='opt'>-n</arg>
   <arg choice='opt'>-x</arg>
+  <sbr/>
+  <command>comparator.py</command>
 </cmdsynopsis>
 
 </refsynopsisdiv>
@@ -45,7 +47,12 @@ after a now-obsolete astronomical instrument called a blink comparator
 that was used to find moving objects in starfield photos.  These
 reports tend to be noisy; <application>filterator</application> is a
 postprocessor for <application>comparator</application> reports that
-can apply significance filtering.</para>
+can apply significance
+filtering. <application>comparator.py</application> is a Python module
+for interpreting <application>comparator</application> reports;
+<application>filterator</application> uses it.</para>
+
+<refsect2><title>comparator</title>
 
 <para><application>comparator</application> works by first chopping
 the specified trees into overlapping shreds (by default 3 lines long)
@@ -143,6 +150,9 @@ extensions are always eligible. Files with <filename>.o</filename> or
 SCCS directories are ignored.  Other files are checked to see if the
 percentage of printable characters near the front of the file is above
 90%.</para>
+</refsect2>
+
+<refsect2><title>filterator</title>
 
 <para><application>filterator</application> is a postprocessor for the
 SCF-B output of <application>comparator</application> that produces an
@@ -173,7 +183,18 @@ looks as through the code has failed to properly merge two or more
 overlapping line ranges, When this happens, the ranges have different
 match sets; they may overlap in one tree, but not in others.  A clue
 to this is the number of matches reported for each range.</para>
+</refsect2>
 
+<refsect2><title>comparator.py</title>
+
+<para><application>comparator.py</application> is a Python module that
+parses and interprets the format emitted by
+<application>comparator</application>.  It can be used to write report
+generators.  The <application>filterator</application> program is an
+example; it is a trivial wrapper around
+<application>comparator.py</application>.</para>
+
+</refsect2>
 </refsect1>
 
 <refsect1 id='author'><title>AUTHOR</title> <para>Eric S. Raymond
