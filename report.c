@@ -216,11 +216,27 @@ void init_intern(const int count)
      return hashcount;
  }
 
+static int mergeable(struct range_t *s, struct range_t *t)
+/* can two ranges be merged? */
+{
+    return 1;
+}
+
+static int sametree(const char *s, const char *t)
+/* are two files from the same tree? */
+{
+    int sn = strchr(s, '/') - s;
+    int tn = strchr(t, '/') - t;
+
+    return (sn == tn) && strncmp(s, t, sn); 
+}
+
 struct match_t *reduce_matches(int localdups)
 /* assemble list of duplicated hashes */
 {
      static struct match_t dummy; 
-     struct match_t *reduced = &dummy;
+     struct match_t *reduced = &dummy, *sp, *tp;
+     int retry;
 
      /* build list of hashes with more than one range associated with */
      for (np = obarray; np < obarray + hashcount; np++)
@@ -228,18 +244,33 @@ struct match_t *reduce_matches(int localdups)
 	 if (np < obarray + hashcount - 1 && !HASHCMP(np, np+1))
 	 {
 	     struct match_t *new;
-	     int i;
+	     int i, heterogenous, nmatches;
 	     struct sorthash_t *mp;
 
-	     new = (struct match_t *)malloc(sizeof(struct match_t));
-	     new->next  = reduced;
-	     reduced = new;
-	     new->nmatches = 1;
+	     /* count the number of hash matches */
+	     nmatches = 1;
 	     for (mp = np+1; mp < obarray + hashcount; mp++)
 		 if (HASHCMP(np, mp))
 		     break;
 		 else
-		     new->nmatches++;
+		     nmatches++;
+
+#ifdef FOO
+	     /* if all these matches are within the same tree, toss them */
+	     heterogenous = 0;
+	     for (mp = np; mp < np + nmatches; mp++)
+		 if (sametree(mp[0].file,mp[1].file))
+		     heterogenous++;
+	     if (!heterogenous)
+		 continue;
+#endif /* FOO */
+
+	     printf("%d has %d in its clique\n", np-obarray, nmatches);
+	     /* passed all tests, keep this set of ranges */
+	     new = (struct match_t *)malloc(sizeof(struct match_t));
+	     new->next  = reduced;
+	     reduced = new;
+	     new->nmatches = nmatches;
 	     new->matches=(struct range_t *)calloc(sizeof(struct range_t),new->nmatches);
 	     for (i = 0; i < new->nmatches; i++)
 	     {
@@ -252,8 +283,28 @@ struct match_t *reduce_matches(int localdups)
      }
      free(obarray);
 
+#ifdef FOO
      /* time to remove duplicates */
-
+     retry = 1;
+     while (retry)
+     {
+	 retry = 0;
+	 for (sp = reduced; sp->next; sp = sp->next)
+	     for (tp = reduced; tp->next; tp = reduced->next)
+	     {
+		 /* intersection is symmetrical */
+		 if (sp >= tp)
+		     continue;
+		 /* don't recheck deleted ranges */
+		 if (!sp->matches || !tp->matches)
+		     continue;
+		 /* ranges must intersect or be tossed */
+		 if (!mergeable(sp->matches, tp->matches))
+		     continue;
+	         retry = 1;
+	     }
+     }
+#endif /* FOO */
      return reduced;
 }
 
@@ -268,7 +319,7 @@ main(int argc, char *argv[])
     extern char	*optarg;	/* set by getopt */
     extern int	optind;		/* set by getopt */
     int	status;
-    struct match_t *reduced;
+    struct match_t *hitlist;
 
     while ((status = getopt(argc, argv, "dh")) != EOF)
     {
@@ -298,16 +349,16 @@ main(int argc, char *argv[])
     for (np = obarray; np < obarray + hashcount; np++)
 	printf("%d: %s:%d:%d (%02x%02x)\n", np-obarray, np->file, np->hash.start, np->hash.end, np->hash.hash[0], np->hash.hash[1]);
 
-    reduced = reduce_matches(local_duplicates);
+    hitlist = reduce_matches(local_duplicates);
     report_time("Reduction done.");
 
-    for (; reduced->next; reduced = reduced->next)
+    for (; hitlist->next; hitlist = hitlist->next)
     {
 	int	i;
 
-	for (i=0; i < reduced->nmatches; i++)
+	for (i=0; i < hitlist->nmatches; i++)
 	{
-	    struct range_t	*rp = reduced->matches+i;
+	    struct range_t	*rp = hitlist->matches+i;
 
 	    printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
 	}
