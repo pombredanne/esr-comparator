@@ -344,7 +344,7 @@ main(int argc, char *argv[])
 	    break;
 
 	case 'd':
-	    chdir(optarg);
+	    dir = optarg;
 	    break;
 
 	case 's':
