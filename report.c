@@ -450,12 +450,27 @@ int sortchunk(void *a, void *b)
 		      ((struct sorthash_t *)b)->file));
 }
 
+int sortmatch(void *a, void *b)
+/* sort by file and first line */
+{
+    struct range_t *s = ((struct match_t *)a)->matches;
+    struct range_t *t = ((struct match_t *)b)->matches;
+
+    int cmp = strcmp(s->file, t->file);
+    if (cmp)
+	return(cmp);
+    else
+	return(s->start - t->start);
+
+    return(0);
+}
+
 main(int argc, char *argv[])
 {
     extern char	*optarg;	/* set by getopt */
     extern int	optind;		/* set by getopt */
-    int	status;
-    struct match_t *hitlist;
+    int	i, status, matchcount;
+    struct match_t *hitlist, *sorted, *match;
 
     while ((status = getopt(argc, argv, "h")) != EOF)
     {
@@ -492,19 +507,31 @@ main(int argc, char *argv[])
     printf("Shred-Size: %d\n", shiflist[0].shred_size);
     puts("%%");
 
-    for (; hitlist->next; hitlist = hitlist->next)
-	if (hitlist->matches)
+    /* we go through a little extra effort to emit a sorted list */
+    matchcount = 0;
+    for (match = hitlist; match->next; match = match->next)
+	if (match->matches)
+	    matchcount++;
+
+    sorted = (struct match_t *)calloc(sizeof(struct match_t), matchcount);
+    i = 0;
+    for (match = hitlist; match->next; match = match->next)
+	if (match->matches)
+	    sorted[i++] = *match;
+    qsort(sorted, matchcount, sizeof(struct match_t), sortmatch);
+
+    for (match = sorted; match < sorted + matchcount; match++)
+    {
+	int	i;
+
+	for (i=0; i < match->nmatches; i++)
 	{
-	    int	i;
+	    struct range_t	*rp = match->matches+i;
 
-	    for (i=0; i < hitlist->nmatches; i++)
-	    {
-		struct range_t	*rp = hitlist->matches+i;
-
-		printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
-	    }
-	    printf("-\n");
+	    printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
 	}
+	printf("-\n");
+    }
 
     exit(0);
 }
