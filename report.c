@@ -203,15 +203,10 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
     return(nonuniques - removed);
 }
 
-struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
-/* assemble list of duplicated hashes */
+static int compact_matches(struct sorthash_t *obarray, const int hashcount)
+/* compact the hash list by removing obvious uniques */
 {
-     unsigned int nonuniques, nreduced, progress, hashcount = *hashcountp;
      struct sorthash_t *mp, *np;
-     struct match_t	*reduced;
-
-     if (debug)
-	 dump_array("Chunk list before reduction.\n",obarray, hashcount);
 
      /*
       * To reduce the size of the in-core working set, we do a a
@@ -244,9 +239,18 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
      /* now we get to reduce the memory footprint */
      report_time("Compaction reduced %d shreds to %d", 
 		 hashcount, mp - obarray);
-     hashcount = mp - obarray;
-     obarray = (struct sorthash_t *)realloc(obarray, 
-			    sizeof(struct sorthash_t)* hashcount);
+     return (mp - obarray);
+}      
+
+struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
+/* assemble list of duplicated hashes */
+{
+     unsigned int nonuniques, nreduced, progress, hashcount = *hashcountp;
+     struct sorthash_t *mp, *np;
+     struct match_t	*reduced;
+
+     if (debug)
+	 dump_array("Chunk list before reduction.\n",obarray, hashcount);
 
      if (debug)
 	 dump_array("Chunk list after reduction.\n",obarray, hashcount);
@@ -347,19 +351,24 @@ void emit_report1(struct sorthash_t *obarray, int hashcount)
 /* report our results (header portion) */
 {
     struct match_t *match, *copy;
+    int matchcount;
 
-    hitlist = reduce_matches(obarray, &hashcount);
+    hashcount = compact_matches(obarray, hashcount);
+    obarray = (struct sorthash_t *)realloc(obarray, 
+				   sizeof(struct sorthash_t)*hashcount);
+    matchcount = hashcount;
+    hitlist = reduce_matches(obarray, &matchcount);
     if (debug)
 	dump_array("After removing uniques.\n", obarray, hashcount);
-    report_time("%d range groups after removing unique hashes", hashcount);
-    mergecount = collapse_ranges(hitlist, hashcount);
+    report_time("%d range groups after removing unique hashes", matchcount);
+    mergecount = collapse_ranges(hitlist, matchcount);
     report_time("%d range groups after merging", mergecount);
 
     /*
      * A little extra effort so we can generate a sorted report.
      * Compact the match list in order to cut the n log n qsort time
      */
-    for (copy = match = hitlist; match < hitlist + hashcount; match++)
+    for (copy = match = hitlist; match < hitlist + matchcount; match++)
 	if (match->nmatches > 0 && copy < match)
 	    *copy++ = *match;
     mergecount = (copy - hitlist);
