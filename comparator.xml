@@ -163,7 +163,7 @@ numbers in the output report will nevertheless be correct).</para>
 characters.  This is recommended for comparing C code; it prevents the
 comparison from being fooled by differences in indent style.</para>
 
-<para>The <option>remove_comments</option> option removes comments in
+<para>The <option>remove-comments</option> option removes comments in
 C files, All // comments are removed, but only "winged" /* comments
 with the start and end of comment on the same line are ignored; also,
 block /* comments are retained, but the beginning /* and ending */ are

@@ -1,4 +1,5 @@
 /* hash.c -- hash and digest computation for comparator */
+#include <stdio.h>
 #include "hash.h"
 
 #ifndef FORCE_MD5

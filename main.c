@@ -1,10 +1,14 @@
 /* main.c -- main sequence of comparator */
 
+#include <limits.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef __sun
+#include <alloca.h>
+#endif
 #include <sys/stat.h>
 #include <errno.h>
 #include <time.h>
@@ -509,11 +513,8 @@ main(int argc, char *argv[])
     /* special case if user gave exactly one tree */
     if (!compile_only && argcount == 1)
     {
-	char	*olddir = NULL;
-
 	if (dir)
 	{
-	    olddir = getcwd(NULL, 0);	/* may fail off Linux */
 	    chdir(dir);
 	}
 	write_scf(argv[optind], redirect(outfile));
@@ -548,7 +549,7 @@ main(int argc, char *argv[])
 
 	    if (dir)
 	    {
-		olddir = getcwd(NULL, 0);	/* may fail off Linux */
+		olddir = getcwd(NULL, PATH_MAX);
 		chdir(dir);
 	    }
 	    write_scf(source, ofp);
@@ -560,7 +561,7 @@ main(int argc, char *argv[])
 	{
 	    if (dir)
 	    {
-		olddir = getcwd(NULL, 0);	/* may fail off Linux */
+		olddir = getcwd(NULL, PATH_MAX);
 		chdir(dir);
 	    }
 	    init_scf(source, scf, 0);

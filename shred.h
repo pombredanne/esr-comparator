@@ -3,6 +3,12 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
+/* Solaris typedefs */
+#ifdef __sun
+typedef uint16_t u_int16_t;
+typedef uint32_t u_int32_t;
+#endif
+
 #ifndef LARGEFILES
 /*
  * 65,536 lines should be enough, but make it possible to compile with 32 bits.
@@ -59,7 +65,7 @@ feature_t;
 
 struct analyzer_t	/* structure describing a feature analyzer */
 {
-    int (*init)(unsigned char *);
+    int (*init)(const char *);
     void (*mode)(int);
     feature_t *(*get)(const struct filehdr_t *, FILE *, linenum_t *);
     void (*free)(const char *);

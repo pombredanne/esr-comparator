@@ -42,13 +42,13 @@ static int file_count;
 static int eligible(const char *file)
 /* is the specified file eligible to be compared? */ 
 {
+    if (strstr(file, "CVS") || strstr(file,"RCS") || strstr(file,"SCCS"))
+	return(0);
     /* fast check for the most common suffixes */
 #define endswith(suff)	!strcmp(suff, file + strlen(file) - strlen(suff))
-    if (endswith(".c") || endswith(".h") || endswith(".html"))
+    else if (endswith(".c") || endswith(".h") || endswith(".html"))
 	return(1);
     else if (endswith(".o") || endswith("~") || endswith(".bdf"))
-	return(0);
-    else if (strstr(file, "CVS") || strstr(file,"RCS") || strstr(file,"SCCS"))
 	return(0);
 #undef endswith
     else
@@ -100,7 +100,7 @@ static struct hash_t emit_chunk(shred *display, int linecount)
 	{
 	    if (debug)
 		fprintf(stderr, "%d (%02x): '%s'\n", i, display[i].flags, display[i].feature);
-	    hash_update(display[i].feature, strlen(display[i].feature));
+	    hash_update((unsigned char*) display[i].feature, strlen(display[i].feature));
 	    out.flags |= display[i].flags;
 	}
     hash_complete(&out.hash);

@@ -15,7 +15,7 @@ def tablegen(maxlen, width):
                 sys.stdout.write('\n\t')
             m = md5.new()
             m.update(`i` + `j`)
-            sys.stdout.write('0x' + m.hexdigest()[-(width*2):] + "LL,")
+            sys.stdout.write('0x' + m.hexdigest()[-(width*2):] + "ULL,")
         print "}, /* end char %02x */" % i
     print "};"
 

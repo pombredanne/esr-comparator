@@ -54,7 +54,7 @@ static regex_t shell_regexps[sizeof(shell_patterns)/sizeof(*shell_patterns)];
 
 static linenum_t	linecount;
 
-int analyzer_init(unsigned char *buf)
+int analyzer_init(const char *buf)
 /* initialize line filtering */
 {
     int i;
@@ -75,7 +75,7 @@ int analyzer_init(unsigned char *buf)
 	    exit(1);
 	}
 
-    cp = strtok(strdup(buf), ", ");
+    cp = strtok(strdup((const char *)buf), ", ");
     if (strcmp(cp, "line-oriented"))
 	return(1);
     while (cp = strtok(NULL, ", "))
