@@ -130,11 +130,12 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 	 printf("Clique beginning at %d:\n", sp - reduced);
 	 for (rp = sp->matches; rp < sp->matches + sp->nmatches; rp++)
 	     printf("%s:%d:%d\n",  rp->file->name, rp->hash.start, rp->hash.end);
-     }
+    }
 #endif /* DEBUG */
 
-     /* time to merge overlapping shreds */
-     for (sp = reduced; sp < reduced + nonuniques; sp++)
+    /* time to merge overlapping shreds */
+    for (sp = reduced; sp < reduced + nonuniques; sp++)
+    {
 	 for (tp = sp + 1; !compare_files(sp, tp) && tp < reduced + nonuniques; tp++)
 	 {
 #ifdef DEBUG
@@ -165,6 +166,7 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 		 sp->nmatches = 0;
 	     }
 	 }
+     }
 
 #ifdef DEBUG
      for (sp = reduced; sp < reduced + nonuniques; sp++)
