@@ -54,6 +54,13 @@ cliques of lines with duplicate hashes, with overlapping ranges
 merged. The output format can (not by coincidence) be stepped through
 with the next-error function of Emacs.</para>
 
+<para>A consequence of the method is that
+<application>comparator</application> will find common code segments
+wherever they are.  It is insenstive to rearrangements of the source
+trees.  With appropriate options, code can be normalized at input to
+ignore differences in whitespace and (in C code) brace placenent.  An
+option to strip comments also exists</para>
+
 <para>The program is capable of generating a hash list for a source
 code tree which can be used in place of the tree itself.  Thus, it is
 possible to do comparisons with source trees without having access to
