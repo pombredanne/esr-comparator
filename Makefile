@@ -47,10 +47,20 @@ regress:
 	    comparator -C -d test test$${n}-a test$${n}-b >test/out$${n}.log 2>/dev/null;\
 	    if diff -c test/out$${n}.good test/out$${n}.log; \
 	    then \
-		echo "Test $${n} passed."; \
+		echo "Test $${n} from trees passed."; \
 	    else \
-		echo "Test $${n} failed."; \
-	    fi \
+		echo "Test $${n} from trees failed."; \
+	    fi; \
+	    comparator -C -d test -c test$${n}-a >test$${n}-a.scf; \
+	    comparator -C -d test -c test$${n}-b >test$${n}-b.scf; \
+	    comparator -C test$${n}-a.scf test$${n}-b.scf >test/out$${n}.log 2>/dev/null;\
+	    rm test$${n}-a.scf test$${n}-b.scf; \
+	    if diff -u test/out$${n}.good test/out$${n}.log; \
+	    then \
+		echo "Test $${n} from SCFs passed."; \
+	    else \
+		echo "Test $${n} from SCFs failed."; \
+	    fi; \
 	done
 
 install: comparator.1 uninstall
