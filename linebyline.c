@@ -14,30 +14,30 @@ static char *c_patterns[] = {
     "/\\* *FALL *THRO?UG?H? *\\*/",
     /* Bare C keywords */
 
-    "[[:<:]]break[[:>:]]",  "[[:<:]]case[[:>:]]","[[:<:]]continue[[:>:]]", 
-    "[[:<:]]default[[:>:]]", "[[:<:]]do[[:>:]]", "[[:<:]]else[[:>:]]", 
-    "[[:<:]]enum[[:>:]]", "[[:<:]]if[[:>:]]", "[[:<:]]goto[[:>:]]",
-    "[[:<:]]return[[:>:]]", "[[:<:]]switch[[:>:]]", "[[:<:]]while[[:>:]]",
-    "[[:<:]]enum[[:>:]]", "[[:<:]]int[[:>:]]", "[[:<:]]long[[:>:]]",
-    "[[:<:]]short[[:>:]]", "[[:<:]]static[[:>:]]", "[[:<:]]struct[[:>:]]",
-    "[[:<:]]typedef[[:>:]]", "[[:<:]]union[[:>:]]", "[[:<:]]void[[:>:]]",
+    "[:<:]break[:>:]",  "[:<:]case[:>:]","[:<:]continue[:>:]", 
+    "[:<:]default[:>:]", "[:<:]do[:>:]", "[:<:]else[:>:]", 
+    "[:<:]enum[:>:]", "[:<:]if[:>:]", "[:<:]goto[:>:]",
+    "[:<:]return[:>:]", "[:<:]switch[:>:]", "[:<:]while[:>:]",
+    "[:<:]enum[:>:]", "[:<:]int[:>:]", "[:<:]long[:>:]",
+    "[:<:]short[:>:]", "[:<:]static[:>:]", "[:<:]struct[:>:]",
+    "[:<:]typedef[:>:]", "[:<:]union[:>:]", "[:<:]void[:>:]",
     /* Preprocessor constructs */
-    "/* *define","# *endif","# *else","# *if[[:>:]]",
-    "# *ifdef[[:>:]]","# *ifndef[[:>:]]",
+    "/* *define","# *endif","# *else","# *if[:>:]",
+    "# *ifdef[:>:]","# *ifndef[:>:]",
     /* Comment delimiters with no content, and line continuation */
     "/\\*+", "\\*+/", "\\*+", "^ *\\s*\\n", "\\\n",
     /* Common preprocessor macros, not significant by themselves. */
-    "[[:<:]]ASSERT[[:>:]]", 
-    "[[:<:]]FALSE[[:>:]]", 
-    "[[:<:]]NULL[[:>:]]",
-    "[[:<:]]STATIC[[:>:]]", 
-    "[[:<:]]TRUE[[:>:]]",
+    "[:<:]ASSERT[:>:]", 
+    "[:<:]FALSE[:>:]", 
+    "[:<:]NULL[:>:]",
+    "[:<:]STATIC[:>:]", 
+    "[:<:]TRUE[:>:]",
     /* Macro include lines are noise, too. */
     "\\s*#include.*","#\\s*line.*",
     /* Common error macros. */
-    "[[:<:]]EFAULT[[:>:]]",
-    "[[:<:]]EINVAL[[:>:]]",
-    "[[:<:]]ENOSYS[[:>:]]",
+    "[:<:]EFAULT[:>:]",
+    "[:<:]EINVAL[:>:]",
+    "[:<:]ENOSYS[:>:]",
 };
 static regex_t c_regexps[sizeof(c_patterns)/sizeof(*c_patterns)];
 
@@ -46,17 +46,17 @@ static char c_punct[] = {
     '{', '}', '(', ')', '<', '>', '[', ']',
     '^', '&', '|', '*', '?', '.', '+', 
     ';', ':', '%', ',', '-', '/', '=', '!', 
-    '\n', '\t', '\v',
+    ' ', '\n', '\t', '\v',
 };
 
 static char *shell_patterns[] = {
     /* Idioms that don't convey any meaning in isolation */
     "exit *[01];?",
     /* Bare shell keywords */
-    "[[:<:]]break[[:>:]]", "[[:<:]]case[[:>:]]", "[[:<:]]done[[:>:]]", 
-    "[[:<:]]do[[:>:]]", "[[:<:]]else[[:>:]]", "[[:<:]]esac[[:>:]]",
-    "[[:<:]]fi[[:>:]]", "[[:<:]]if[[:>:]]", "[[:<:]]return[[:>:]]",
-    "[[:<:]]shift[[:>:]]", "[[:<:]]true[[:>:]]", "[[:<:]]while[[:>:]]", 
+    "[:<:]break[:>:]", "[:<:]case[:>:]", "[:<:]done[:>:]", 
+    "[:<:]do[:>:]", "[:<:]else[:>:]", "[:<:]esac[:>:]",
+    "[:<:]fi[:>:]", "[:<:]if[:>:]", "[:<:]return[:>:]",
+    "[:<:]shift[:>:]", "[:<:]true[:>:]", "[:<:]while[:>:]", 
     /* Blank comment */
     "^#\n",
 };
@@ -113,17 +113,17 @@ int filter_pass(const char *line)
 	return(1);
     else
     {
-	char	buf[BUFSIZ][2];
-	int	changed, i = 0;
+	char	buf[2][BUFSIZ];
+	int	changed , i, flip = 0;
 
 	buf[0][0] = ' ';
 	strncpy(buf[0]+1, line, BUFSIZ-2);
 
-	while (changed)
-	{
+	do {
 	    char *s, *t, *sp, *tp;
 
-	    s = buf[i]; t = buf[!i]; i ^= 1; changed = 0;
+	    s = buf[flip]; t = buf[!flip]; flip ^= 1; 
+	    changed = 0;
 
 	    /* remove all punctuation */
 	    for (sp = s, tp = t; *sp; sp++)
@@ -131,11 +131,15 @@ int filter_pass(const char *line)
 		    changed++;
 	        else
 		    *tp++ = *sp;
-	    if (changed)
-		continue;
+	    *tp = '\0';
 
 	    /* replace all regexps with the empty string */
-	}
+
+	    if (t[0] == '\0')
+		return(0);
+	} while 
+	    (changed);
+	return(1);
     }
 }
 
@@ -148,7 +152,9 @@ int main(int argc, char *argv[])
     while(fgets(buf, BUFSIZ, stdin))
     {
 	if (filter_pass(buf))
-	    fputs("!! ", stdout);
+	    fputs("yes: ", stdout);
+	else
+	    fputs("no: ", stdout);
 	fputs(buf, stdout);
     }
 }
