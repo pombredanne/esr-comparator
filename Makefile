@@ -17,7 +17,7 @@ shredcompare: shredcompare.o
 	$(CC) $(LFLAGS) shredcompare.o -o shredcompare
 
 clean:
-	rm -f shredtree shredcompare shredtree.o md5.o shredcompare.o
+	rm -f shredtree shredcompare shredtree.o md5.o shredcompare.o TEST1 TEST2
 
 test-a:
 	shredtree -c test1 >TEST1
@@ -31,7 +31,7 @@ test-b:
 goodtest:
 	shredtree -c -d ~/src/unix src5r4/src/ucbhead >src5r4.shif
 	shredtree -c -d ~/src/unix linux-2.6.0-test4/include/linux >linux-2.6.0-test4.shif
-	shredcompare src5r4.shif linux-2.6.0-test4.shif >TEST.LOG
+	shredcompare src5r4.shif linux-2.6.0-test4.shif
 
 bigtest:
 	shredtree -c -d ~/src/unix src5r4 >src5r4.shif
