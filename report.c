@@ -102,7 +102,6 @@ static int sametree(const char *s, const char *t)
 static void collapse_ranges(struct match_t *reduced, int *nonuniques)
 /* collapse together overlapping ranges in the hit list */
 { 
-    unsigned int retry;
     struct match_t *sp, *tp;
 
 #ifdef DEBUG
@@ -117,53 +116,47 @@ static void collapse_ranges(struct match_t *reduced, int *nonuniques)
 #endif /* DEBUG */
 
      /* time to merge overlapping shreds */
-     do {
-	 retry = 0;
-	 for (sp = reduced; sp->next; sp = sp->next)
-	     for (tp = reduced; tp->next; tp = tp->next)
+     for (sp = reduced; sp->next; sp = sp->next)
+	 for (tp = reduced; tp->next; tp = tp->next)
+	 {
+	     /* intersection is symmetrical */
+	     if (sp >= tp)
+		 continue;
+#ifdef DEBUG
+	     printf("Trying merge of %d into %d\n", tp->index, sp->index);
+#endif /* DEBUG */
+	     /* neither must have been deleted */
+	     if (!sp->matches || !tp->matches)
 	     {
-		 /* intersection is symmetrical */
-		 if (sp >= tp)
-		     continue;
 #ifdef DEBUG
-		 printf("Trying merge of %d into %d\n", tp->index, sp->index);
+		 printf("Null match pointer: %d=%p, %d=%p\n", 
+			sp->index, sp->matches, tp->index, tp->matches);
 #endif /* DEBUG */
-		 /* neither must have been deleted */
-		 if (!sp->matches || !tp->matches)
-		 {
-#ifdef DEBUG
-		     printf("Null match pointer: %d=%p, %d=%p\n", 
-			    sp->index, sp->matches, tp->index, tp->matches);
-#endif /* DEBUG */
-		     continue;
-		 }
-		 /* ranges must be the same length */
-		 if (sp->nmatches != tp->nmatches)
-		 {
-#ifdef DEBUG
-		     printf("Range length mismatch\n");
-#endif /* DEBUG */
-		     continue;
-		 }
-		 /* attempt the merge */
-		 if (merge_ranges(sp->matches, tp->matches, sp->nmatches))
- 		 {		 
-#ifdef DEBUG
-		     struct range_t	*rp;
-
-		     printf("Merged %d into %d\n", tp->index, sp->index);
-		     for (rp=sp->matches; rp < sp->matches+sp->nmatches; rp++)
-			 printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
-#endif /* DEBUG */
-		     free(tp->matches);
-		     (*nonuniques)--;
-		     tp->matches = NULL;
-		     /* list is altered, do another merge pass */
-		     retry++;
-		 }
+		 continue;
 	     }
-     } while
-	 (retry);
+	     /* ranges must be the same length */
+	     if (sp->nmatches != tp->nmatches)
+	     {
+#ifdef DEBUG
+		 printf("Range length mismatch\n");
+#endif /* DEBUG */
+		 continue;
+	     }
+	     /* attempt the merge */
+	     if (merge_ranges(sp->matches, tp->matches, sp->nmatches))
+	     {		 
+#ifdef DEBUG
+		 struct range_t	*rp;
+
+		 printf("Merged %d into %d\n", tp->index, sp->index);
+		 for (rp=sp->matches; rp < sp->matches+sp->nmatches; rp++)
+		     printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
+#endif /* DEBUG */
+		 free(tp->matches);
+		 (*nonuniques)--;
+		 tp->matches = NULL;
+	     }
+	 }
 }
 
 struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
