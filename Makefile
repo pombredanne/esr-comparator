@@ -70,7 +70,7 @@ SRC2  = src5r4
 regress2:
 	comparator -C -c -d $(UNIX) $(SRC1) >test1-old.dump
 	comparator -C -c -d $(UNIX) $(SRC2) >test2-old.dump
-	comparator -C -c -d $(UNIX):$(UNIX) $(SRC1) $(SRC2)
+	comparator -C -c -d $(UNIX) $(SRC1) $(SRC2)
 	dumpscf <$(SRC1).scf >$test1.dump
 	dumpscf <$(SRC2).scf >$test2.dump
 	diff -u test1-old.dump test1.dump
