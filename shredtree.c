@@ -58,7 +58,7 @@ static int eligible(const char *file)
 
 	/* count printables */
 	for (cp = buf; *cp; cp++)
-	    if (isascii(*cp))
+	    if (isgraph(*cp) || isspace(*cp))
 		printable++;
 
 	/* are we over the critical percentage? */
