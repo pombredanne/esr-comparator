@@ -164,17 +164,20 @@ class CommonReport:
         for (treename, dummy) in self.trees:
             matches[treename] = matchlines[treename] = 0
         for clique in self.cliques:
-            firstmatch = {}
+            intree = {}
             for (treename, dummy) in self.trees:
-                firstmatch[treename] = 0
+                intree[treename] = False
             for (file, start, end) in clique:
                 for (treename, properties) in self.trees:
                     if treename == file.split("/")[0]:
                         break
-                if not treename in firstmatch:
-                    properties['matches'] += 1
-                    firstmatch[tree] = True 
-                properties['matchlines'] += end - start + 1
+                if not treename in intree:
+                    matches[treename] += 1
+                    intree[tree] = True
+                matchlines[treename] += end - start + 1
+        for (treename, properties) in self.trees:
+            properties['matches'] = matches[treename]
+            properties['matchlines'] = matchlines[treename]
         self.matches = len(self.cliques)
 
     def cliquedump(self, clique):
