@@ -21,6 +21,6 @@ srcdupchk - the shred algorithm in C++
 ctcompare - C Token Comparator
 	http://minnie.tuhs.org/Programs/Ctcompare/
 
-See the NEWS file for recent developmets.
+See the xhangelog in the RPM spec file for recent developments.
 
 
