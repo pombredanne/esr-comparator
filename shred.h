@@ -36,6 +36,7 @@ extern int shredsize;
 /* main.c functions */
 extern void report_time(char *legend, ...);
 extern void corehook(struct hash_t hash, const char *file);
+extern void extend_current_chunk(void);
 extern void dump_array(const char *legend,
 		       struct sorthash_t *obarray, int hashcount);
 

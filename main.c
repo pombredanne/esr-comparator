@@ -73,6 +73,13 @@ void corehook(struct hash_t hash, const char *file)
     sort_count++;
 }
 
+void extend_current_chunk(void)
+/* bump the end-line number on the last chunk, if there is one */
+{
+    if (sort_count > 0)
+	sort_buffer[sort_count-1].hash.end++;
+}
+
 static void write_scf(const char *tree, FILE *ofp)
 /* generate shred file for given tree */
 {
