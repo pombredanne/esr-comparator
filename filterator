@@ -75,8 +75,9 @@ class CommonReport:
     # Template for parsing the output from comparator.
     shredline = re.compile("(.*):([0-9]+):([0-9]+):([0-9]+)")
 
-    def __init__(self, fp):
+    def __init__(self, fp, dir):
         # Read the SCF header
+        self.dir = dir
         self.hash_method = "RXOR"
         self.merge_program = None
         id = fp.readline()
@@ -145,6 +146,9 @@ class CommonReport:
 
     def extract_text(self, clique):
         "Return text corresponding to the given clique."
+        if self.dir:
+            olddir = os.getcwd()
+            os.chdir(dir)
         for (file, start, end) in clique:
             try:
                 # Try to deduce the text_type
@@ -172,6 +176,8 @@ class CommonReport:
             except IOError:
                 sys.stderr.write("filterator: can't open %s\n" % file)
                 sys.exit(0)
+        if self.dir:
+            os.chdir(olddir)
         return (text_type, text)
 
     def filter_by_size(self, minsize):
@@ -226,10 +232,11 @@ if __name__ == '__main__':
     stats = debug = 0
     dofilter = 1
     minsize = 5
+    dir = None
     linecounts = {}
     for (opt, val) in optlist:
         if opt == '-d':
-            os.chdir(val)
+            dir = val
         elif opt == '-m':
             minsize = int(val)
         elif opt == '-n':
@@ -239,7 +246,7 @@ if __name__ == '__main__':
         elif opt == '-x':
             debug = 1
 
-    state = CommonReport(sys.stdin)
+    state = CommonReport(sys.stdin, dir)
     if minsize:
         state.filter_by_size(minsize)
     if dofilter:
