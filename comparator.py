@@ -52,7 +52,7 @@ class CommonReport:
             self.trees[tree] = {}
             for assignment in properties.split(", "):
                 (property, value) = assignment.split("=")
-                self.trees[tree][property] = int(value)
+                self.trees[tree][property.strip()] = int(value)
         # Now read the common-segment stuff
         self.cliques = []
         self.files = {}
@@ -99,9 +99,7 @@ class CommonReport:
                 pass
         if self.dir:
             os.chdir(olddir)
-        if not text:
-            print >>sys.stderr, "Failed to extract text from", clique
-        return text
+        return (file, start, end, text)
 
     def filter_by_size(self, minsize):
         "Throw out all common segments below a specified size."
@@ -111,6 +109,10 @@ class CommonReport:
                 if end - start + 1 >= minsize:
                     filtered.append(clique)
                     break
+            else:
+                properties = self.trees[file.split("/")[0]]
+                properties['matches'] -= 1
+                properties['matchlines'] -= end - start + 1
         self.cliques = filtered
 
 # Property flags

@@ -23,17 +23,18 @@ if __name__ == '__main__':
             sys.stdout.write(rep[:-1] + "\n")
         print 75 * '-'
         for clique in state.cliques:
-            for (file, start, end) in clique:
-                if start == 1 and end == state.files[file]:
-                    print "%% %s:%d-%d: entire (%d matches)" % \
-                          (file, start, end, len(clique))
-                    continue
-            print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(clique))
-            sys.stdout.write(state.extract_text(clique))
+            (file, start, end, text) = state.extract_text(clique)
+            if start == 1 and end == state.files[file]:
+                print "%% %s:%d-%d: entire (%d matches)" % \
+                      (file, start, end, len(clique))
+            else:
+                print "%% %s:%d-%d: (%d matches)" % \
+                      (file, start, end, len(clique))
+            sys.stdout.write(text)
     # Main line begins here
     import getopt
     try:
-        (optlist, args) = getopt.getopt(sys.argv[1:], 'd:m')
+        (optlist, args) = getopt.getopt(sys.argv[1:], 'd:m:')
     except getopt.GetoptError:
         sys.stderr.write("usage: filterator [-d dir] [-m size]\n")
         sys.exit(2)
@@ -50,7 +51,10 @@ if __name__ == '__main__':
         state = comparator.CommonReport(sys.stdin, dir)
         if minsize:
             state.filter_by_size(minsize)
-        report_common(state)
+        try:
+            report_common(state)
+        except KeyboardInterrupt:
+            pass
     except comparator.ComparatorException, e:
         sys.stderr.write("filterator: " + e.message + "\n")
         sys.exit(1)
