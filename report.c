@@ -1,4 +1,4 @@
-/* shredcompare.c -- search hash lists for common matches */
+/* report.c -- search hash lists for common matches */
 
 #include <unistd.h>
 #include <stdio.h>
@@ -289,3 +289,4 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
     }
 }
 
+/* report.c ends here */
