@@ -224,35 +224,34 @@ static int merge_tree(char *tree)
     list = sorted_file_list(tree, &file_count);
     if (!file_count)
     {
-	fprintf(stderr, "comparator: couldn't open %s, %s\n", tree, strerror(errno));
+	fprintf(stderr, 
+		"comparator: couldn't open %s, %s\n", tree, strerror(errno));
 	exit(1);
     }
     i = 0;
     fprintf(stderr, "reading...   ");
     for (place = list; place < list + file_count; place++)
     {
-	shredfile(*place, corehook);
+	totallines += shredfile(*place, corehook);
 	if (!debug && !(i++ % 100))
 	    fprintf(stderr, "\b\b\b%02.0f%%", i / (file_count * 0.01));
     }
     fprintf(stderr, "\b\b\b100%%...done, %d files, %d shreds.\n", 
 	    file_count, sort_count - old_entry_count);
     free(list);
+    return(totallines);
 }
 
-static void init_scf(char *file)
+static void init_scf(char *file, struct scf_t *scf)
 /* add to the in-core list of sorthash structures from a SCF file */
 {
-    struct scf_t	*scf;
     char	buf[BUFSIZ];
-
-    scf = (struct scf_t *)malloc(sizeof(struct scf_t));
 
     /* read in the SCF metadata block and add it to the in-core list */
     scf->name = strdup(file);
     scf->fp   = fopen(scf->name, "r");
     fgets(buf, sizeof(buf), scf->fp);
-    if (strncmp(buf, "#SCF-A ", 6))
+    if (strncmp(buf, "#SCF-A 1.1", 9))
     {
 	fprintf(stderr, 
 		"shredcompare: %s is not a SCF-A file.\n", 
@@ -280,9 +279,6 @@ static void init_scf(char *file)
 	else if (!strcmp(buf, "Generator-Program"))
 	    scf->generator_program = strdup(value);
     }
-
-    scf->next = scflist;
-    scflist = scf;
 }
 
 static void dump_array(struct sorthash_t *obarray, 
@@ -453,7 +449,10 @@ main(int argc, char *argv[])
 		olddir = getcwd(NULL, 0);	/* may fail off Linux */
 		chdir(dir);
 	    }
-	    init_scf(source);
+	    scf = (struct scf_t *)malloc(sizeof(struct scf_t));
+	    init_scf(source, scf);
+	    scf->next = scflist;
+	    scflist = scf;
 	    if (dir)
 		chdir(olddir);
 	}
