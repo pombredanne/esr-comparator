@@ -83,15 +83,17 @@ class CommonReport:
         if type(fp) == type(""):
             self.name = fp
             self.fp = open(self.name)
+        else:
+            self.fp = fp
         # Read the SCF header
         self.dir = dir
         self.hash_method = "RXOR"
         self.merge_program = None
-        id = fp.readline()
+        id = self.fp.readline()
         if not id.startswith("#SCF-B "):
             raise ComparatorException("input is not a SCF-B file.\n")
         while 1:
-            line = fp.readline()
+            line = self.fp.readline()
             if not line or line == '%%\n':
                 break
             (tag, value) = line.split(":")
@@ -107,7 +109,7 @@ class CommonReport:
         # Read file statistics
         self.trees = {}
         while 1:
-            line = fp.readline()
+            line = self.fp.readline()
             if not line or line == '%%\n':
                 break
             (tag, value) = line.split(":")
@@ -117,7 +119,7 @@ class CommonReport:
         self.files = {}
         locations = []
         while 1:
-            line = fp.readline()
+            line = self.fp.readline()
             if not line:
                 break
             m = CommonReport.shredline.search(line)
@@ -186,6 +188,8 @@ class CommonReport:
                 pass
         if self.dir:
             os.chdir(olddir)
+        if not text:
+            print >>sys.stderr, "Failed to extract text from", clique
         return (text_type, text)
 
     def filter_by_size(self, minsize):
