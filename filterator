@@ -44,7 +44,7 @@ def nontrivial(text):
             text = regexp.sub(' ', text)
         for ch in ('{','}', '(',')', '<','>', '[',']',
                    ';', ':', ',', '.', '%', '^', '&', '|', '*','?',
-                   '+', '-', '/', '=', '!', '\n','\t'):
+                   '+', '-', '/', '=', '!', '\n','\t', '\v'):
             text = text.replace(ch, ' ')
         if savecopy == text:
             break
