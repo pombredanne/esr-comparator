@@ -224,10 +224,11 @@ void init_intern(const int count)
      return hashcount;
  }
 
-static int merge(struct range_t *p, struct range_t *q, int nmatches)
+static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
 /* merge t into s, if the ranges in the match are compatible */
 {
     int	i;
+    return 0;
     /*
      * The general problem: you have two lists of shreds, of the same
      * lengths.  Within each list, all shreds have the same hash.
@@ -316,12 +317,12 @@ struct match_t *reduce_matches(int localdups)
 	     if (!heterogenous)
 		 continue;
 
-#ifdef DEBUG
-	     printf("%d has %d in its clique\n", np-obarray, nmatches);
+#ifdef ODEBUG
+	     printf("*** %d has %d in its clique\n", np-obarray, nmatches);
 	     for (i = 0; i < nmatches; i++)
 		 printf("%d: %s:%d:%d\n", 
 			np-obarray+i, np[i].file, np[i].hash.start, np[i].hash.end);
-#endif /* DEBUG */
+#endif /* ODEBUG */
 	     /* passed all tests, keep this set of ranges */
 	     new = (struct match_t *)malloc(sizeof(struct match_t));
 #ifdef DEBUG
@@ -342,6 +343,17 @@ struct match_t *reduce_matches(int localdups)
      }
      free(obarray);
 
+#ifdef DEBUG
+     for (sp = reduced; sp->next; sp = sp->next)
+     {
+	 struct range_t	*rp;
+
+	 printf("Clique beginning at %d:\n", sp->index);
+	 for (rp = sp->matches; rp < sp->matches + sp->nmatches; rp++)
+	     printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
+     }
+#endif /* DEBUG */
+
      /* time to remove duplicates */
      retry = 1;
      while (retry)
@@ -360,7 +372,10 @@ struct match_t *reduce_matches(int localdups)
 		 if (sp->nmatches != tp->nmatches)
 		     continue;
 		 /* attempt the merge */
-		 if (!merge(sp->matches, tp->matches, sp->nmatches))
+#ifdef DEBUG
+		 printf("Trying merge of %d into %d\n", tp->index, sp->index);
+#endif /* DEBUG */
+		 if (!merge_ranges(sp->matches, tp->matches, sp->nmatches))
 		     continue;
 		 /* merge succeeded, clean up */
 #ifdef DEBUG
