@@ -23,6 +23,12 @@ struct hash_t
     unsigned char	hash[HASHSIZE];
 };
 
+struct sorthash_t
+{
+    struct hash_t	hash;
+    char		*file;
+};
+
 /* control bits, meant to be set at startup */
 extern int c_only;
 extern int rws;

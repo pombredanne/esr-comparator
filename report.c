@@ -32,11 +32,6 @@ struct shif_t
 };
 static struct shif_t *shiflist;
 
-struct sorthash_t
-{
-    struct hash_t	hash;
-    char		*file;
-};
 #define HASHCMP(s, t)	memcmp((s)->hash.hash, (t)->hash.hash, HASHSIZE)
 
 static struct sorthash_t *obarray, *np;

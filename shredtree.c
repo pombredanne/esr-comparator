@@ -16,9 +16,10 @@ int rws = 0;
 int debug = 0;
 int shredsize = 5;
 
-/* globally visible data; chunk_buffer should be a malloc area set by the caller */
-int file_count, chunk_count;
+/* globally visible data */
+int file_count, chunk_count, sort_count;
 struct hash_t *chunk_buffer;
+struct sorthash_t *sort_buffer;
 
 struct item
 {
@@ -62,12 +63,13 @@ typedef struct
 }
 shred;
 
-static void emit_chunk(shred *display, int linecount)
-/* emit chunk corresponding to current display; modifies globals chunk_buffer and chunk_count */
+static struct hash_t emit_chunk(shred *display, int linecount) 
+/* emit chunk corresponding to current display */
 {
     struct md5_ctx	ctx;
     int  		i, firstline;
     unsigned char	*cp;
+    struct hash_t	out;
 
     if (debug)
     {
@@ -87,26 +89,54 @@ static void emit_chunk(shred *display, int linecount)
 	    }    
     }
 
-    chunk_buffer = (struct hash_t *)realloc(chunk_buffer, 
-				      sizeof(struct hash_t) * (chunk_count+1));
-
     /* build completed chunk onto end of array */
     md5_init_ctx(&ctx);
     for (i = 0; i < shredsize; i++)
 	if (display[i].line)
 	    md5_process_bytes(display[i].line, strlen(display[i].line), &ctx);
-    md5_finish_ctx(&ctx, (void *)&chunk_buffer[chunk_count].hash);
+    md5_finish_ctx(&ctx, (void *)&out.hash);
     for (i = shredsize - 1; i >= 0; i--)
 	if (display[i].line)
 	    firstline = i;
     firstline = display[firstline].number;
-    chunk_buffer[chunk_count].start = TONET(firstline);
-    chunk_buffer[chunk_count].end = TONET(linecount);
-    chunk_count++;
+    out.start = TONET(firstline);
+    out.end = TONET(linecount);
+
+    return(out);
 }
 
-static void shredfile(const char *file)
-/* emit hash section for specified file; modifies globals chunk_buffer and chunk_count */
+/* 
+ * We differentiate these two functions in order to avaid the memory
+ * overhead of the extra (char *) when assembling shred lists to be written
+ * to a file.  This is only worth bothering with because the data sets
+ * can get quite large.
+ */
+
+static void filehook(struct hash_t hash, const char *file)
+/* hook to store only hashes */
+{
+    chunk_buffer = (struct hash_t *)realloc(chunk_buffer, 
+				      sizeof(struct hash_t) * (chunk_count+1));
+    
+    chunk_buffer[chunk_count++] = hash;
+}
+
+
+static void corehook(struct hash_t hash, const char *file)
+/* hook to store hash and file */
+{
+    sort_buffer = (struct sorthash_t *)realloc(sort_buffer, 
+				      sizeof(struct sorthash_t) * (sort_count+1));
+    
+    sort_buffer[sort_count].hash = hash;
+    sort_buffer[sort_count].file = (char *)file;
+    sort_count++;
+}
+
+
+static void shredfile(const char *file, 
+		      void (*hook)(struct hash_t, const char *))
+/* emit hash section for specified file */
 {
     FILE *fp;
     char buf[BUFSIZ];
@@ -136,7 +166,7 @@ static void shredfile(const char *file)
 
 	/* flush completed chunk */
 	if (accepted >= shredsize)
-	    emit_chunk(display, linecount);
+	    hook(emit_chunk(display, linecount), file);
 
 	/* shreds in progress are shifted down */
 	free(display[0].line);
@@ -145,7 +175,7 @@ static void shredfile(const char *file)
 	display[shredsize-1].line = NULL;
     }
     if (linecount < shredsize)
-	emit_chunk(display, linecount);
+	hook(emit_chunk(display, linecount), file);
 
     free(display);
     fclose(fp);
@@ -173,18 +203,10 @@ static int stringsort(void *a, void *b)
     return strcmp(*(char **)a, *(char **)b);
 }
 
-void generate_shredfile(const char *tree, FILE *ofp)
-/* generate shred file for given tree */
+static char **sorted_file_list(const char *tree)
+/* generate a sorted list of files under the given tree */
 {
     char	**place, **list;
-    u_int32_t	netfile_count;
-
-    fputs("#SHIF-A 1.0\n", ofp);
-    fputs("Generator-Program: shredtree 1.0\n", ofp);
-    fputs("Hash-Method: MD5\n", ofp);
-    fprintf(ofp, "Normalization: %s\n", rws ? "remove_whitespace" : "none");
-    fprintf(ofp, "Shred-Size: %d\n", shredsize);
-    fputs("%%\n", ofp);
 
     /* make file list */
     ftw(tree, treewalker, 16);
@@ -196,8 +218,23 @@ void generate_shredfile(const char *tree, FILE *ofp)
 
     /* the objective -- sort */
     qsort(list, file_count, sizeof(char *), stringsort);
+}
 
-    /* generate the list */
+void generate_shredfile(const char *tree, FILE *ofp)
+/* generate shred file for given tree */
+{
+    char	**place, **list;
+    u_int32_t	netfile_count;
+
+    list = sorted_file_list(tree);
+
+    fputs("#SHIF-A 1.0\n", ofp);
+    fputs("Generator-Program: shredtree 1.0\n", ofp);
+    fputs("Hash-Method: MD5\n", ofp);
+    fprintf(ofp, "Normalization: %s\n", rws ? "remove_whitespace" : "none");
+    fprintf(ofp, "Shred-Size: %d\n", shredsize);
+    fputs("%%\n", ofp);
+
     netfile_count = htonl(file_count);
     fwrite(&netfile_count, sizeof(u_int32_t), 1, ofp);
     for (place = list; place < list + file_count; place++)
@@ -207,7 +244,7 @@ void generate_shredfile(const char *tree, FILE *ofp)
 	/* shredfile adds data to chunk_buffer */
 	chunk_buffer = (struct hash_t *)calloc(sizeof(struct hash_t), 1);
 	chunk_count = 0;
-	shredfile(*place);
+	shredfile(*place, filehook);
 
 	/* the actual output */
 	fputs(*place, ofp);
@@ -217,6 +254,22 @@ void generate_shredfile(const char *tree, FILE *ofp)
 	fwrite(chunk_buffer, sizeof(struct hash_t), chunk_count, ofp);
 	free(chunk_buffer);
     }
+}
+
+struct sorthash_t *generate_shredlist(const char *tree)
+/* generate an in-core list of sorthash structures */
+{
+    char	**place, **list;
+
+    sort_buffer = (struct sorthash_t*)calloc(sizeof(struct sorthash_t),1);
+    sort_count = 0;
+
+    list = sorted_file_list(tree);
+    for (place = list; place < list + file_count; place++)
+	shredfile(*place, corehook);
+
+    /* caller is responsible for freeing this */
+    return(sort_buffer);
 }
 
 /* shredtree.c ends here */
