@@ -8,10 +8,10 @@ def reporthook(clique):
     rep = ""
     (file, start, end, text) = state.extract_text(clique)
     if start == 1 and end == state.files[file]:
-        rep += "%% %s:%d-%d: entire (%d matches)" % \
+        rep += "%% %s:%d-%d: entire (%d matches)\n" % \
               (file, start, end, len(clique))
     else:
-        rep += "%% %s:%d-%d: (%d matches)" % \
+        rep += "%% %s:%d-%d: (%d matches)\n" % \
               (file, start, end, len(clique))
         rep += text
     return rep
