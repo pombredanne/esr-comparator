@@ -55,19 +55,21 @@ shredsize = 5
 verbose = False
 ws = re.compile(r"\s+")
 
-# These just make the code more readable.
-name = 0
-start = 1
-end = 2
-source = 0
-target = 1
-
 class Range:
     "Represent a range of lines."
     def __init__(self, file, start, end):
         self.file = file
         self.start = start
         self.end = end
+    def fetch(self):
+        rfp = open(self.file)
+        for i in range(self.start):
+            rfp.readline()
+        text = ""
+        for i in range(self.start, self.end):
+            text += rfp.readline()
+        rfp.close()
+        return text
     def __str__(self):
         # 0-origin line numbers internally, 1-origin externally.
         return "%s:%d-%d" % (self.file, self.start+1, self.end)
@@ -138,17 +140,17 @@ def shredcompare(tree1, tree2):
             j = len(matches) - i
             this = matches[j]
             last = matches[j-1]
-            if last[source].file == this[source].file \
-		   and last[target].file==this[target].file \
-                   and last[source].start==this[source].start-1:
+            if last[0].file == this[0].file \
+		   and last[1].file==this[1].file \
+                   and last[0].start==this[0].start-1:
                 merge_hit = True
-                last[source].end += 1
-                last[target].end +=1
+                last[0].end += 1
+                last[1].end +=1
                 matches = matches[:j] + matches[j+1:]
     return matches
 
 def report_time():
-    "Report time since the last elapsed time"
+    "Report time since start_time was set."
     endtime = time.time()
     if verbose:
         elapsed = endtime - starttime 
@@ -156,7 +158,6 @@ def report_time():
         minutes = elapsed/60; elapsed %= 60
         seconds = elapsed
         print "%% Done in %dh, %dm, %ds" % (hours, minutes, seconds)
-
 
 if __name__ == '__main__':
     try:
@@ -175,13 +176,14 @@ if __name__ == '__main__':
     starttime = time.time()
     if makehash:
         shreds = shredtree(makehash)
-        report_time()
-        wfp = open(makehash + ".hash")
+        wfp = open(makehash + ".hash", "w")
         cPickle.dump(shreds, wfp)
         wfp.close()
+        report_time()
     else:
         matches = shredcompare(args[0], args[1])
         report_time()
         for (source, target) in matches:
             print source, "->", target
+            sys.stdout.write(source.fetch())
 
