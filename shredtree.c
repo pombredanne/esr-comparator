@@ -8,10 +8,19 @@
 #include <alloca.h>
 #include "md5.h"
 
-static c_only = 0;
-static rws = 0;
-static debug = 0;
-static shredsize = 5;
+static int c_only = 0;
+static int rws = 0;
+static int debug = 0;
+static int shredsize = 5;
+static int filecount;
+
+struct item
+{
+    char	*file;
+    struct item *next;
+}
+dummy;
+struct item *head = &dummy;
 
 static int eligible(const char *file)
 /* is the specified file eligible to be compared? */ 
@@ -153,8 +162,21 @@ int treewalker(const char *file, const struct stat *sb, int flag)
 /* walk the tree, emitting hash sections for eligible files */
 {
     if (flag == FTW_F && sb->st_size > 0 && eligible(file))
-        shredfile(file);
+    {
+	struct item *new;
+
+	new = (struct item *)malloc(sizeof(new));
+        new->file = strdup(file);
+	new->next = head;
+	head = new;
+	filecount++;
+    }
     return(0);
+}
+
+int stringsort(void *a, void *b)
+{
+    return strcmp(*(char **)a, *(char **)b);
 }
 
 main(int argc, char *argv[])
@@ -163,7 +185,7 @@ main(int argc, char *argv[])
     extern int	optind;		/* set by getopt */
 
     int status;
-    char *dir = ".";
+    char **place, **list, *dir = ".";
     while ((status = getopt(argc, argv, "cdhs:w")) != EOF)
     {
 	switch (status)
@@ -204,5 +226,19 @@ main(int argc, char *argv[])
     printf("Normalization: %s\n", rws ? "remove_whitespace" : "none");
     puts("%%");
 
+    /* make file list */
     ftw(argv[optind], treewalker, 16);
+
+    printf("Filecount: %d\n", filecount);
+
+    /* now that we know the length, copy into an array */
+    list = place = (char **)calloc(sizeof(char *), filecount);
+    for (; head->next; head = head->next)
+	*place++ = head->file;
+
+    /* the objective -- sort */
+    qsort(list, filecount, sizeof(char *), stringsort);
+
+    for (place = list; place < list + filecount; place++)
+	shredfile(*place);
 }
