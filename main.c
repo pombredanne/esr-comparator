@@ -178,7 +178,7 @@ void read_scf(const char *name, FILE *fp)
 	    this.end = FROMNET(this.end);
 	    corehook(this, name);
 	    hashcount++;
-	    if (hashcount % 10000 == 0)
+	    if (!debug && hashcount % 10000 == 0)
 		fprintf(stderr,"\b\b\b%02.0f%%",(ftell(fp) / (sb.st_size * 0.01)));
 	}
     }
@@ -204,7 +204,7 @@ static void merge_tree(char *tree)
     for (place = list; place < list + file_count; place++)
     {
 	shredfile(*place, corehook);
-	if (!(i++ % 100))
+	if (!debug && !(i++ % 100))
 	    fprintf(stderr, "\b\b\b%02.0f%%", i / (file_count * 0.01));
     }
     fprintf(stderr, "\b\b\b100%%...done, %d files, %d entries.\n", 
