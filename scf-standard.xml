@@ -19,13 +19,21 @@
 
 <revhistory> 
    <revision>
+      <revnumber>1.2</revnumber>
+      <date>2003-11-07</date>
+      <authorinitials>esr</authorinitials>
+       <revremark>
+	 Added remove-braces.
+       </revremark>
+  </revision>
+   <revision>
       <revnumber>1.1</revnumber>
       <date>2003-10-07</date>
       <authorinitials>esr</authorinitials>
        <revremark>
 	 Added remove-braces.
        </revremark>
-   </revision>
+  </revision>
   <revision>
       <revnumber>1.0</revnumber>
       <date>2003-09-07</date>
@@ -212,11 +220,11 @@ may include the following:</para>
 <para><emphasis>remove-braces</emphasis>: Remove { and }.</para>
 </listitem>
 
-<!--
 <listitem>
-<para><emphasis>remove-C-comments</emphasis>: Remove /* and */</para>
+<para><emphasis>remove-comments</emphasis>: When used with 
+<emphasis>remove-braces</emphasis>, also remove /* and */</para>
 </listitem>
--->
+
 </itemizedlist>
 </listitem>
 </varlistentry>
