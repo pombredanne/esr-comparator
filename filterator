@@ -61,7 +61,7 @@ def nontrivial(text, filetype):
         # identifier, we're looking at something that might be
         # interesting.
         text = ' ' + text
-        while True:
+        while 1:
             savecopy = text
             for regexp in junk[filetype]:
                 text = regexp.sub(' ', text)
@@ -77,11 +77,11 @@ def deduce_deletia(line):
     if "sh" in line:
         return "shell"
 
-def report_common():
+def report_common(stats=1,list=1):
     "Generate a report on common code."
     count = lines = 0
     locations = []
-    while True:
+    while 1:
         line = sys.stdin.readline()
         if not line:
             break
@@ -126,17 +126,22 @@ def report_common():
                             print "Shred-Size: %d" % shredsize
                             if minsize:
                                 print "Minimum-Size: %d" % minsize
-                            print "%%"
+                            print 75 * '-'
                         count += 1
                         lines += end - start + 1
-                        print "%% %s:%s-%s: (%d matches)" % (file, start, end, len(locations))
-                        sys.stdout.write(text)
+                        if list:
+                            print "%% %s:%s-%s: (%d matches)" % (file, start, end, len(locations))
+                            sys.stdout.write(text)
                     locations = []
                     break
                 except IOError:
                     sys.stderr.write("filterator: can't open %s\n" % file)
                     sys.exit(0)
-    print "%d lines in %d overlaps." % (lines, count)
+    if stats:
+        print 75 * '-'
+        print "# %d lines in %d overlaps." % (lines, count)
+        for (tree, linecount) in linecounts.items():
+            print "# %f%% of %s" % ((lines*100.0)/linecount, tree)
 
 if __name__ == '__main__':
     try:
@@ -144,18 +149,18 @@ if __name__ == '__main__':
     except getopt.GetoptError:
         sys.stderr.write("usage: filterator [-d dir] [-n] [-s size] [-x]\n")
         sys.exit(2)
-    nofilter = debug = False
+    nofilter = debug = 0
     minsize = 0
     linecounts = {}
     for (opt, val) in optlist:
         if opt == '-d':
             os.chdir(val)
         elif opt == '-n':
-            nofilter = True
+            nofilter = 1
         elif opt == '-s':
             minsize = int(val)
         elif opt == '-x':
-            debug = True
+            debug = 1
 
     # Read the SCF header
     hash_method = "MD5"
@@ -165,7 +170,7 @@ if __name__ == '__main__':
         sys.stderr.write("filterator: input is not a SCF-B file.\n")
         sys.exit(1)
     # Read metadata
-    while True:
+    while 1:
         line = sys.stdin.readline()
         if not line or line == '%%\n':
             break
@@ -180,7 +185,7 @@ if __name__ == '__main__':
         elif tag == "Hash-Method":
             hash_method = value
     # Read file statistics
-    while True:
+    while 1:
         line = sys.stdin.readline()
         if not line or line == '%%\n':
             break
