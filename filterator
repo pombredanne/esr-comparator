@@ -10,10 +10,10 @@ shredline = re.compile("([^:]*):([0-9]+):([0-9]+)")
 # Tokens to be removed when checking whether a shred is significant
 junk = map(re.compile, (
     # Idioms that don't convey any meaning in isolation
-    r"return +\(?[a-z]+\)?;", r"return +\(?-?[01]+\)?;", r"goto +[a-z]+;",
+    r"return *\(?[a-z]+\)? *;", r"return *\(?-?[01]+\)? *;", r"goto +[a-z]+;",
     r"exit *\([01]\);",
     # Pragmas
-    r'/\* ARGSUSED \*/', r'/\* NOTREACHED \*/', 
+    r'/\* *ARGSUSED *\*/', r'/\* *NOTREACHED *\*/', 
     # Bare C keywords
     r'\bbreak\b',  r'\bcase\b',r'\bcontinue\b', r'\bdefault\b',
     r'\bdo\b', r'\belse\b', r'\bif\b', r'\bgoto\b', r'\breturn\b',
@@ -65,12 +65,36 @@ if __name__ == '__main__':
         elif opt == '-n':
             nofilter = True
 
-    # skip the SCF header
+    # Read the SCF header
+    hash = "MD5"
+    merge_program = None
+    id = sys.stdin.readline()
+    if not id.startswith("#SCF-B "):
+        sys.stderr.write("filterator: input is not a SCF-B file.")
+        sys.exit(1)
     while True:
         line = sys.stdin.readline()
         if not line or line == '%%\n':
             break
+        (tag, value) = line.split(":")
+        value = value.strip()
+        if tag == "Normalization":
+            normalization = value
+        elif tag == "Shred-Size":
+            shredsize = int(value)
+        elif tag == "Merge-Program":
+            merge_program = value
+        elif tag == "Hash-Method":
+            hash_method = value
 
+    print "#SCF-C 1.0"
+    print "Filter-Program: filterator 1.0"
+    print "Hash-Method: MD5"
+    if merge_program:
+        print "Merge=Program:", merge_program
+    print "Normalization:", normalization
+    print "Shred-Size: %d" % shredsize
+    print "%%"
     count = 0
     locations = []
     while True:
@@ -88,11 +112,14 @@ if __name__ == '__main__':
                         rfp.readline()
                     text = ""
                     for i in range(start, end+1):
-                        text += rfp.readline()
+                        nextline = rfp.readline()
+                        if nextline[0] == '%':
+                            nextline[0] = '%' + nextline
+                        text += nextline
                     rfp.close()
                     if nofilter or nontrivial(text):
                         count += 1
-                        print "%%%%#%%%% %s:%s-%s:" % (file, start, end)
+                        print "%% %s:%s-%s:" % (file, start, end)
                         sys.stdout.write(text)
                         #print `nontrivial(text)`
                     locations = []
