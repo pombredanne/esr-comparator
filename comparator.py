@@ -171,9 +171,9 @@ class CommonReport:
                 for (treename, properties) in self.trees:
                     if treename == file.split("/")[0]:
                         break
-                if not treename in intree:
+                if not intree.get(treename, False):
                     matches[treename] += 1
-                    intree[tree] = True
+                    intree[treename] = True
                 matchlines[treename] += end - start + 1
         for (treename, properties) in self.trees:
             properties['matches'] = matches[treename]
