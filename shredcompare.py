@@ -29,7 +29,7 @@ verbose = False
 mark_time = None
 ws = re.compile(r"\s+")
 
-class Range:
+class Shred:
     "Represent a range of lines."
     def __init__(self, file, start, end):
         self.file = file
@@ -44,9 +44,19 @@ class Range:
             text += rfp.readline()
         rfp.close()
         return text
+    def linerange(self):
+        return range(self.start, self.end)
+    def intersects(self, other):
+        return self.file == other.file and \
+           self.start in other.linerange() or other.start in self.linerange()
+    def merge(self, other):
+        self.start = min(self.start, other.start)
+        self.end   = max(self.end,   other.end)
     def __cmp__(self, other):
         return cmp((self.file, self.start, self.end), 
                    (other.file, other.start, other.end))
+    def __hash_(self):
+        return hash((self.file, self.start, self.end))
     def __str__(self):
         # 0-origin line numbers internally, 1-origin externally.
         return "%s:%d-%d" % (self.file, self.start+1, self.end)
@@ -55,6 +65,10 @@ class Range:
 def smash_whitespace(line):
     "Replace each string of whitespace in a line with a single space."
     return ws.sub(' ', line)
+
+def is_line_relevant(line):
+    "Don't start chunks on lines with no features.  This is a speed hack."
+    return line.strip()
 
 def shredfile(file, tree):
     "Build a dictionary of shred tuples corresponding to a specified file."
@@ -65,11 +79,12 @@ def shredfile(file, tree):
     lines = map(smash_whitespace, fp.readlines())
     fp.close()
     for i in range(len(lines)-shredsize):
-        m = md5.new()
-        for j in range(shredsize):
-            m.update(lines[i+j])
-        # Merging shreds into a dict automatically suppresses duplicates
-        shreds[m.digest()] = Range(file, i, i+shredsize)
+        if is_line_relevant(lines[i]):
+            m = md5.new()
+            for j in range(shredsize):
+                m.update(lines[i+j])
+            # Merging shreds into a dict automatically suppresses duplicates.
+            shreds[m.digest()] = Shred(file, i, i+shredsize)
     return shreds
 
 def eligible(file):
@@ -96,7 +111,7 @@ def shredtree(tree):
     return shreds
 
 def shredcompare(tree1, tree2):
-    "Compare two trees.  Returns a list of matching Range pairs"
+    "Compare two trees.  Returns a list of matching Shred pairs"
     shreds1 = shredtree(tree1)
     shreds2 = shredtree(tree2)
     # Nuke everything but checksum matches between the trees
@@ -110,24 +125,35 @@ def shredcompare(tree1, tree2):
     matches = []
     for key in shreds1.keys():
         matches.append((shreds1[key], shreds2[key]))
-    # Merge adjacent ranges if possible
-    matches.sort()	# Sort in natural order
-    merge_hit = True
-    while merge_hit:
-        merge_hit = False
-        j = len(matches) - 1
-        while j > 0:
-            this = matches[j]
-            last = matches[j-1]
-            if last[0].file == this[0].file \
-		   and last[1].file==this[1].file \
-                   and last[0].start==this[0].start-1:
-                merge_hit = True
-                last[0].end = this[0].end
-                last[1].end = this[1].end
-                matches = matches[:j] + matches[j+1:]
-            j -= 1
-    return matches
+    # Merge overlapping ranges if possible.
+    # This in O(n**2) in the number of matching chunks.
+    # Should performance ever become a problem, break this up into
+    # separate passes over the chunks in each file. (Corresponds
+    # to eliminating a bunch of off-diagonal entries.
+    retry = True
+    while retry:
+        retry = False
+        #print "Matches at start:", matches
+        for i in range(len(matches)):
+            for j in range(len(matches)):
+                if i >= j:
+                    continue
+                # Neither shred must have been deleted
+                if not matches[j] or not matches[i]:
+                    continue
+                #print "Checking:", matches[j], matches[i]
+                # Toss them out if they don't intersect
+                if not (matches[j][0].intersects(matches[i][0]) and \
+                	matches[j][1].intersects(matches[i][1])):
+                    print "alpha and beta don't intersect"
+                    continue
+                # Merge lower chunk into upper; delete lower
+                #print "Found a merge:", matches[j], matches[i]
+                matches[j][0].merge(matches[i][0])
+                matches[j][1].merge(matches[i][1])
+                matches[i] = None
+                retry = True
+    return filter(lambda x: x, matches)
 
 def report_time(legend=None):
     "Report time since start_time was set."
