@@ -1,4 +1,4 @@
-/* shedtree.c -- generate MD5 hash list in SHIF-A format from a file tree */
+/* shedtree.c -- generate MD5 hash list from a file tree */
 
 #include <stdio.h>
 #include <unistd.h>
@@ -7,19 +7,18 @@
 #include <errno.h>
 #include <alloca.h>
 #include <netinet/in.h>
-#include <sys/types.h>
 #include "md5.h"
 #include "shred.h"
 
 /* control bits, meant to be set at startup */
-static int c_only = 0;
-static int rws = 0;
-static int debug = 0;
-static int shredsize = 5;
+int c_only = 0;
+int rws = 0;
+int debug = 0;
+int shredsize = 5;
 
 /* globally visible data; chunk_buffer should be a malloc area set by the caller */
-static int file_count, chunk_count;
-static struct hash_t *chunk_buffer;
+int file_count, chunk_count;
+struct hash_t *chunk_buffer;
 
 struct item
 {
@@ -152,7 +151,7 @@ static void shredfile(const char *file)
     fclose(fp);
 }
 
-int treewalker(const char *file, const struct stat *sb, int flag)
+static int treewalker(const char *file, const struct stat *sb, int flag)
 /* walk the tree, emitting hash sections for eligible files */
 {
     if (flag == FTW_F && sb->st_size > 0 && eligible(file))
@@ -174,7 +173,7 @@ static int stringsort(void *a, void *b)
     return strcmp(*(char **)a, *(char **)b);
 }
 
-static void generate_shredfile(const char *tree, FILE *ofp)
+void generate_shredfile(const char *tree, FILE *ofp)
 /* generate shred file for given tree */
 {
     char	**place, **list;
@@ -220,50 +219,4 @@ static void generate_shredfile(const char *tree, FILE *ofp)
     }
 }
 
-main(int argc, char *argv[])
-{
-    extern char	*optarg;	/* set by getopt */
-    extern int	optind;		/* set by getopt */
-
-    int status;
-    while ((status = getopt(argc, argv, "cd:hs:w")) != EOF)
-    {
-	switch (status)
-	{
-	case 'c':
-	    c_only = 1;
-	    break;
-
-	case 'd':
-	    chdir(optarg);
-	    break;
-
-	case 's':
-	    shredsize = atoi(optarg);
-	    break;
-
-	case 'w':
-	    rws = 1;
-	    break;
-
-	case 'x':
-	    debug = 1;
-	    break;
-
-	case 'h':
-	default:
-	    fprintf(stderr,"usage: shredtree [-c] [-d dir ] [-s shredsize] [-w] [-x] path\n");
-	    fprintf(stderr,"  -c      = check .c, .h, and .txt files only.\n");
-	    fprintf(stderr,"  -d dir  = change directory before digesting.\n");
-	    fprintf(stderr,"  -h      = help (display this message).\n");
-	    fprintf(stderr,"  -x      = debug, display chunks in output.\n");
-	    fprintf(stderr,"  -s size = set shred size (default %d)\n",
-		    shredsize);
-	    fprintf(stderr,"  -w      = remove whitespace.\n");
-	    exit(0);
-	}
-    }
-
-    generate_shredfile(argv[optind], stdout);
-    exit(0);
-}
+/* shredtree.c ends here */

@@ -1,5 +1,7 @@
 /* shred.h -- types for shred similarity tools */
 
+#include <sys/types.h>
+
 /*
  * 65,536 lines should be enough, but maybe someday this will be 32 bits.
  * The point of making it a short is that the data sets can get quite large.
@@ -20,5 +22,19 @@ struct hash_t
     linenum_t   	start, end;
     unsigned char	hash[HASHSIZE];
 };
+
+/* control bits, meant to be set at startup */
+extern int c_only;
+extern int rws;
+extern int debug;
+extern int shredsize;
+
+/* globally visible data; chunk_buffer should be a malloc area set by the caller */
+extern int file_count, chunk_count;
+extern struct hash_t *chunk_buffer;
+
+/* functions */
+extern void generate_shredfile(const char *, FILE *);
+extern void shredreport(int argc, char *argv[]);
 
 /* shred.h ends here */

@@ -471,27 +471,16 @@ static int sortmatch(void *a, void *b)
     return(0);
 }
 
-main(int argc, char *argv[])
+void shredreport(int argc, char *argv[])
+/* merge hashes from several files and generate a report to standard output */
 {
     extern char	*optarg;	/* set by getopt */
     extern int	optind;		/* set by getopt */
-    int	i, status, matchcount;
+    int	i, matchcount;
     struct match_t *hitlist, *sorted, *match;
 
-    while ((status = getopt(argc, argv, "h")) != EOF)
-    {
-	switch (status)
-	{
-	case 'h':
-	default:
-	    fprintf(stderr,"usage: shredtree hashfile...\n");
-	    fprintf(stderr,"  -h      = help (display this message).\n");
-	    exit(0);
-	}
-    }
-
     report_time(NULL);
-    merge_hashes(argc - optind, argv + optind);
+    merge_hashes(argc, argv);
     report_time("Hash merge done, %d entries", hashcount);
 
     /* the magic CPU-eating moment; sort the whole thing */ 
@@ -556,6 +545,5 @@ main(int argc, char *argv[])
 	}
 	printf("-\n");
     }
-
-    exit(0);
 }
+
