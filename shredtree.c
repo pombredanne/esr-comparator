@@ -19,9 +19,6 @@
 #include "shred.h"
 
 /* control bits, meant to be set at startup */
-int remove_braces = 0;
-int remove_whitespace = 0;
-int remove_comments = 0;
 int shredsize = 3;
 
 struct item
@@ -74,60 +71,6 @@ static int eligible(const char *file)
     }
 }
 
-static int normalize(char *buf)
-/* normalize a buffer in place, return 0 if it should be skipped */
-{
-    if (remove_comments)
-    {
-	if (remove_braces)	/* remove C comments */
-	{
-	    char	*ss = strstr(buf, "//");
-
-	    if (ss)
-		*ss = '\0';
-	    else
-	    {
-		char *start = strstr(buf, "/*"), *end = strstr(buf, "*/");
-
-		if (start && end && start < end)
-		    strcpy(start, end+2);
-		else if (start && !end)
-		    *start = '\0';
-		else if (end && !start)
-		    *end = '\0';
-	    }
-	}
-	else
-	{
-	    char	*ss = strchr(buf, '#');
-
-	    if (ss)
-		*ss = '\0';
-	}
-    }
-
-    if (remove_whitespace)	/* strip whitespace, ignore blank lines */
-    {
-	char *tp, *sp;
-
-	for (tp = sp = buf; *sp; sp++)
-	    if (*sp != ' ' && *sp != '\t' && *sp != '\n')
-		*tp++ = *sp;
-	*tp = '\0';
-    }
-    if (remove_braces)		/* strip C statement brackets */
-    {
-	char *tp, *sp;
-
-	for (tp = sp = buf; *sp; sp++)
-	    if (*sp != '{' && *sp != '}')
-		*tp++ = *sp;
-	*tp = '\0';
-    }
-
-    return(buf[0]);
-}
-
 typedef struct
 {
     char	*line;
@@ -174,7 +117,9 @@ int shredfile(struct filehdr_t *file,
     FILE *fp;
     char buf[BUFSIZ];
     int i, linecount, accepted;
+    linenum_t	linenumber;
     shred *display;
+    feature_t *feature;
 
     if ((fp = fopen(file->name, "r")) == NULL)
     {
@@ -185,77 +130,42 @@ int shredfile(struct filehdr_t *file,
 
     /* deduce what filtering type we should use */
 #define endswith(suff) !strcmp(suff,file->name+strlen(file->name)-strlen(suff))
-    filter_set(0);
+    analyzer_mode(0);
     if (endswith(".c") || endswith(".h"))
-	filter_set(C_CODE);
+	analyzer_mode(C_CODE);
     else if (endswith(".sh"))
-	filter_set(SHELL_CODE);
+	analyzer_mode(SHELL_CODE);
 #undef endswith
 
     display = (shred *)calloc(sizeof(shred), shredsize);
 
-    accepted = linecount = 0;
-    while(fgets(buf, sizeof(buf), fp) != NULL)
+    linenumber = accepted=0;
+    while ((feature = analyzer_get(file, fp, &linenumber)))
     {
-	int	braceline = 0;
-
-	linecount++;
-	if (linecount >= MAX_LINENUM)
-	{
-	    fprintf(stderr, "comparator: %s too large, only first %d lines will be compared.\n", file->name, MAX_LINENUM-1);
-	    break;
-	}
-
-	if (remove_braces)
-	{
-	    char *cp;
-
-	    for (cp = buf; *cp && isspace(*cp); cp++)
-		continue;
-	    braceline = (*cp == '}');
-	}
-	if (!normalize(buf))
-	{
-	    /*
-	     * What this is for is to include trailing C } lines in chunk
-	     * listings even though we're ignoring them for comparison 
-	     * purposes (in order not to be fooled by variance in indent
-	     * styles).  This is a kluge, but it means we will capture
-	     * entire C functions that differ only by brace placement.
-	     */
-	    if (remove_braces && braceline)
-		extend_current_chunk(file->length);
-	    continue;
-	}
 	accepted++;
 
-	/* maybe we can get the file type from the first line? */
-	if (linecount == 1 && buf[0] == '#')
-	    if (strstr(buf, "sh"))
-		filter_set(SHELL_CODE);
-
 	/* create new shred */
-	display[shredsize-1].line = strdup(buf);
-	display[shredsize-1].start = linecount;
-	display[shredsize-1].flags = filter_pass(buf) ? INSIGNIFICANT : 0;
+	display[shredsize-1].line = feature->text;
+	display[shredsize-1].start = linenumber;
+	display[shredsize-1].flags = feature->flags;
 
 	/* flush completed chunk */
 	if (accepted >= shredsize)
-	    hook(emit_chunk(display, linecount), file);
+	    hook(emit_chunk(display, linenumber), file);
 
 	/* shreds in progress are shifted down */
-	free(display[0].line);
+	analyzer_free(display[0].line);
 	for (i=1; i < shredsize; i++)
 	    display[i-1] = display[i];
 	display[shredsize-1].line = NULL;
 	display[shredsize-1].flags = 0;
     }
     if (accepted && accepted < shredsize)
-	hook(emit_chunk(display, linecount), file);
+	hook(emit_chunk(display, linenumber), file);
 
     free(display);
     fclose(fp);
-    return(linecount);
+    return(linenumber);
 }
 
 /*************************************************************************

@@ -52,6 +52,13 @@ struct sorthash_t
     struct filehdr_t	*file;
 };
 
+typedef struct
+{
+    char	*text;
+    int		flags;
+}
+feature_t;
+
 /* control bits, meant to be set at startup */
 extern int remove_braces;
 extern int remove_whitespace;
@@ -74,10 +81,12 @@ extern int shredfile(struct filehdr_t *,
 		     void (*hook)(struct hash_t, struct filehdr_t *));
 extern void sort_hashes(struct sorthash_t *hashlist, int hashcount);
 
-/* filter.c functions */
-extern void filter_init(void);
-extern void filter_set(int);
-extern int filter_pass(const char *line);
+/* linebyline.c functions */
+extern void analyzer_init(void);
+extern void analyzer_mode(int);
+extern feature_t *analyzer_get(const struct filehdr_t *,
+			       FILE *, linenum_t *linenumber);
+extern void analyzer_free(const char *);
 
 /* shredcompare.c functions */
 extern int merge_compare(struct sorthash_t *obarray, int hashcount);

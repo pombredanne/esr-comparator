@@ -13,7 +13,7 @@ DOCS    = README NEWS comparator.xml scf-standard.xml COPYING
 EXTRAS  = shredtree.py shredcompare.py
 TEST    = test
 SOURCES = $(CODE) $(SCRIPTS) $(DOCS) $(EXTRAS) $(TEST) comparator.spec Makefile
-CFLAGS  = -O3
+CFLAGS  = -g	#-O3
 LDFLAGS = 
 
 all: comparator comparator.1
