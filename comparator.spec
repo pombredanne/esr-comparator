@@ -7,6 +7,7 @@ Group: Utilities
 URL: http://www.catb.org/~esr/comparator/
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-root
+#Keywords: source code, comparison
 
 %description
 comparator and filterator are a pair of tools for rapidly finding common
@@ -17,17 +18,16 @@ detecting copyright infringement.
 %setup -q
 
 %build
-make
-make comparator.1
+make %{?_smp_mflags} comparator comparator.1
 
 %install
 [ "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf "$RPM_BUILD_ROOT"
-mkdir -p "$RPM_BUILD_ROOT"/usr/bin
-mkdir -p "$RPM_BUILD_ROOT"/usr/share/man/man1/
-pylib=`ls -d /usr/local/lib/python*/site-packages/`
+mkdir -p "$RPM_BUILD_ROOT"%{_bindir}
+mkdir -p "$RPM_BUILD_ROOT"%{_mandir}/man1/
+pylib=`ls -d %{_libdir}/python*/site-packages/`
 mkdir -p "$RPM_BUILD_ROOT"${pylib}
-cp comparator filterator "$RPM_BUILD_ROOT"/usr/bin
-cp comparator.1 "$RPM_BUILD_ROOT"/usr/share/man/man1/
+cp comparator filterator "$RPM_BUILD_ROOT"%{_bindir}
+cp comparator.1 "$RPM_BUILD_ROOT"%{_mandir}/man1/
 cp comparator.py "$RPM_BUILD_ROOT"${pylib}
 
 %clean
@@ -39,7 +39,7 @@ cp comparator.py "$RPM_BUILD_ROOT"${pylib}
 %{_bindir}/comparator
 %{_bindir}/filterator
 %{_mandir}/man1/comparator.1*
-/usr/local/lib/python*/site-packages/comparator.py
+%{_libdir}/python*/site-packages/comparator.py
 
 %changelog
 * Mon Dec 29 2003 Eric S. Raymond <esr@snark.thyrsus.com> 2.3-1

@@ -100,8 +100,5 @@ comparator-$(VERS).tar.gz: $(SOURCES) comparator.1
 
 dist: comparator-$(VERS).tar.gz
 
-RPMROOT=/usr/src/redhat
-rpm: dist
-	rpmbuild --define 'myversion $(VERS)' -ta comparator-$(VERS).tar.gz
-	cp $(RPMROOT)/RPMS/*/comparator-$(VERS)*.rpm .
-	cp $(RPMROOT)/SRPMS/comparator-$(VERS)*.src.rpm .
+release: comparator-$(VERS).tar.gz comparator.html
+	shipper -f; rm -f CHANGES ANNOUNCE* *.1 *.html *.rpm *.lsm
