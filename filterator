@@ -119,7 +119,7 @@ if __name__ == '__main__':
                     rfp.close()
                     if nofilter or nontrivial(text):
                         count += 1
-                        print "%% %s:%s-%s:" % (file, start, end)
+                        print "%% %s:%s-%s: (%d matches)" % (file, start, end, len(locations))
                         sys.stdout.write(text)
                         #print `nontrivial(text)`
                     locations = []
