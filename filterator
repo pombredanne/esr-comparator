@@ -78,7 +78,7 @@ class CommonReport:
         return lines
 
     def extract_text(self, clique):
-        "Return text corresponding to the nth clique."
+        "Return text corresponding to the given clique."
         for (file, start, end) in clique:
             try:
                 # Try to deduce the text_type
@@ -117,6 +117,12 @@ class CommonReport:
                     filtered.append(clique)
                     break
         self.cliques = filtered
+
+    def filter_by_significance(self):
+        "Throw out all cliques that aren't significant."
+        self.cliques = filter(
+            		lambda x: apply(nontrival,self.extract_text(clique)),
+                        self.cliques)
 
 # Tokens to be removed when checking whether a shred is significant
 junk = {
@@ -161,7 +167,7 @@ junk = {
         )),
     }
 
-def nontrivial(text, filetype):
+def nontrivial(filetype, text):
     "Identify a shred as trivial or nontrivial."
     if filetype:
         if debug:
@@ -184,10 +190,10 @@ def nontrivial(text, filetype):
                 continue
     return text.strip()
 
-def report_common(state, stats=1,list=1):
+def report_common(state):
     "Generate a report on common code."
     print "Filter-Program: filterator 1.0"
-    print "Filtering:", ("language", "none")[nofilter]
+    print "Filtering:", ("none", "language")[dofilter]
     print "Hash-Method: MD5"
     if state.merge_program:
         print "Merge-Program:", state.merge_program
@@ -208,11 +214,13 @@ def report_common(state, stats=1,list=1):
                 print "%% %s:%d-%d: entire (%d matches)" % (file, start, end, len(clique))
                 continue
             (text_type, text) = state.extract_text(clique)
-            if nofilter or nontrivial(text, text_type):
+            if not dofilter or nontrivial(text_type, text):
                  if list:
                     print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(clique))
                     sys.stdout.write(text)
             break
+            #print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(clique))
+            #sys.stdout.write(state.extract_text(clique)[1])
 
 if __name__ == '__main__':
     try:
@@ -220,7 +228,8 @@ if __name__ == '__main__':
     except getopt.GetoptError:
         sys.stderr.write("usage: filterator [-d dir] [-m size] [-n] [-x]\n")
         sys.exit(2)
-    stats = nofilter = debug = 0
+    stats = debug = 0
+    dofilter = 0
     minsize = 5
     linecounts = {}
     for (opt, val) in optlist:
@@ -229,7 +238,7 @@ if __name__ == '__main__':
         elif opt == '-m':
             minsize = int(val)
         elif opt == '-n':
-            nofilter = 1
+            dofilter = 0
         elif opt == '-S':
             stats = 1
         elif opt == '-x':
@@ -238,6 +247,8 @@ if __name__ == '__main__':
     state = CommonReport(sys.stdin)
     if minsize:
         state.filter_by_size(minsize)
+    #if dofilter:
+    #    state.filter_by_significance()
 
     if stats:
         print "%d overlaps" % state.segment_count()
