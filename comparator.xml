@@ -52,7 +52,7 @@ filtering. <application>comparator.py</application> is a Python module
 for interpreting <application>comparator</application> reports;
 <application>filterator</application> uses it.</para>
 
-<refsect2><title>comparator</title>
+<refsect2><title>How comparator works</title>
 
 <para><application>comparator</application> works by first chopping
 the specified trees into overlapping shreds (by default 3 lines long)
