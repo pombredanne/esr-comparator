@@ -247,40 +247,40 @@ static void init_scf(char *file, struct scf_t *scf)
 {
     if (file)
     {
-    char	buf[BUFSIZ];
+	char	buf[BUFSIZ];
 
-    /* read in the SCF metadata block and add it to the in-core list */
-    scf->name = strdup(file);
-    scf->fp   = fopen(scf->name, "r");
-    fgets(buf, sizeof(buf), scf->fp);
-    if (strncmp(buf, "#SCF-A 1.1", 9))
-    {
-	fprintf(stderr, 
-		"shredcompare: %s is not a SCF-A file.\n", 
-		scf->name);
-	exit(1);
-    }
-    while (fgets(buf, sizeof(buf), scf->fp) != NULL)
-    {
-	char	*value;
+	/* read in the SCF metadata block and add it to the in-core list */
+	scf->name = strdup(file);
+	scf->fp   = fopen(scf->name, "r");
+	fgets(buf, sizeof(buf), scf->fp);
+	if (strncmp(buf, "#SCF-A 1.1", 9))
+	{
+	    fprintf(stderr, 
+		    "shredcompare: %s is not a SCF-A file.\n", 
+		    scf->name);
+	    exit(1);
+	}
+	while (fgets(buf, sizeof(buf), scf->fp) != NULL)
+	{
+	    char	*value;
 
-	if (!strcmp(buf, "%%\n"))
-	    break;
-	value = strchr(buf, ':');
-	*value++ = '\0';
-	while(*value == ' ')
-	    value++;
-	strchr(value, '\n')[0] = '\0';
+	    if (!strcmp(buf, "%%\n"))
+		break;
+	    value = strchr(buf, ':');
+	    *value++ = '\0';
+	    while(*value == ' ')
+		value++;
+	    strchr(value, '\n')[0] = '\0';
 
-	if (!strcmp(buf, "Normalization"))
-	    scf->normalization = strdup(value);
-	else if (!strcmp(buf, "Shred-Size"))
-	    scf->shred_size = atoi(value);
-	else if (!strcmp(buf, "Hash-Method"))
-	    scf->hash_method = strdup(value);
-	else if (!strcmp(buf, "Generator-Program"))
-	    scf->generator_program = strdup(value);
-    }
+	    if (!strcmp(buf, "Normalization"))
+		scf->normalization = strdup(value);
+	    else if (!strcmp(buf, "Shred-Size"))
+		scf->shred_size = atoi(value);
+	    else if (!strcmp(buf, "Hash-Method"))
+		scf->hash_method = strdup(value);
+	    else if (!strcmp(buf, "Generator-Program"))
+		scf->generator_program = strdup(value);
+	}
     }
     else
     {
