@@ -42,6 +42,8 @@ static int eligible(const char *file)
 	return(1);
     else if (endswith(".o") || endswith("~"))
 	return(0);
+    else if (strstr(file, "CVS") || strstr(file,"RCS") || strstr(file,"SCCS"))
+	return(0);
 #undef endswith
     else
     {
