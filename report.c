@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "shred.h"
 
 static int local_duplicates;
 
@@ -144,5 +145,32 @@ main(int argc, char *argv[])
     /* read in all hashes */
     for (sp = shiflist; sp < shiflist + filecount; sp++)
     {
+	u_int32_t	sectcount;
+
+	fread(&sectcount, sizeof(u_int32_t), 1, sp->fp);
+	sectcount = ntohl(sectcount);
+	while (sectcount--)
+	{
+	    char	buf[BUFSIZ];
+	    linenum_t	chunks;
+
+	    fgets(buf, sizeof(buf), sp->fp);
+	    file_intern(buf);
+	    fread(&chunks, sizeof(linenum_t), 1, sp->fp);
+	    chunks = FROMNET(chunks);
+
+	    while (chunks--)
+	    {
+		struct hash_t	this;
+
+		fread(&this, sizeof(struct hash_t), 1, sp->fp);
+		this.start = FROMNET(this.start);
+		this.end = FROMNET(this.end);
+		hash_intern(&this);
+	    }
+	}
     }
+    report_time("Hash merge done.");
+
+    /* more... */
 }
