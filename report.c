@@ -105,64 +105,59 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int hashcount)
      static struct match_t dummy; 
      struct match_t *reduced = &dummy, *sp, *tp;
      unsigned int retry, nonuniques, progress;
-     struct sorthash_t *np;
+     struct sorthash_t *mp, *np;
 
      /* build list of hashes with more than one range associated with */
      nonuniques = progress = 0;
      fprintf(stderr, "%% Extracting duplicates...   ");
-     for (np = obarray; np < obarray + hashcount; np++)
+     for (np = obarray; np < obarray + hashcount; np = mp)
      {
-	 if (np < obarray + hashcount - 1 && !HASHCMP(np, np+1))
+	 struct match_t *new;
+	 int i, heterogenous, nmatches;
+
+	 if (!debug && progress++ % 10000 == 0)
+	     fprintf(stderr, "\b\b\b%02.0f%%", progress / (hashcount * 0.01));
+
+	 /* count the number of hash matches */
+	 nmatches = 1;
+	 for (mp = np+1; mp < obarray + hashcount; mp++)
+	     if (HASHCMP(np, mp))
+		 break;
+	     else
+		 nmatches++;
+
+	 /* if all these matches are within the same tree, toss them */
+	 heterogenous = 0;
+	 for (i = 0; i < nmatches; i++)
+	     if (!sametree(np[i].file, np[(i+1) % nmatches].file))
+		 heterogenous++;
+	 if (!heterogenous)
+	     continue;
+
+	 if (debug)
 	 {
-	     struct match_t *new;
-	     int i, heterogenous, nmatches;
-	     struct sorthash_t *mp;
-
-	     if (!debug && progress++ % 10000 == 0)
-		 fprintf(stderr, "\b\b\b%02.0f%%", progress / (hashcount * 0.01));
-
-	     /* count the number of hash matches */
-	     nmatches = 1;
-	     for (mp = np+1; mp < obarray + hashcount; mp++)
-		 if (HASHCMP(np, mp))
-		     break;
-		 else
-		     nmatches++;
-
-	     /* if all these matches are within the same tree, toss them */
-	     heterogenous = 0;
+	     printf("*** %d has %d in its clique\n", np-obarray, nmatches);
 	     for (i = 0; i < nmatches; i++)
-		 if (!sametree(np[i].file, np[(i+1) % nmatches].file))
-		     heterogenous++;
-	     if (!heterogenous)
-		 continue;
+		 printf("%d: %s:%d:%d\n", 
+			np-obarray+i, np[i].file, np[i].hash.start, np[i].hash.end);
+	 }
 
-	     if (debug)
-	     {
-		 printf("*** %d has %d in its clique\n", np-obarray, nmatches);
-		 for (i = 0; i < nmatches; i++)
-		     printf("%d: %s:%d:%d\n", 
-			    np-obarray+i, np[i].file, np[i].hash.start, np[i].hash.end);
-	     }
-
-	     /* passed all tests, keep this set of ranges */
-	     new = (struct match_t *)malloc(sizeof(struct match_t));
+	 /* passed all tests, keep this set of ranges */
+	 new = (struct match_t *)malloc(sizeof(struct match_t));
 #ifdef DEBUG
-	     new->index = np - obarray;
+	 new->index = np - obarray;
 #endif /* DEBUG */
-	     new->next  = reduced;
-	     reduced = new;
-	     new->nmatches = nmatches;
-	     new->matches=(struct range_t *)calloc(sizeof(struct range_t),new->nmatches);
-	     nonuniques++;
-	     for (i = 0; i < new->nmatches; i++)
-	     {
-		 new->matches[i].file  = np[i].file;
-		 new->matches[i].start = np[i].hash.start;
-		 new->matches[i].end   = np[i].hash.end;
-	     }
-	     np = mp-1;
-	}
+	 new->next  = reduced;
+	 reduced = new;
+	 new->nmatches = nmatches;
+	 new->matches=(struct range_t *)calloc(sizeof(struct range_t),new->nmatches);
+	 nonuniques++;
+	 for (i = 0; i < new->nmatches; i++)
+	 {
+	     new->matches[i].file  = np[i].file;
+	     new->matches[i].start = np[i].hash.start;
+	     new->matches[i].end   = np[i].hash.end;
+	 }
      }
      free(obarray);
      fprintf(stderr, "\b\b\b100%% done.\n");
