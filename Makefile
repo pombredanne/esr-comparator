@@ -20,6 +20,11 @@ clean:
 	rm -f shredtree shredcompare shredtree.o md5.o shredcompare.o
 
 test:
-	time shredtree -c -w -d ~/src/unix src5r4 >src5r4.shif
-	time shredtree -c -w -d ~/src/unix linux-2.6.0-test4 >linux-2.6.0-test4.shif
-	time shredcompare.py src5r4.shif linux-2.6.0-test4.shif >TEST.LOG
+	shredtree -c test1 >TEST1
+	shredtree -c test2 >TEST2
+	shredcompare TEST1 TEST2
+
+testgood:
+	shredtree -c test3 >TEST1
+	shredtree -c test4 >TEST2
+	shredcompare TEST1 TEST2

@@ -31,6 +31,7 @@ struct shif_t
     char	*hash_method;
     char	*generator_program;
 };
+static struct shif_t *shiflist;
 
 struct sorthash_t
 {
@@ -112,7 +113,7 @@ void init_intern(const int count)
  static void merge_hashes(int argc, char *argv[])
  /* merge hashes from specified files into an in-code list */
  {
-     struct shif_t *shiflist, *sp;
+     struct shif_t *sp;
      struct stat sb;
      long total;
 
@@ -140,6 +141,8 @@ void init_intern(const int count)
 		 break;
 	     value = strchr(buf, ':');
 	     *value++ = '\0';
+	     while(*value == ' ')
+		 value++;
 	     strchr(value, '\n')[0] = '\0';
 
 	     if (!strcmp(buf, "Normalization"))
@@ -313,7 +316,7 @@ struct match_t *reduce_matches(int localdups)
 	     /* if all these matches are within the same tree, toss them */
 	     heterogenous = 0;
 	     for (i = 0; i < nmatches; i++)
-		 if (sametree(mp[i].file,mp[(i+1) % nmatches].file))
+		 if (sametree(np[i].file, np[(i+1) % nmatches].file))
 		     heterogenous++;
 	     if (!heterogenous)
 		 continue;
@@ -452,6 +455,13 @@ main(int argc, char *argv[])
 
     hitlist = reduce_matches(local_duplicates);
     report_time("Reduction done");
+
+    puts("#SHIF-B 1.0");
+    puts("Merge-Program: shredcompare 1.0");
+    printf("Shred-Size: %d\n", shiflist[0].shred_size);
+    printf("Hash-Method: %s\n", shiflist[0].hash_method);
+    printf("Normalization: %s\n", shiflist[0].normalization);
+    puts("%%");
 
     for (; hitlist->next; hitlist = hitlist->next)
 	if (hitlist->matches)
