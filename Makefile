@@ -32,7 +32,7 @@ hashtab.h: hashgen.py
 	python hashgen.py >hashtab.h
 
 clean:
-	rm -f comparator shredtree.o md5.o report.o main.o *~
+	rm -f comparator shredtree.o md5.o report.o main.o hash.o *~
 	rm -f comparator.1 filterator.1 
 	rm -f *.dump *.scf
 
