@@ -15,8 +15,12 @@ if __name__ == '__main__':
         print "Shred-Size: %d" % state.shredsize
         if minsize:
             print "Minimum-Size: %d" % minsize
-        #print 75 * '-'
-        #sys.stdout.write(str(comparator.CommonStatistics(state)))
+        print 75 * '-'
+        for tree in state.trees:
+            rep = tree + ":"
+            for (key, value) in state.trees[tree].items():
+                rep += " %s=%s," % (key, value)
+            sys.stdout.write(rep[:-1] + "\n")
         print 75 * '-'
         for clique in state.cliques:
             for (file, start, end) in clique:
