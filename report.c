@@ -11,8 +11,6 @@
 #define min(x, y)	((x < y) ? (x) : (y)) 
 #define max(x, y)	((x > y) ? (x) : (y)) 
 
-#define DEBUG
-
 static int local_duplicates;
 
 struct item
@@ -228,7 +226,6 @@ static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
 /* merge t into s, if the ranges in the match are compatible */
 {
     int	i;
-    return 0;
     /*
      * The general problem: you have two lists of shreds, of the same
      * lengths.  Within each list, all shreds have the same hash.
@@ -383,8 +380,6 @@ struct match_t *reduce_matches(int localdups)
 #endif /* DEBUG */
 		 free(tp->matches);
 		 tp->matches = NULL;
-		 /* if this garbages *tp the loop may fail */ 
-		 free(tp);
 		 /* list is altered, do another merge pass */
 	         retry = 1;
 	     }
