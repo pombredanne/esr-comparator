@@ -5,7 +5,7 @@
 import os, sys, re, getopt
 
 # Template for parsing the output from comparator.
-shredline = re.compile("([^:]*):([0-9]+):([0-9]+)")
+shredline = re.compile("(.*):([0-9]+):([0-9]+)")
 
 # Tokens to be removed when checking whether a shred is significant
 junk = map(re.compile, (
@@ -53,7 +53,7 @@ def nontrivial(text):
     return text.strip()
 
 def report_common():
-    "Generate a report on common code"
+    "Generate a report on common code."
     count = 0
     locations = []
     while True:
@@ -65,6 +65,8 @@ def report_common():
             locations.append((m.group(1), int(m.group(2)), int(m.group(3))))
         if line == '%%\n':
             for (file, start, end) in locations:
+                if end - start + 1 < minsize:
+                    continue
                 try:
                     rfp = open(file)
                     for i in range(start-1):
@@ -102,19 +104,22 @@ def report_common():
 
 if __name__ == '__main__':
     try:
-        (optlist, args) = getopt.getopt(sys.argv[1:], 'd:n')
+        (optlist, args) = getopt.getopt(sys.argv[1:], 'd:ns:')
     except getopt.GetoptError:
-        sys.stderr.write("usage: filterator [-d dir] [-n]\n")
+        sys.stderr.write("usage: filterator [-d dir] [-n] [-s size]\n")
         sys.exit(2)
     nofilter = False
+    minsize = 0
     for (opt, val) in optlist:
         if opt == '-d':
             os.chdir(val)
         elif opt == '-n':
             nofilter = True
+        elif opt == '-s':
+            minsize = int(val)
 
     # Read the SCF header
-    hash = "MD5"
+    hash_method = "MD5"
     merge_program = None
     id = sys.stdin.readline()
     if not id.startswith("#SCF-B "):
