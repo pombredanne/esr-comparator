@@ -252,14 +252,15 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 
      /* build list of hashes with more than one range associated */
      nonuniques = progress = 0;
-     fprintf(stderr, "%% Extracting duplicates...   ");
+     if (verbose)
+	 fprintf(stderr, "%% Extracting duplicates...   ");
      nreduced = 10000;
      reduced = (struct match_t *)malloc(sizeof(struct match_t) * nreduced);
      for (np = obarray; np < obarray + hashcount; np = mp)
      {
 	 int i, heterogenous, nmatches;
 
-	 if (!debug && progress++ % 10000 == 0)
+	 if (verbose && !debug && progress++ % 10000 == 0)
 	     fprintf(stderr, "\b\b\b%02.0f%%", progress / (hashcount * 0.01));
 
 	 /* count the number of hash matches */
@@ -303,7 +304,8 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 	 reduced[nonuniques].nmatches = nmatches;
 	 nonuniques++;
      }
-     fprintf(stderr, "\b\b\b100%% done.\n");
+     if (verbose)
+	 fprintf(stderr, "\b\b\b100%% done.\n");
 
      *hashcountp = nonuniques;
      return reduced;

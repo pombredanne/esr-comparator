@@ -48,7 +48,7 @@ struct sorthash_t
 extern int remove_braces;
 extern int remove_whitespace;
 extern int remove_comments;
-extern int debug;
+extern int verbose, debug;
 extern int shredsize;
 
 /* main.c functions */
