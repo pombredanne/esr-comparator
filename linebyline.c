@@ -1,7 +1,7 @@
 /******************************************************************************
 
 NAME:
-   linebyline.c -- line-oriented feature analyzer four source comparisons
+   linebyline.c -- line-oriented feature analyzer for source-code comparisons
 
 ******************************************************************************/
 #include <stdlib.h>
