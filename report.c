@@ -316,7 +316,12 @@ struct match_t *reduce_matches(int localdups)
 	     if (!heterogenous)
 		 continue;
 
+#ifdef DEBUG
 	     printf("%d has %d in its clique\n", np-obarray, nmatches);
+	     for (i = 0; i < nmatches; i++)
+		 printf("%d: %s:%d:%d\n", 
+			np-obarray+i, np[i].file, np[i].hash.start, np[i].hash.end);
+#endif /* DEBUG */
 	     /* passed all tests, keep this set of ranges */
 	     new = (struct match_t *)malloc(sizeof(struct match_t));
 #ifdef DEBUG
@@ -421,8 +426,10 @@ main(int argc, char *argv[])
     qsort(obarray, hashcount, sizeof(struct sorthash_t), sortchunk);
     report_time("Sort done.");
 
+#ifdef ODEBUG
     for (np = obarray; np < obarray + hashcount; np++)
 	printf("%d: %s:%d:%d (%02x%02x)\n", np-obarray, np->file, np->hash.start, np->hash.end, np->hash.hash[0], np->hash.hash[1]);
+#endif /* ODEBUG */
 
     hitlist = reduce_matches(local_duplicates);
     report_time("Reduction done.");
