@@ -435,7 +435,7 @@ main(int argc, char *argv[])
 
     int status, file_only, compile_only, argcount, mergecount;
     struct scf_t	*scf;
-    char *dir, *outfile, *normalization = "line_oriented";
+    char *dir, *outfile, *normalization = "line-oriented";
 
     compile_only = file_only = nofilter = 0;
     dir = outfile = NULL;
