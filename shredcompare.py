@@ -137,17 +137,18 @@ def shredcompare(tree1, tree2):
     merge_hit = True
     while merge_hit:
         merge_hit = False
-        for i in range(1,len(matches)):
-            j = len(matches) - i
+        j = len(matches) - 1
+        while j > 0:
             this = matches[j]
             last = matches[j-1]
             if last[0].file == this[0].file \
 		   and last[1].file==this[1].file \
                    and last[0].start==this[0].start-1:
                 merge_hit = True
-                last[0].end += 1
-                last[1].end +=1
+                last[0].end = this[0].end
+                last[1].end = this[1].end
                 matches = matches[:j] + matches[j+1:]
+            j -= 1
     return matches
 
 def report_time(legend=None):
