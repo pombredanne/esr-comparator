@@ -578,6 +578,7 @@ main(int argc, char *argv[])
 	    if (scf->fp)
 	    {
 		read_scf(scf);
+		scf->name[strlen(scf->name) - strlen(".scf")] = '\0';
 		fclose(scf->fp);
 	    }
 
