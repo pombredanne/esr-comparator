@@ -66,6 +66,7 @@ static int merge_ranges(struct sorthash_t *p,
 	p[i].hash.start = min(p[i].hash.start, q[i].hash.start);
 	p[i].hash.end   = max(p[i].hash.end, q[i].hash.end);
 	p[i].hash.flags |= q[i].hash.flags;
+	q[i].hash.flags = INTERNAL_FLAG;	/* used only in debug code */
     }
     return(1);
 }
@@ -226,15 +227,15 @@ static int compact_matches(struct sorthash_t *obarray, const int hashcount)
       * The technique: first mark...
       */
      if (SORTHASHCMP(obarray, obarray+1))
-	 obarray[0].hash.flags = UNIQUE_FLAG;
+	 obarray[0].hash.flags = INTERNAL_FLAG;
      for (np = obarray+1; np < obarray + hashcount-1; np++)
 	 if (SORTHASHCMP(np, np-1) && SORTHASHCMP(np, np+1))
-	     np->hash.flags = UNIQUE_FLAG;
+	     np->hash.flags = INTERNAL_FLAG;
      if (SORTHASHCMP(obarray+hashcount-2, obarray+hashcount-1))
-	 obarray[hashcount-1].hash.flags = UNIQUE_FLAG;
+	 obarray[hashcount-1].hash.flags = INTERNAL_FLAG;
      /* ...then sweep. */
      for (mp = np = obarray; np < obarray + hashcount; np++)
-	 if (np->hash.flags != UNIQUE_FLAG)
+	 if (np->hash.flags != INTERNAL_FLAG)
 	     *mp++ = *np;
      /* now we get to reduce the memory footprint */
      report_time("Compaction reduced %d shreds to %d", 
@@ -282,7 +283,10 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 	     if (!sametree(np[i].file->name, np[(i+1) % nmatches].file->name))
 		 heterogenous++;
 	 if (!heterogenous)
+	 {
+	     np[i].hash.flags = INTERNAL_FLAG;	/* used only in debug code */
 	     continue;
+	 }
 
 	 if (debug)
 	 {
@@ -362,6 +366,8 @@ void emit_report1(struct sorthash_t *obarray, int hashcount)
 	dump_array("After removing uniques.\n", obarray, hashcount);
     report_time("%d range groups after removing unique hashes", matchcount);
     mergecount = collapse_ranges(hitlist, matchcount);
+    if (debug)
+	dump_array("After merging ranges.\n", obarray, hashcount);
     report_time("%d range groups after merging", mergecount);
 
     /*

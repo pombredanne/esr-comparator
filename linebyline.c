@@ -7,23 +7,23 @@
 
 static char *c_patterns[] = {
     /* Idioms that don't convey any meaning in isolation */
-    "return [a-z]+", "return -?[01]+",
-    "goto +[a-z]+", "exit *\\([01]\\)",
+    "return [a-z]+", "return [01]+",
+    "goto +[a-z]+", "exit *[01]",
     /* Pragmas */
-    "/\\* *ARGSUSED *\\*/",
-    "/\\* *NOTREACHED *\\*/", 
-    "/\\* *FALL *THRO?UG?H? *\\*/",
+    " ARGSUSED ",
+    " NOTREACHED ", 
+    " FALL *THRO?UG?H? ",
     /* Bare C keywords */
     " auto ", " break ",  " case "," continue ", " default ", " do ", " else ",
     " enum ", " if ", " goto "," return ", " switch ", " while ", " int ",
     " long ", " short ", " static ", " struct ", " typedef ", " union ", 
     " void ",
-    /* Preprocessor constructs (# has already been stripped)*/
-    "^ *define","^ *endif","^ *else", "^ *ifdef ","^ *ifndef ",
+    /* Preprocessor constructs (# has already been stripped) */
+    "^ define"," endif"," else", " ifdef "," ifndef ",
     /* Common preprocessor macros, not significant by themselves. */
     " ASSERT ", " EXTERN ", " FALSE ", " NULL "," STATIC ", " TRUE ",
     /* Macro include lines are noise, too. */
-    "^ *include.*","^ *line.*",
+    " include .*"," line .*",
     /* Common error macros. */
     " EFAULT ",
     " EINVAL ",

@@ -35,7 +35,7 @@ struct hash_t
 #define C_CODE		0x01	/* identified as C code */
 #define SHELL_CODE	0x02	/* identified as shell code */
 #define CATEGORIZED	0x03	/* we can significance-test this */
-#define UNIQUE_FLAG	0x80	/* internal use only */
+#define INTERNAL_FLAG	0x80	/* internal use only */
 };
 #define SORTHASHCMP(s, t) hash_compare((s)->hash.hash, (t)->hash.hash)
 

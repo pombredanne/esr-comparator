@@ -374,19 +374,20 @@ void dump_array(const char *legend,
 
     fputs(legend, stdout);
     for (np = obarray; np < obarray + hashcount; np++)
-    {
-	fprintf(stdout, "%2d: %s %s:%d:%d",
-		np-obarray, 
-		hash_dump(np->hash.hash),
-		np->file->name, np->hash.start, np->hash.end);
-	if (np->hash.flags)
+	if (!(np->hash.flags & INTERNAL_FLAG))
 	{
-	    fputc('\t', stdout);
-	    dump_flags(np->hash.flags, stdout);
-	    fprintf(stdout, " (0x%02x)", np->hash.flags);
+	    fprintf(stdout, "%2d: %s %s:%d:%d",
+		    np-obarray, 
+		    hash_dump(np->hash.hash),
+		    np->file->name, np->hash.start, np->hash.end);
+	    if (np->hash.flags)
+	    {
+		fputc('\t', stdout);
+		dump_flags(np->hash.flags, stdout);
+		fprintf(stdout, " (0x%02x)", np->hash.flags);
+	    }
+	    fputc('\n', stdout);
 	}
-	fputc('\n', stdout);
-    }
 }
 
 void report_time(char *legend, ...)

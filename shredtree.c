@@ -40,7 +40,7 @@ static int eligible(const char *file)
 #define endswith(suff)	!strcmp(suff, file + strlen(file) - strlen(suff))
     if (endswith(".c") || endswith(".h") || endswith(".html"))
 	return(1);
-    else if (endswith(".o") || endswith("~"))
+    else if (endswith(".o") || endswith("~") || endswith(".bdf"))
 	return(0);
     else if (strstr(file, "CVS") || strstr(file,"RCS") || strstr(file,"SCCS"))
 	return(0);
