@@ -242,15 +242,15 @@ static int merge_tree(char *tree)
     return(totallines);
 }
 
-static void init_scf(char *file, struct scf_t *scf)
+static void init_scf(char *file, struct scf_t *scf, const int readfile)
 /* add to the in-core list of sorthash structures from a SCF file */
 {
-    if (file)
+    scf->name = strdup(file);
+    if (readfile)
     {
 	char	buf[BUFSIZ];
 
 	/* read in the SCF metadata block and add it to the in-core list */
-	scf->name = strdup(file);
 	scf->fp   = fopen(scf->name, "r");
 	fgets(buf, sizeof(buf), scf->fp);
 	if (strncmp(buf, "#SCF-A 1.1", 9))
@@ -477,7 +477,7 @@ main(int argc, char *argv[])
 		olddir = getcwd(NULL, 0);	/* may fail off Linux */
 		chdir(dir);
 	    }
-	    init_scf(source, scf);
+	    init_scf(source, scf, 1);
 	    if (dir)
 		chdir(olddir);
 	}
@@ -513,8 +513,8 @@ main(int argc, char *argv[])
 		olddir = getcwd(NULL, 0);	/* may fail off Linux */
 		chdir(dir);
 	    }
-	    init_scf(NULL, scf);
-	    merge_tree(source);
+	    init_scf(source, scf, 0);
+	    scf->totallines = merge_tree(source);
 	    if (dir)
 		chdir(olddir);
 	}
@@ -567,11 +567,14 @@ main(int argc, char *argv[])
 	}
 
 	/* now we're ready to emit the report */
-	puts("#SCF-B 1.0");
+	puts("#SCF-B 1.1");
 	printf("Hash-Method: %s\n", scflist->hash_method);
 	puts("Merge-Program: comparator 1.0");
 	printf("Normalization: %s\n", scflist->normalization);
 	printf("Shred-Size: %d\n", scflist->shred_size);
+	puts("%%");
+	for (scf = scflist; scf->next; scf = scf->next)
+	    printf("%s:%d\n", scf->name, scf->totallines);
 	puts("%%");
 
 	report_time("Hash merge done, %d shreds", sort_count);

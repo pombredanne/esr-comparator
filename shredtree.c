@@ -156,7 +156,7 @@ static struct hash_t emit_chunk(shred *display, int linecount)
     return(out);
 }
 
-void shredfile(const char *file, 
+int shredfile(const char *file, 
 		      void (*hook)(struct hash_t, const char *))
 /* emit hash section for specified file */
 {
@@ -201,6 +201,7 @@ void shredfile(const char *file,
 
     free(display);
     fclose(fp);
+    return(linecount);
 }
 
 /*************************************************************************

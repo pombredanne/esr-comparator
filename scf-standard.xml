@@ -19,6 +19,14 @@
 
 <revhistory> 
    <revision>
+      <revnumber>1.3</revnumber>
+      <date>2003-12-07</date>
+      <authorinitials>esr</authorinitials>
+       <revremark>
+	 SCF format goes to 1.1; line count is added.
+       </revremark>
+  </revision>
+   <revision>
       <revnumber>1.2</revnumber>
       <date>2003-11-07</date>
       <authorinitials>esr</authorinitials>
@@ -26,7 +34,7 @@
 	 Added remove-braces.
        </revremark>
   </revision>
-   <revision>
+  <revision>
       <revnumber>1.1</revnumber>
       <date>2003-10-07</date>
       <authorinitials>esr</authorinitials>
@@ -179,12 +187,13 @@ able to describe what reduction and filtering steps were performed.</para>
 these needs.  These formats will be known as SCF (source Comparison
 Interchange Format) files, pronounced "skiff".</para>
 
-<para>Each format consists of three sections: an identification line,
-metadata, and data.  The identification line consists of a hash sign,
-a format identifier, a space, and a revision level.  The metadata section
-consists of lines in the format of an RFC-822 header (a tag, followed by
-a colon and whitespace, followed by a value).  The data section consists
-of the line "%%\n" followed by data.  Metadata is encoded in UTF-8.</para>
+<para>Each format consists of four sections: an identification line,
+metadata, hash data, and (optionally) a statistics trailer.  The
+identification line consists of a hash sign, a format identifier, a
+space, and a revision level.  The metadata section consists of lines
+in the format of an RFC-822 header (a tag, followed by a colon and
+whitespace, followed by a value).  The data section consists of the
+line "%%\n" followed by data.  Metadata is encoded in UTF-8.</para>
 
 <para>For each format, we describe the format identifier, the metadata tags
 and their semantics, and the format of the data section.  Some metadata
@@ -197,7 +206,7 @@ operations like diff(1) or comm(1) can give meaningful results.</para>
 <sect2><title>SCF-A:</title>
 
 <para>This is the format for hash lists.  The identifier is 'SCF-A'.
-At version 1.0, the following metadata tags are defined:</para>
+At version 1.1, the following metadata tags are defined:</para>
 
 <variablelist>
 <varlistentry>
@@ -254,7 +263,8 @@ may include the following:</para>
 order, followed by a series of file sections.  Each section consists
 of a filename line, terminated by a newline, followed by a count of
 shreds expressed as a four-byte integer in network byte order,
-followed by a sequence of shred records.</para>
+followed by a sequence of shred records.  The length of the data
+section is drtivable from the data lengths.</para>
 
 <para>A shred record consists of two integers in network byte order
 (start and end line numbers) followed by a fixed-length block of hash
@@ -263,6 +273,10 @@ data.  For the default MD5 hash the data is 16 bytes.</para>
 <para>Shreds should be ordered by start line number.  Empty files should be
 skipped, and nonempty files should always have at least one shred.
 Files should be listed in sort order by name.</para>
+
+<para>This format has a statistics trailer.  At level 1.1 it consists
+of a single 4-byte unsigned integer in network order, a count of lines 
+for the associated source tree.</para>
 
 <para>This unpleasant binary format has been chosen to make processing as
 fast as possible, because shred data sets are quite large in holding
@@ -319,6 +333,8 @@ filename, start line, and end line.  Line numbers are 1-origin.</para>
 start line, then by end line.  Ranges within range sets should be
 sorted by natural order.  Range sets should be sorted by the natural
 order of their first member.</para>
+
+<para>This format has no statistics trailer.</para>
 
 <para>It is strongly recommended that when a SCF-B file is generated from
 SCF-A files, the Normalization and Shred-Size headers should be copied

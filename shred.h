@@ -39,7 +39,7 @@ extern void corehook(struct hash_t hash, const char *file);
 
 /* shredtree.c functions */
 extern char **sorted_file_list(const char *, int *);
-extern void shredfile(const char *, void (*hook)(struct hash_t, const char *));
+extern int shredfile(const char *, void (*hook)(struct hash_t, const char *));
 extern void sort_hashes(struct sorthash_t *hashlist, int hashcount);
 
 /* shredcompare.c functions */

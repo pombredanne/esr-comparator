@@ -146,6 +146,7 @@ if __name__ == '__main__':
         sys.exit(2)
     nofilter = debug = False
     minsize = 0
+    linecounts = {}
     for (opt, val) in optlist:
         if opt == '-d':
             os.chdir(val)
@@ -163,6 +164,7 @@ if __name__ == '__main__':
     if not id.startswith("#SCF-B "):
         sys.stderr.write("filterator: input is not a SCF-B file.\n")
         sys.exit(1)
+    # Read metadata
     while True:
         line = sys.stdin.readline()
         if not line or line == '%%\n':
@@ -177,5 +179,12 @@ if __name__ == '__main__':
             merge_program = value
         elif tag == "Hash-Method":
             hash_method = value
+    # Read file statistics
+    while True:
+        line = sys.stdin.readline()
+        if not line or line == '%%\n':
+            break
+        (tag, value) = line.split(":")
+        linecounts[tag] = int(value.strip())
 
     report_common()
