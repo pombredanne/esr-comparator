@@ -48,8 +48,8 @@ if __name__ == '__main__':
 
     try:
         state = comparator.CommonReport(sys.stdin, dir)
-        #if minsize:
-        #    state.filter_by_size(minsize)
+        if minsize:
+            state.filter_by_size(minsize)
         report_common(state)
     except comparator.ComparatorException, e:
         sys.stderr.write("filterator: " + e.message + "\n")
