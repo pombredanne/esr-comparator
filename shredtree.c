@@ -51,14 +51,23 @@ static void emit_chunk(shred *display, int linecount)
 /* emit chunk corresponding to current display */
 {
     struct md5_ctx	ctx;
-    int  		i;
-    unsigned char hash[32];
+    int  		i, firstline;
+    unsigned char hash[32], *cp;
 
     if (debug)
     {
 	for (i = 0; i < shredsize; i++)
 	    if (display[i].line)
-		puts(display[i].line);
+	    {
+		for (cp = display[i].line; *cp; cp++)
+		    if (*cp == '\n')
+			fputs("\\n", stdout);
+		    else if (*cp == '\t')
+			fputs("\\t", stdout);
+		    else
+			putchar(*cp);
+	        putchar('\n');
+	    }    
     }
 
     /* flush completed chunk */
@@ -67,9 +76,12 @@ static void emit_chunk(shred *display, int linecount)
 	if (display[i].line)
 	    md5_process_bytes(display[i].line, strlen(display[i].line), &ctx);
     md5_finish_ctx(&ctx, (void *)hash);
+    for (i = shredsize - 1; i >= 0; i--)
+	if (display[i].line)
+	    firstline = i;
     fprintf(stdout, 
 	    "%d\t%d\t%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", 
-	    display[0].number, linecount, 
+	    display[firstline].number, linecount, 
 	    hash[0],
 	    hash[1],
 	    hash[2],
@@ -127,6 +139,7 @@ void shredfile(const char *file)
 	free(display[0].line);
 	for (i=1; i < shredsize; i++)
 	    display[i-1] = display[i];
+	display[shredsize-1].line = NULL;
     }
     if (linecount < shredsize)
 	emit_chunk(display, linecount);
@@ -139,7 +152,7 @@ void shredfile(const char *file)
 int treewalker(const char *file, const struct stat *sb, int flag)
 /* walk the tree, emitting hash sections for eligible files */
 {
-    if (flag == FTW_F && eligible(file))
+    if (flag == FTW_F && sb->st_size > 0 && eligible(file))
         shredfile(file);
     return(0);
 }
