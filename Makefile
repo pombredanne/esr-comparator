@@ -27,4 +27,7 @@ test:
 testgood:
 	shredtree -c test3 >TEST1
 	shredtree -c test4 >TEST2
+	@echo "*** Python;"
+	shredcompare.py TEST1 TEST2
+	@echo "*** C:"
 	shredcompare TEST1 TEST2
