@@ -70,24 +70,33 @@ static int eligible(const char *file)
 static int normalize(char *buf)
 /* normalize a buffer in place, return 0 if it should be skipped */
 {
-    if (remove_comments && remove_braces)	/* remove_c_comments */
-    {
-	char	*ss = strstr(buf, "//");
+    if (remove_comments)
+	if (remove_braces)	/* remove C comments */
+	{
+	    char	*ss = strstr(buf, "//");
 
-	if (ss)
-	    *ss = '\0';
+	    if (ss)
+		*ss = '\0';
+	    else
+	    {
+		char *start = strstr(buf, "/*"), *end = strstr(buf, "*/");
+
+		if (start && end && start < end)
+		    strcpy(start, end+2);
+		else if (start && !end)
+		    *start = '\0';
+		else if (end && !start)
+		    *end = '\0';
+	    }
+	}
 	else
 	{
-	    char *start = strstr(buf, "/*"), *end = strstr(buf, "*/");
+	    char	*ss = strchr(buf, '#');
 
-	    if (start && end && start < end)
-		strcpy(start, end+2);
-	    else if (start && !end)
-		*start = '\0';
-	    else if (end && !start)
-		*end = '\0';
+	    if (ss)
+		*ss = '\0';
 	}
-    }
+
     if (remove_whitespace)	/* strip whitespace, ignore blank lines */
     {
 	char *tp, *sp;

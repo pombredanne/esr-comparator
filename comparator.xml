@@ -29,6 +29,8 @@
   <command>filterator</command>
   <arg choice='opt'>-d <replaceable>dir</replaceable></arg>
   <arg choice='opt'>-n</arg>
+  <arg choice='opt'>-s <replaceable>minsize</replaceable></arg>
+  <arg choice='opt'>-x</arg>
 </cmdsynopsis>
 
 </refsynopsisdiv>
@@ -101,10 +103,11 @@ removed.  This is recommended for comparing C code; it prevents the
 comparison from being fooled by differences in indent style.</para>
 
 <para>The <option>-r</option> option removes comments.  This is only
-effective in conjunction with <option>-C</option>. All // comments,
+effective in conjunction with <option>-C</option>. In C files, ll // comments,
 but only "winged" /* comments with the start and end of comment on the
-same line are ignored.  Block /* comments are retained, but the
-beginning /* and ending */ are ignored, </para>
+same line are ignored; also, block /* comments are retained, but the
+beginning /* and ending */ are ignored, In other files, all #
+comments are removed.</para>
 
 <para>The <option>-x</option> enables some debugging output.  It
 is for developers; if you need to understand it, read the code.</para>
@@ -121,14 +124,18 @@ percentage of printable characters near the front of the file is above
 <para><application>filterator</application> is a postprocessor for the
 SCF-B output of <application>comparator</application> that produces an
 actual code listing.  By default, it throws away ranges that appear to
-be noise.  The noise test is to throw away whitespace, C syntax,
+be noise.  The noise test for C files is to throw away whitespace, C syntax,
 #include lines and a few common macros and see if anything is left.
-The <option>-n</option> suppresses noise filtering.  The
+The noise test for shell files throws away Bourne-shell keywords</para>
+
+<para>The <option>-n</option> suppresses noise filtering.  The
 <option>-d</option> acts as it does for
 <application>comparator</application>.  The <option>-s</option> option
 sets the minimum size of overlap to be reported; setting this to a
-slightly larger number than the <application>comparator</application> shred
-size may be a useful way to filter out spurious matches.</para>
+slightly larger number than the <application>comparator</application>
+shred size may be a useful way to filter out spurious matches. The
+<option>-x</option> enables some debugging output.  It is for
+developers; if you need to understand it, read the code.</para>
 
 <para>Occasionally the <application>filterator</application> output
 looks as through the code has failed to properly merge two or more
