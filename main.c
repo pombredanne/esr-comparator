@@ -10,7 +10,7 @@
 #include <time.h>
 #include "shred.h"
 
-int debug = 0;
+int verbose = 0, debug = 0;
 
 struct scf_t
 {
@@ -120,7 +120,15 @@ static void write_scf(const char *tree, FILE *ofp)
     linecount_t	netfile_count, totallines = 0;
     char	buf[BUFSIZ];
 
+    if (verbose)
+	fprintf(stderr, "%% Scanning tree %s...", tree);
     list = sorted_file_list(tree, &file_count);
+    if (!file_count)
+    {
+	fprintf(stderr, 
+		"comparator: couldn't open %s, %s\n", tree, strerror(errno));
+	exit(1);
+    }
 
     fputs("#SCF-A 1.1\n", ofp);
     fputs("Generator-Program: comparator 1.0\n", ofp);
@@ -132,7 +140,8 @@ static void write_scf(const char *tree, FILE *ofp)
 
     netfile_count = htonl(file_count);
     fwrite(&netfile_count, sizeof(linecount_t), 1, ofp);
-    fprintf(stderr, "%% Reading tree %s...    ", tree);
+    if (verbose)
+	fprintf(stderr, "reading %d files...    ", file_count);
     progress = totalchunks = 0;
     for (place = list; place < list + file_count; place++)
     {
@@ -190,10 +199,11 @@ static void write_scf(const char *tree, FILE *ofp)
 	}
 	totalchunks += chunk_count;
 	free(chunk_buffer);
-	if (!debug && progress++ % 100 == 0)
+	if (verbose && !debug && progress++ % 100 == 0)
 	    fprintf(stderr, "\b\b\b\b%3.0f%%", progress / (file_count * 0.01));
     }
-    fprintf(stderr, "\b\b\b\b100%%, done, %d total chunks.\n", totalchunks);
+    if (verbose)
+	fprintf(stderr, "\b\b\b\b100%%, done, %d total chunks.\n",totalchunks);
 
     /* the statistics trailer */
     totallines = htonl(totallines);
@@ -208,7 +218,8 @@ static void read_scf(struct scf_t *scf)
     struct stat sb;
 
     stat(scf->name, &sb);
-    fprintf(stderr, "%% Reading hash list %s...    ", scf->name);
+    if (verbose)
+	fprintf(stderr, "%% Reading hash list %s...    ", scf->name);
     fread(&filecount, sizeof(linecount_t), 1, scf->fp);
     filecount = ntohl(filecount);
     while (filecount--)
@@ -237,11 +248,12 @@ static void read_scf(struct scf_t *scf)
 	    this.end = FROMNET(this.end);
 	    corehook(this, filehdr);
 	    hashcount++;
-	    if (!debug && hashcount % 10000 == 0)
+	    if (verbose && !debug && hashcount % 10000 == 0)
 		fprintf(stderr,"\b\b\b\b%3.0f%%",(ftell(scf->fp) / (sb.st_size * 0.01)));
 	}
     }
-    fprintf(stderr, "\b\b\b\b100%%...done, %d shreds\n", hashcount);
+    if (verbose)
+	fprintf(stderr, "\b\b\b\b100%%...done, %d shreds\n", hashcount);
 
     fread(&scf->totallines, sizeof(linecount_t), 1, scf->fp);
     scf->totallines = ntohl(scf->totallines);
@@ -256,7 +268,8 @@ static int merge_tree(char *tree)
 
     old_entry_count = sort_count;
     file_count = 0;
-    fprintf(stderr, "%% Scanning tree %s...", tree);
+    if (verbose)
+	fprintf(stderr, "%% Scanning tree %s...", tree);
     list = sorted_file_list(tree, &file_count);
     if (!file_count)
     {
@@ -265,7 +278,8 @@ static int merge_tree(char *tree)
 	exit(1);
     }
     i = 0;
-    fprintf(stderr, "reading...    ");
+    if (verbose)
+	fprintf(stderr, "reading %d files...    ", file_count);
     for (place = list; place < list + file_count; place++)
     {
 	struct filehdr_t *filep = register_file(*place, 0);
@@ -273,11 +287,12 @@ static int merge_tree(char *tree)
 
 	filep->length = lines; 
 	totallines += lines;
-	if (!debug && !(i++ % 100))
+	if (verbose && !debug && !(i++ % 100))
 	    fprintf(stderr, "\b\b\b\b%3.0f%%", i / (file_count * 0.01));
     }
-    fprintf(stderr, "\b\b\b\b100%%...done, %d files, %d shreds.\n", 
-	    file_count, sort_count - old_entry_count);
+    if (verbose)
+	fprintf(stderr, "\b\b\b\b100%%...done, %d files, %d shreds.\n", 
+		file_count, sort_count - old_entry_count);
     free(list);
     return(totallines);
 }
@@ -375,7 +390,7 @@ void report_time(char *legend, ...)
     time_t endtime = time(NULL);
     va_list	ap;
 
-    if (mark_time)
+    if (mark_time && verbose)
     {
     	int elapsed, hours, minutes, seconds;
 	char	buf[BUFSIZ];
@@ -393,13 +408,14 @@ void report_time(char *legend, ...)
 
 static void usage(void)
 {
-    fprintf(stderr,"usage: comparator [-c] [-C] [-d dir ] [-r] [-o file] [-s shredsize] [-w] [-x] path...\n");
+    fprintf(stderr,"usage: comparator [-c] [-C] [-d dir ] [-r] [-o file] [-s shredsize] [-v] [-w] [-x] path...\n");
     fprintf(stderr,"  -c      = generate SCF files\n");
     fprintf(stderr,"  -C      = apply C normalizations\n");
     fprintf(stderr,"  -d dir  = change directory before digesting.\n");
     fprintf(stderr,"  -o file = write to the specified file.\n");
     fprintf(stderr,"  -r      = renove comments\n");
     fprintf(stderr,"  -s size = set shred size (default %d)\n", shredsize);
+    fprintf(stderr,"  -v      = enable progress messages on stderr.\n");
     fprintf(stderr,"  -w      = remove whitespace.\n");
     fprintf(stderr,"  -x      = debug, display chunks in output.\n");
     exit(0);
@@ -417,7 +433,7 @@ main(int argc, char *argv[])
 
     compile_only = file_only = 0;
     dir = outfile = NULL;
-    while ((status = getopt(argc, argv, "cCd:ho:rs:wx")) != EOF)
+    while ((status = getopt(argc, argv, "cCd:ho:rs:vwx")) != EOF)
     {
 	switch (status)
 	{
@@ -443,6 +459,10 @@ main(int argc, char *argv[])
 
 	case 's':
 	    shredsize = atoi(optarg);
+	    break;
+
+	case 'v':
+	    verbose = 1;
 	    break;
 
 	case 'w':
@@ -482,6 +502,13 @@ main(int argc, char *argv[])
     /* special case if user gave exactly one tree */
     if (!compile_only && argcount == 1)
     {
+	char	*olddir = NULL;
+
+	if (dir)
+	{
+	    olddir = getcwd(NULL, 0);	/* may fail off Linux */
+	    chdir(dir);
+	}
 	write_scf(argv[optind], stdout);
 	exit(0);
     }
