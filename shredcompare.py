@@ -143,11 +143,11 @@ class ShredTree:
             rfp = open(self.path + ".hash")
             shreds = {}
             while True:
+                digest = rfp.read(16)
                 line = rfp.readline()
                 if not line:
                     break
-                digest = line[:16]
-                (file, start, end) = line[16:].split(":")
+                (file, start, end) = line.split("\t")
                 self.shreds[digest] = Shred(file, int(start), int(end))
             rfp.close()
 
@@ -157,7 +157,7 @@ class ShredTree:
         wfp = open(self.path + ".hash", "w")
         for key in self.shreds:
             shred = self.shreds[key]
-            wfp.write(key+"%s:%d:%d"%(shred.file,shred.start,shred.end)+"\n")
+            wfp.write(key+shred.file+"\t"+str(shred.start)+"\t"+str(shred.end)+"\n")
         wfp.close()
 
 def shredcompare(tree1, tree2, shredsize, verbose):
