@@ -13,12 +13,8 @@
 
 struct match_t
 {
-    struct match_t *next;
     int            nmatches;
     struct sorthash_t *matches;
-#ifdef DEBUG
-    int	index;
-#endif /* DEBUG */
 }
 dummy_match;
 
@@ -98,37 +94,35 @@ static int sametree(const char *s, const char *t)
 static int collapse_ranges(struct match_t *reduced, int nonuniques)
 /* collapse together overlapping ranges in the hit list */
 { 
-    struct match_t *sp, *tp;
-    int removed = 0;
+     struct match_t *sp, *tp;
+     int removed = 0;
 
 #ifdef DEBUG
-     for (sp = reduced; sp->next; sp = sp->next)
+     for (sp = reduced; sp < reduced + nonuniques; sp++)
      {
 	 struct sorthash_t	*rp;
 
-	 printf("Clique beginning at %d:\n", sp->index);
+	 printf("Clique beginning at %d:\n", sp - reduced);
 	 for (rp = sp->matches; rp < sp->matches + sp->nmatches; rp++)
-	     printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
+	     printf("%s:%d:%d\n",  rp->file, rp->hash.start, rp->hash.end);
      }
 #endif /* DEBUG */
 
      /* time to merge overlapping shreds */
-     for (sp = reduced; sp->next; sp = sp->next)
-	 for (tp = reduced; tp->next; tp = tp->next)
+     for (sp = reduced; sp < reduced + nonuniques; sp++)
+	 for (tp = reduced; tp < sp; tp++)
 	 {
-	     /* intersection is symmetrical */
-	     if (sp >= tp)
-		 continue;
 #ifdef DEBUG
-	     printf("Trying merge of %d into %d\n", tp->index, sp->index);
+	     printf("Trying merge of %d into %d\n", tp-reduced, sp-reduced);
 #endif /* DEBUG */
 	     /* neither must have been deleted */
-	     if (!sp->matches || !tp->matches)
+	     if (!sp->nmatches || !tp->nmatches)
 	     {
 #ifdef DEBUG
 		 printf("Null match pointer: %d=%p, %d=%p\n", 
-			sp->index, sp->matches, tp->index, tp->matches);
+			sp-reduced, sp->matches, tp-reduced, tp->matches);
 #endif /* DEBUG */
+
 		 continue;
 	     }
 	     /* ranges must be the same length */
@@ -143,26 +137,37 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 	     if (merge_ranges(sp->matches, tp->matches, sp->nmatches))
 	     {		 
 #ifdef DEBUG
-		 struct range_t	*rp;
+		 struct sorthash_t	*rp;
 
-		 printf("Merged %d into %d\n", tp->index, sp->index);
+		 printf("*** Merged %d into %d\n", tp-reduced, sp-reduced);
 		 for (rp=sp->matches; rp < sp->matches+sp->nmatches; rp++)
-		     printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
+		     printf("%s:%d:%d\n",rp->file,rp->hash.start,rp->hash.end);
 #endif /* DEBUG */
-		 nonuniques--;
-		 tp->matches = NULL;
+		 removed++;
+		 tp->nmatches = 0;
 	     }
 	 }
 
-     return(nonuniques);
+#ifdef DEBUG
+     for (sp = reduced; sp < reduced + nonuniques; sp++)
+     {
+	 struct sorthash_t	*rp;
+
+	 printf("Clique beginning at %d (%d):\n", sp - reduced, sp->nmatches);
+	 for (rp = sp->matches; rp < sp->matches + sp->nmatches; rp++)
+	     printf("%s:%d:%d\n",  rp->file, rp->hash.start, rp->hash.end);
+     }
+#endif /* DEBUG */
+
+     return(nonuniques - removed);
 }
 
 struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 /* assemble list of duplicated hashes */
 {
      static struct match_t dummy; 
-     struct match_t *reduced = &dummy, *sp, *tp;
-     unsigned int nonuniques, progress, hashcount = *hashcountp;
+     struct match_t *reduced, *sp, *tp;
+     unsigned int nonuniques, nreduced, progress, hashcount = *hashcountp;
      struct sorthash_t *mp, *np;
 
      /*
@@ -200,9 +205,11 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
      obarray = (struct sorthash_t *)realloc(obarray, 
 			    sizeof(struct sorthash_t)* hashcount);
 
-     /* build list of hashes with more than one range associated with */
+     /* build list of hashes with more than one range associated */
      nonuniques = progress = 0;
      fprintf(stderr, "%% Extracting duplicates...   ");
+     nreduced = 10000;
+     reduced = (struct match_t *)malloc(sizeof(struct match_t) * nreduced);
      for (np = obarray; np < obarray + hashcount; np = mp)
      {
 	 struct match_t *new;
@@ -236,25 +243,23 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 	 }
 
 	 /* passed all tests, keep this set of ranges */
-	 new = (struct match_t *)malloc(sizeof(struct match_t));
-#ifdef DEBUG
-	 new->index = np - obarray;
-#endif /* DEBUG */
-	 new->next  = reduced;
-	 reduced = new;
-	 new->nmatches = nmatches;
+	 if (nonuniques >= nreduced)
+	 {
+	     nreduced *= 2;
+	     reduced = (struct match_t *)realloc(reduced,
+						 sizeof(struct match_t)*nreduced);
+	 }
 	 /*
 	  * Point into the existing hash array rather than allocating
 	  * new storage.  This means our working set won't get any
 	  * smaller, but it avoids the time overhead of doing a bunch
 	  * of malloc and free calls.
 	  */
-	 new->matches = np;
+	 reduced[nonuniques].matches = np;
+	 reduced[nonuniques].nmatches = nmatches;
 	 nonuniques++;
      }
      fprintf(stderr, "\b\b\b100%% done.\n");
-
-     report_time("%d range groups after removing unique hashes", nonuniques);
 
      *hashcountp = nonuniques;
      return reduced;
@@ -278,39 +283,30 @@ static int sortmatch(const void *a, const void *b)
 void emit_report(struct sorthash_t *obarray, int hashcount)
 /* report our results */
 {
-    struct match_t *hitlist, *sorted, *match;
-    int i, matchcount;
+    struct match_t *hitlist, *match;
+    int mergecount;
 
     hitlist = reduce_matches(obarray, &hashcount);
-    hashcount = collapse_ranges(hitlist, hashcount);
-    report_time("%d range groups after merging", hashcount);
+    report_time("%d range groups after removing unique hashes", hashcount);
+    mergecount = collapse_ranges(hitlist, hashcount);
+    report_time("%d range groups after merging", mergecount);
     report_time("Reduction done");
 
-    /* we go through a little extra effort to emit a sorted list */
-    matchcount = 0;
-    for (match = hitlist; match->next; match = match->next)
-	if (match->matches)
-	    matchcount++;
-
-    sorted = (struct match_t *)calloc(sizeof(struct match_t), matchcount);
-    i = 0;
-    for (match = hitlist; match->next; match = match->next)
-	if (match->matches)
-	    sorted[i++] = *match;
-    qsort(sorted, matchcount, sizeof(struct match_t), sortmatch);
-
-    for (match = sorted; match < sorted + matchcount; match++)
-    {
-	int	i;
-
-	for (i=0; i < match->nmatches; i++)
+    qsort(hitlist, hashcount, sizeof(struct match_t), sortmatch);
+    for (match = hitlist; match < hitlist + hashcount; match++)
+	if (match->nmatches)
 	{
-	    struct sorthash_t	*rp = match->matches+i;
+	    int	i;
 
-	    printf("%s:%d:%d\n",  rp->file, rp->hash.start, rp->hash.end);
+	    for (i=0; i < match->nmatches; i++)
+	    {
+		struct sorthash_t	*rp = match->matches+i;
+
+		printf("%s:%d:%d\n",  rp->file, rp->hash.start, rp->hash.end);
+	    }
+	    printf("%%%%\n");
 	}
-	printf("%%%%\n");
-    }
+    /* free(hitlist); */
 }
 
 /* report.c ends here */
