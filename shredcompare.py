@@ -24,7 +24,6 @@
 
 import sys, os, os.path, re, md5, getopt, time, cPickle
 
-shredsize = 5
 verbose = False
 mark_time = None
 ws = re.compile(r"\s+")
@@ -52,66 +51,106 @@ class Shred:
     def merge(self, other):
         self.start = min(self.start, other.start)
         self.end   = max(self.end,   other.end)
+    # Make these sortable (not presently used)
     def __cmp__(self, other):
         return cmp((self.file, self.start, self.end), 
                    (other.file, other.start, other.end))
     def __hash_(self):
         return hash((self.file, self.start, self.end))
+    # External representation
     def __str__(self):
         # 0-origin line numbers internally, 1-origin externally.
         return "%s:%d-%d" % (self.file, self.start+1, self.end)
     __repr__ = __str__
 
-def smash_whitespace(line):
-    "Replace each string of whitespace in a line with a single space."
-    return ws.sub(' ', line)
+class ShredTree:
+    "Represent a collection of shreds corresponding to a file tree."
+    def __init__(self, path, ignorehash=False, shredsize=5):
+        self.path = path
+        self.shredsize = shredsize
+        self.shreds = {}
+        if ignorehash:
+            self.shredtree()
+        else:
+            self.read_hash()
+            if not self.shreds:
+                self.shredtree()
 
-def is_line_relevant(line):
-    "Don't start chunks on lines with no features.  This is a speed hack."
-    return line.strip()
+    # Dictionary emulation
+    def __getitem__(self, key):
+        return self.shreds[key]
+    def __setitem__(self, key, value):
+        self.shreds[key] = value
+    def __delitem__(self, key):
+        del self.shreds[key]
+    def __contains__(self, item):
+        return item in self.shreds
+    def update(self, dict):
+        self.shreds.update(dict)
+    def keys(self):
+        return self.shreds.keys()
 
-def shredfile(file, tree):
-    "Build a dictionary of shred tuples corresponding to a specified file."
-    if verbose:
-        print file
-    shreds = {}
-    fp = open(file)
-    lines = map(smash_whitespace, fp.readlines())
-    fp.close()
-    for i in range(len(lines)-shredsize):
-        if is_line_relevant(lines[i]):
-            m = md5.new()
-            for j in range(shredsize):
-                m.update(lines[i+j])
-            # Merging shreds into a dict automatically suppresses duplicates.
-            shreds[m.digest()] = Shred(file, i, i+shredsize)
-    return shreds
-
-def eligible(file):
-    "Is a file eligible for comparison?"
-    return filter(lambda x: file.endswith(x), ('.c', 'h', '.y', '.l', '.txt'))
-
-def shredtree(tree):
-    "Shred an entire file tree; return a dictionary of checksums-to-locations."
-    shreds = {}
-    if verbose:
-        print "% Shredding", tree
-    # No precomputed hashes.  Prepare a news shred list.
-    for root, dirs, files in os.walk(tree):
-        for file in files:
-            path = os.path.join(root, file)
-            if eligible(path):
-                shreds.update(shredfile(path, tree))
-    return shreds
+    # Real methods
+    def shredtree(self):
+        "Shred a file tree; srt up dictionary of checksums-to-locations."
+        self.shreds = {}
+        if verbose:
+            print "% Shredding", self.path
+        # No precomputed hashes.  Prepare a news shred list.
+        for root, dirs, files in os.walk(self.path):
+            for file in files:
+                fullpath = os.path.join(root, file)
+                if self.eligible(fullpath):
+                    self.shredfile(fullpath)
+    def smash_whitespace(self, line):
+        "Replace each string of whitespace in a line with a single space."
+        return ws.sub(' ', line)
+    def is_line_relevant(self, line):
+        "Don't start chunks on lines with no features.  This is a speed hack."
+        return line.strip()
+    def shredfile(self, file):
+        "Build a dictionary of shred tuples corresponding to a specified file."
+        if verbose:
+            print file
+        fp = open(file)
+        lines = map(self.smash_whitespace, fp.readlines())
+        fp.close()
+        for i in range(len(lines)-shredsize):
+            if self.is_line_relevant(lines[i]):
+                m = md5.new()
+                for j in range(self.shredsize):
+                    m.update(lines[i+j])
+                # Merging shreds into a dict automatically suppresses duplicates.
+                self.shreds[m.digest()] = Shred(file, i, i + self.shredsize)
+    def eligible(self, file):
+        "Is a file eligible for comparison?"
+        return filter(lambda x: file.endswith(x), ('.c','h','.y','.l','.txt'))
+    def read_hash(self):
+        "Try to read a hash digest corresponding to this tree."
+        if os.path.exists(self.path + ".hash"):
+            # There's a precomputed shred list.
+            rfp = open(self.path + ".hash")
+            shreds = {}
+            while True:
+                line = rfp.readline()
+                if not line:
+                    break
+                digest = line[:16]
+                (file, range) = line[16:].split(":")
+                (start, end) = range.split("-")
+                self.shreds[digest] = Shred(file, int(start), int(end))
+            rfp.close()
+    def write_hash(self):
+        "Write a hash digest corresponding to a tree."
+        wfp = open(self.path + ".hash", "w")
+        for key in self.shreds:
+            wfp.write(key + str(self.shreds[key]) + "\n")
+        wfp.close()
 
 def shredcompare(tree1, tree2):
     "Compare two trees.  Returns a list of matching shred pairs"
-    shreds1 = read_hash(tree1)
-    if not shreds1:
-        shreds1 = shredtree(tree1)
-    shreds2 = read_hash(tree2)
-    if not shreds2:
-        shreds2 = shredtree(tree2)
+    shreds1 = ShredTree(tree1)
+    shreds2 = ShredTree(tree2)
     # Nuke everything but checksum matches between the trees
     for key in shreds1.keys():
         if not key in shreds2:
@@ -153,32 +192,6 @@ def shredcompare(tree1, tree2):
                 retry = True
     return filter(lambda x: x, matches)
 
-def read_hash(tree):
-    "Try to read a hash digest corresponding to a tree."
-    if not os.path.exists(tree + ".hash"):
-        return None
-    else:
-        # There's a precomputed shred list.
-        rfp = open(tree + ".hash")
-        shreds = {}
-        while True:
-            line = rfp.readline()
-            if not line:
-                break
-            digest = line[:16]
-            (file, range) = line[16:].split(":")
-            (start, end) = range.split("-")
-            shreds[digest] = Shred(file, int(start), int(end))
-        rfp.close()
-        return shreds
-
-def write_hash(shreds, tree):
-    "Write a hash digest corresponding to a tree."
-    wfp = open(tree + ".hash", "w")
-    for key in shreds:
-        wfp.write(key + str(shreds[key]) + "\n")
-    wfp.close()
-
 def report_time(legend=None):
     "Report time since start_time was set."
     global mark_time
@@ -198,6 +211,7 @@ if __name__ == '__main__':
         sys.stderr.write("usage: shredcompare [-s shredsize] [-v] [-h] tree1 tree2\n")
         sys.exit(2)
     makehash = None
+    shredsize=5
     for (opt, val) in optlist:
         if opt == '-s':
             shredsize = int(val)
@@ -207,9 +221,9 @@ if __name__ == '__main__':
             makehash = val
     report_time()
     if makehash:
-        shreds = shredtree(makehash)
+        shreds = ShredTree(makehash, ignorehash=True, shredsize=shredsize)
         report_time("Shred list complete.")
-        write_hash(shreds, makehash)
+        shreds.write_hash()
         report_time("Digesting complete")
     else:
         matches = shredcompare(args[0], args[1])
