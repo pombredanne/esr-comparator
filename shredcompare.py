@@ -135,7 +135,7 @@ if __name__ == '__main__':
     try:
         (optlist, args) = getopt.getopt(sys.argv[1:], 's:v')
     except getopt.GetoptError:
-        sys.stderr.write("usage: shredcompare [-s shredsize] tree1 tree2\n")
+        sys.stderr.write("usage: shredcompare [-s shredsize] [-v] tree1 tree2\n")
         sys.exit(2)
     for (opt, val) in optlist:
         if opt == '-s':
@@ -150,7 +150,7 @@ if __name__ == '__main__':
         hours = elapsed/3600; elapsed %= 3600
         minutes = elapsed/60; elapsed %= 60
         seconds = elapsed
-        print "Done in %dh, %dm, %ds" % (hours, minutes, seconds)
+        print "%% Done in %dh, %dm, %ds" % (hours, minutes, seconds)
     for (source, target) in matches:
         print source, "->", target
 
