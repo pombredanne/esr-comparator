@@ -28,22 +28,8 @@ static int merge_ranges(struct sorthash_t *p,
      * lengths.  Within each list, all shreds have the same hash.
      * Within the lists, the shreds are sorted in filename order.
      * 
-     * First, check to see that all the filenames match pairwise.
-     * If there are no such matches, these chunks are completely
-     * irrelevant to each other.  It might be that for some values
-     * of i the filenames are equal and for others not.  In that case
-     * the pair of lists of ranges cannot represent the same overlapping
-     * segments of text, which is the only case we are interested in.
      */
-    for (i = 0; i < nmatches; i++)
-	if (strcmp(p[i].file->name, q[i].file->name))
-	{
-#ifdef DEBUG
-	    printf("File mismatch\n");
-#endif /* DEBUG */
-	    return(0);
-	}
- 
+
     /*
      * There are two possible overlap cases.  Either the start line of
      * each range in p is within the corresponding range in q or
@@ -90,15 +76,55 @@ static int sametree(const char *s, const char *t)
     return (sn == tn) && !strncmp(s, t, sn); 
 }
 
+static int compare_files(const void *a, const void *b)
+/* sort by files shred is included in */
+{
+    struct match_t *s = ((struct match_t *)a);
+    struct match_t *t = ((struct match_t *)b);
+    int i;
+
+    /* two cliques of different length can never match */
+    if (s->nmatches - t->nmatches)
+	return(s->nmatches - t->nmatches);
+
+    /* sort by file */
+    for (i = 0; i < s->nmatches; i++)
+    {
+	int cmp = strcmp(s->matches[i].file->name, t->matches[i].file->name);
+
+	if (cmp)
+	    return(cmp);
+    }
+
+    return(0);
+}
+
 static int collapse_ranges(struct match_t *reduced, int nonuniques)
 /* collapse together overlapping ranges in the hit list */
 { 
-     struct match_t *sp, *tp;
-     int removed = 0;
+    struct match_t *sp, *tp;
+    int removed = 0;
+
+    /*
+     * For two matches to be eligible for merger, all the filenames
+     * match pairwise.  If there are no such matches, these chunks are
+     * completely irrelevant to each other.  It might be that for some
+     * values of i the filenames are equal and for others not.  In
+     * that case the pair of lists of ranges cannot represent the same
+     * overlapping segments of text, which is the only case we are
+     * interested in.
+     *
+     * This gives us leverage to apply the qsort trick again.  The naive
+     * way to check for range overlaps would be to write a quadratic
+     * double loop compairing all matches pairwise.  Instead we can
+     * use this sort to partition the matches into spans such that
+     * all overlaps must take place within spans.
+     */
+    qsort(reduced, nonuniques, sizeof(struct match_t), compare_files);
 
 #ifdef DEBUG
-     for (sp = reduced; sp < reduced + nonuniques; sp++)
-     {
+    for (sp = reduced; sp < reduced + nonuniques; sp++)
+    {
 	 struct sorthash_t	*rp;
 
 	 printf("Clique beginning at %d:\n", sp - reduced);
@@ -109,7 +135,7 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 
      /* time to merge overlapping shreds */
      for (sp = reduced; sp < reduced + nonuniques; sp++)
-	 for (tp = reduced; tp < sp; tp++)
+	 for (tp = sp + 1; tp < reduced + nonuniques; tp++)
 	 {
 #ifdef DEBUG
 	     printf("Trying merge of %d into %d\n", tp-reduced, sp-reduced);
@@ -124,16 +150,9 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 
 		 continue;
 	     }
-	     /* ranges must be the same length */
-	     if (sp->nmatches != tp->nmatches)
-	     {
-#ifdef DEBUG
-		 printf("Range length mismatch\n");
-#endif /* DEBUG */
-		 continue;
-	     }
+
 	     /* attempt the merge */
-	     if (merge_ranges(sp->matches, tp->matches, sp->nmatches))
+	     if (merge_ranges(tp->matches, sp->matches, sp->nmatches))
 	     {		 
 #ifdef DEBUG
 		 struct sorthash_t	*rp;
@@ -143,7 +162,7 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 		     printf("%s:%d:%d\n",rp->file->name,rp->hash.start,rp->hash.end);
 #endif /* DEBUG */
 		 removed++;
-		 tp->nmatches = 0;
+		 sp->nmatches = 0;
 	     }
 	 }
 
