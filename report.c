@@ -245,7 +245,7 @@ static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
      * segments of text, which is the only case we are interested in.
      */
     for (i = 0; i < nmatches; i++)
-	if (strcmp(p->file, p->file))
+	if (strcmp(p[i].file, q[i].file))
 	    return(0);
  
     /*
