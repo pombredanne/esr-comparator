@@ -5,7 +5,8 @@
 #include <string.h>
 #include <ftw.h>
 #include <errno.h>
-#include <alloca.h>
+#include <ctype.h>
+#include <stdlib.h>
 #include <netinet/in.h>
 #include "md5.h"
 #include "shred.h"
@@ -50,7 +51,7 @@ static int eligible(const char *file)
     {
 	FILE	*fp = fopen(file, "r");
 	char	buf[BUFSIZ], *cp;
-	int	printable;
+	int	printable = 0;
 
 	if (!fp || !fgets(buf, sizeof(buf)-1, fp))
 	    return(0);
@@ -121,7 +122,6 @@ static struct hash_t emit_chunk(shred *display, int linecount)
 {
     struct md5_ctx	ctx;
     int  		i, firstline;
-    unsigned char	*cp;
     struct hash_t	out;
 
     /* build completed chunk onto end of array */
@@ -136,6 +136,7 @@ static struct hash_t emit_chunk(shred *display, int linecount)
 	    md5_process_bytes(display[i].line, strlen(display[i].line), &ctx);
 	}
     md5_finish_ctx(&ctx, (void *)&out.hash);
+    firstline = shredsize;
     for (i = shredsize - 1; i >= 0; i--)
 	if (display[i].line)
 	    firstline = i;
@@ -215,7 +216,7 @@ static int treewalker(const char *file, const struct stat *sb, int flag)
     return(0);
 }
 
-static int stringsort(void *a, void *b)
+static int stringsort(const void *a, const void *b)
 /* sort comparison of strings by content */ 
 {
     return strcmp(*(char **)a, *(char **)b);
@@ -249,7 +250,7 @@ char **sorted_file_list(const char *tree, int *fc)
  *
  *************************************************************************/
 
-static int sortchunk(void *a, void *b)
+static int sortchunk(const void *a, const void *b)
 /* sort by hash */
 {
     int cmp = HASHCMP((struct sorthash_t *)a, (struct sorthash_t *)b);

@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include "shred.h"
 
@@ -167,7 +168,6 @@ void read_scf(const char *name, FILE *fp)
     {
 	char	buf[BUFSIZ];
 	linenum_t	chunks;
-	struct item *new;
 
 	fgets(buf, sizeof(buf), fp);
 	*strchr(buf, '\n') = '\0';
@@ -318,11 +318,12 @@ void report_time(char *legend, ...)
 
     if (mark_time)
     {
-	int elapsed = endtime - mark_time;
-	int hours = elapsed/3600; elapsed %= 3600;
-	int minutes = elapsed/60; elapsed %= 60;
-	int seconds = elapsed;
+    	int elapsed, hours, minutes, seconds;
 	char	buf[BUFSIZ];
+	elapsed = endtime - mark_time;
+	hours = elapsed/3600; elapsed %= 3600;
+	minutes = elapsed/60; elapsed %= 60;
+	seconds = elapsed;
 
 	va_start(ap, legend);
 	vsprintf(buf, legend, ap);
@@ -345,6 +346,7 @@ static void usage(void)
     exit(0);
 }
 
+int
 main(int argc, char *argv[])
 {
     extern char	*optarg;	/* set by getopt */
@@ -409,8 +411,6 @@ main(int argc, char *argv[])
 
     if (outfile)
     {
-	FILE	*ofp;
-
 	if (freopen(outfile, "w", stdout) == NULL)
 	{
 	    perror("comparator");
@@ -485,7 +485,7 @@ main(int argc, char *argv[])
 	char	buf[BUFSIZ];
 
 	dummy_scf.hash_method = "MD5";
-	buf[0] == '\0';
+	buf[0] = '\0';
 	if (remove_whitespace)
 	    strcat(buf, "remove-whitespace, ");
 	if (remove_comments)

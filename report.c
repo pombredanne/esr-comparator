@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include "shred.h"
 
@@ -26,7 +27,6 @@ struct match_t
 #endif /* DEBUG */
 }
 dummy_match;
-static struct match_t *reduced = &dummy_match;
 
 static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
 /* merge p into q, if the ranges in the match are compatible */
@@ -227,7 +227,7 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int hashcount)
      return reduced;
 }
 
-static int sortmatch(void *a, void *b)
+static int sortmatch(const void *a, const void *b)
 /* sort by file and first line */
 {
     struct range_t *s = ((struct match_t *)a)->matches;
