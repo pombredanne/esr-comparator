@@ -22,6 +22,7 @@ if __name__ == '__main__':
                 rep += " %s=%s," % (key, value)
             sys.stdout.write(rep[:-1] + "\n")
         print 75 * '-'
+        state.read_matches()
         for clique in state.cliques:
             (file, start, end, text) = state.extract_text(clique)
             if start == 1 and end == state.files[file]:
