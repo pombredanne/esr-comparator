@@ -1,0 +1,210 @@
+$Id$
+
+As of September 2003 there are several individuals and research groups engaged
+in building tools for doing analysis of similarities among source-code trees.
+The immediate motivation for these projects is to verify or refute assertions
+that the source code of the Linux kernel contains code copied from various
+proprietary Unixes, but the techniques should be of general use in code
+auditing and historical analysis.
+
+It is desirable that different research groups be able to compare and 
+cross-check each others' results.  It is also desirable that it be 
+possible to do similarity checks between source trees without having
+direct access to the sources, which may be hedged about with proprietary
+restrictions.
+
+Because many groups are using variations on the shred algorithm[1], both
+goals are achievable by adopting interchange formats for the intermediate
+computations.  Conceptually, these techniques break down into the following
+steps:
+
+1. Normalization: Normalize the source code
+
+This step consists of transformations on the source trees which are intended
+to ignore trivial differences -- for example, removing whitespace so that 
+variations in indent style don't lead to false negatives.  The normalization
+step varies significantly among programs.
+
+2. Hashing: Compute a sliding-window hash
+
+Chop the source into shreds, overlapping segments of N lines where N
+is a parameter of the technique.  A shred begins on each line of the
+source code except the last N-1 lines of each file.  Hash each shred
+into a signature with a technique such as MD5.  The hashing serves two
+purposes: to reduce the cost of comparing segments, and to make it 
+possible to do comparisons without seeing the original code. 
+
+The result of this stage is a list of pairs consisting of a hash and a
+range, which is in turn a triple consisting of a filename, a start line
+number, and an an end line number.
+
+3. Reduction: Throw out non-duplicate hashes
+
+Shreds that don't match any other shred in the list can be thrown out.
+In the original shred algorithm, duplicates within any of the trees are
+thrown out, leaving a list only of hashes duplicated between trees but
+unique within trees.  In some variations, all duplicates are retained.
+
+The output of this stage is a list of matches.  Each match consists
+of two or more ranges corresponding to a given hash, but the hash can
+be omitteed from the list.
+
+4. Merging: Merge overlapping matches
+
+Two matches (A1, A2,...An) and (B1, B2,...Bn) are mergeable if there
+is some overlap value k such that the kth line in A[i] is the same as
+the first line in B[i] for every i.  If just two trees are being 
+compared, the usual case, then n = 2.
+
+In this stage, mergeable pairs of matches are replaced with a single 
+match in the obvious way.  For later stages, the shred size N is no longer
+a parameter.
+
+The input of this stage is a list of matches.  The output of this
+stage is a list of matches.
+
+5. Filtering: Throw out uninteresting matches
+
+Some matches aren't interesting.  For example, a match consisting entirely
+of blank lines is almost certainly uninteresting.  Filtering logic cooperates
+with normalization to implement some theory of what similarities are
+interesting.
+
+The input of this stage is a list of matches.  The output of this
+stage is a list of matches.
+
+6. Reporting: Report generation. 
+
+The list of interesting matches may be rendered as a list of overlapping
+code segments, or as statistics, or in other ways.
+
+Most of the variation among source-comparison methods is in 
+normalization and filtering.  Hashing, merging, and reduction don't
+vary a great deal, and the variation they do have can be captured
+by simple parameters and switches.
+
+Accordingly, it will be useful to define interchange standards for
+the following intermediate results:
+
+A: After hashing.  
+
+First, we need a common format for a list of the hashes associated
+with a given source tree after normalization.  This one is
+particularly important, because it will allow groups of analysts to
+do comparisons on trees even though some groups might not have
+legal access to the original source code.
+
+B: After reduction, merging, and filtering
+
+We also need a common format for match lists.  The format should be 
+able to describe what reduction and filtering steps were performed.
+
+The remainder of this document describes file formats to fill these needs.
+These formats will be known as SCIF (source Comparison Interchange Format)
+files, pronounced "skiff".
+
+Each format consists of three sections: an identification line,
+metadata, and data.  The identification line consists of a hash sign,
+a format identifier, a space, and a revision level.  The metadata section
+consists of lines in the format of an RFC-822 header (a tag, followed by
+a colon and whitespace, followed by a value).  The data section consists
+of the line "%%\n" followed by data.  Metadata is encoded in UTF-8.
+
+For each format, we describe the format identifier, the metadata tags
+and their semantics, and the format of the data section.  Some metadata
+tags are optional, but it is recommended that they always be written out.
+Metadata tags short be written out in ASCII sort order of the tag.
+
+The ordering rules give every data-set a canonical form so that
+operations like diff(1) or comm(1) can give meaningful results.
+
+SHIF-A:
+
+This is the format for hash lists.  The identifier is 'SHIF-A'.  At version
+1.0, the following metadata tags are defined:
+
+Normalization: (mandatory)
+
+   A series of comma-separated tokens describing normalization steps.  These
+   may include the following:
+
+   none: No normalization.
+
+   remove-whitespace: All whitespace (spaces, tabs, and linefeeds) has
+   been stripped out.
+
+   remove-braces: Remove { and }.
+
+   remove-C-comments: Remove /* and */
+
+Shred-Size: (mandatory)
+
+   The shred size as a decimal integer.
+
+Hash-Method: (optional)
+
+   The hashing method.  Defaults to MD5
+
+Generator-Program: (optional)
+
+   Name and version of the generating program.
+
+Comment: (optional)
+
+   Arbitrary comment text for human eyes.
+
+The data section consists of 4-byte integer file count in network byte
+order, followed by a series of file sections.  Each section consists
+of a filename line, terminated by a newline, followed by a count of
+shreds expressed as a four-byte integer in network byte order,
+followed by a sequence of shred records.
+
+A shred record consists of two integers in network byte order (start and end
+line numbers) followed by a fixed-length block of hash data.  For the 
+default MD5 hash the data is 16 bytes.
+
+Shreds should be ordered by start line number.  Empty files should be
+skipped, and nonempty files should always have at least one shred.
+Files should be listed in sort order by name.
+
+This unpleasant binary format has been chosen to make processing as
+fast as possible, because shred data sets are quite large in holding
+down I/O is an important consideration.
+
+SHIF-B:
+
+This is the format for match lists. The identifier is 'SHIF-B'.  At version
+1.0, the following metadata tags are defined:
+
+Filtering: (optional)
+
+   May have the following values. If the Filtering header is absent, treat
+   as "Filtering: none".
+
+   none: No filtering has been performed
+
+   C-syntax: Any chunk consisting entirely of whitespace, C keywords, 
+   syntax, and certain common constants (thus, with no references to 
+   variables or functions) has been discarded.
+
+Merge-Program: (optional)
+
+   Name and version of the program used to merge hashes and do comparisons.
+
+Comment: (optional)
+
+   Arbitrary comment text for human eyes.
+
+The data section consists of a sequence of range sets.  Each range set
+consists of two or more ranges followed by a line containing a %%\n
+section marker.  A range is represented as three tab-separated fields:
+filename, start line, and end line.  Line numbers are 1-origin.
+
+The natural sort order for range sets is by filename, then by start line,
+then by end line.  Ranges within range sets should be sorted by natural
+order.  Range sets should be sorted by the natural order of their first
+member.
+
+It is strongly recommended that when a SHIF-B file is generated from
+SHIF-A files, the Normalization and Shred-Size headers should be copied
+into the result.
