@@ -1,9 +1,10 @@
-# Makefile for comparator tools
+# Makefile for the comparator tool
 
 SOURCES = shredtree.c shredcompare.c main.c md5.c md5.h
-DOCS = README comparator.xml
-
-CFLAGS=-g
+DOCS    = README comparator.xml
+EXTRAS  = shredtree.py shredcompare.py
+TEST    = test1 test2 test3 test4
+ALL     = $(SOURCES) $(DOCS) $(EXTRAS) $(TEST)
 
 all: comparator comparator.1
 
