@@ -33,7 +33,9 @@ static struct scf_t dummy_scf, *scflist = &dummy_scf;
 static struct filehdr_t dummy_filehdr, *filelist = &dummy_filehdr;
 
 static int chunk_count, sort_count, dofilter;
+static size_t chunk_buffer_alloc_sz;
 static struct hash_t *chunk_buffer;
+static size_t sort_buffer_alloc_sz;
 static struct sorthash_t *sort_buffer;
 
 struct filehdr_t *register_file(const char *file, linenum_t length)
@@ -74,9 +76,12 @@ static int is_scf_file(const char *file)
 static void filehook(struct hash_t hash, struct filehdr_t *file)
 /* hook to store only hashes */
 {
-    chunk_buffer = (struct hash_t *)realloc(chunk_buffer, 
-				      sizeof(struct hash_t) * (chunk_count+1));
-    
+    if (chunk_buffer_alloc_sz < chunk_count + 1) {
+	chunk_buffer_alloc_sz = 2*chunk_buffer_alloc_sz + 1;
+	chunk_buffer = (struct hash_t *)realloc(chunk_buffer, 
+			  sizeof(struct hash_t) * (chunk_buffer_alloc_sz));
+    }
+
     chunk_buffer[chunk_count++] = hash;
 }
 
@@ -84,8 +89,11 @@ static void filehook(struct hash_t hash, struct filehdr_t *file)
 void corehook(struct hash_t hash, struct filehdr_t *file)
 /* hook to store hash and file */
 {
-    sort_buffer = (struct sorthash_t *)realloc(sort_buffer, 
-				      sizeof(struct sorthash_t) * (sort_count+1));
+    if (sort_buffer_alloc_sz < sort_count + 1) {
+	sort_buffer_alloc_sz = 2*sort_buffer_alloc_sz + 1;
+	sort_buffer = (struct sorthash_t *)realloc(sort_buffer, 
+			  sizeof(struct sorthash_t) * (sort_buffer_alloc_sz));
+    }
     
     sort_buffer[sort_count].hash = hash;
     sort_buffer[sort_count].file = file;
@@ -183,6 +191,7 @@ static void write_scf(const char *tree, FILE *ofp)
 	}
 	totalchunks += chunk_count;
 	free(chunk_buffer);
+	chunk_buffer_alloc_sz = 0;
 	if (verbose && !debug && progress++ % 100 == 0)
 	    fprintf(stderr, "\b\b\b\b%3.0f%%", progress / (file_count * 0.01));
     }
@@ -484,6 +493,7 @@ main(int argc, char *argv[])
 	    debug = 1;
 	    break;
 
+	case 'h':
 	default:
 	    usage();
 	}
