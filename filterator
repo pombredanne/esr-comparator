@@ -8,7 +8,7 @@ import os, sys, re, getopt
 shredline = re.compile("(.*):([0-9]+):([0-9]+)")
 
 # Tokens to be removed when checking whether a shred is significant
-junk = map(re.compile, (
+C_junk = map(re.compile, (
     # Idioms that don't convey any meaning in isolation
     r"return *\(?[a-z]+\)? *;", r"return *\(?-?[01]+\)? *;", r"goto +[a-z]+;",
     r"exit *\([01]\);",
@@ -16,7 +16,7 @@ junk = map(re.compile, (
     r'/\* *ARGSUSED *\*/', r'/\* *NOTREACHED *\*/', 
     # Bare C keywords
     r'\bbreak\b',  r'\bcase\b',r'\bcontinue\b', r'\bdefault\b',
-    r'\bdo\b', r'\belse\b', r'\bif\b', r'\bgoto\b', r'\breturn\b',
+    r'\bdo\b', r'\belse\b', r'\benum\b', r'\bif\b', r'\bgoto\b', r'\breturn\b',
     r'\bswitch\b', r'\bwhile\b',
     r'enum', r'\bint\b', r'\blong\b', r'\bshort\b', r'\bstatic\b',
     r'\bstruct\b', r'typedef', r'\bunion\b', r'\bvoid\b',
@@ -31,30 +31,36 @@ junk = map(re.compile, (
     r'\bEINVAL\b', r'\bENOSYS\b', 
     ))
 
-def nontrivial(text):
+def nontrivial(text, filetype):
     "Identify a shred as trivial or nontrivial."
-    # Basic theory of this function is that if we throw out all C
-    # syntax and and common constants, and there is still an
-    # identifier, we're looking at something that might be
-    # interesting.
-    text = ' ' + text
-    while True:
-        savecopy = text
-        for regexp in junk:
-            text = regexp.sub(' ', text)
-        for ch in ('{','}', '(',')', '<','>', '[',']',
-                   ';', ':', ',', '.', '%', '^', '&', '|', '*','?',
-                   '+', '-', '/', '=', '!', '\n','\t', '\v'):
-            text = text.replace(ch, ' ')
-        if savecopy == text:
-            break
-        else:
-            continue
+    if filetype == "C":
+        # Basic theory of this function is that if we throw out all C
+        # syntax and and common constants, and there is still an
+        # identifier, we're looking at something that might be
+        # interesting.
+        text = ' ' + text
+        while True:
+            savecopy = text
+            for regexp in C_junk:
+                text = regexp.sub(' ', text)
+            for ch in ('{','}', '(',')', '<','>', '[',']', '\\\n',
+                       ';', ':', ',', '.', '%', '^', '&', '|', '*','?',
+                       '+', '-', '/', '=', '!', '\n','\t', '\v'):
+                text = text.replace(ch, ' ')
+            if savecopy == text:
+                break
+            else:
+                continue
     return text.strip()
+
+def deduce_filetype(line):
+    "Deduce filetype from the data on its first line."
+    if "sh" in line:
+        return "sh"
 
 def report_common():
     "Generate a report on common code."
-    count = 0
+    count = lines = 0
     locations = []
     while True:
         line = sys.stdin.readline()
@@ -68,18 +74,27 @@ def report_common():
                 if end - start + 1 < minsize:
                     continue
                 try:
+                    # Try to deduce the filetype so we know how to filter
+                    filetype = None
+                    if file.endswith(".c") or file.endswith(".h"):
+                        filetype = "C"
+                    # Skip to the relevant chunk
                     rfp = open(file)
                     for i in range(start-1):
-                        rfp.readline()
+                        line = rfp.readline()
+                        if i == 0:
+                            filetype = deduce_filetype(line)
                     text = ""
                     for i in range(start, end+1):
                         nextline = rfp.readline()
+                        if i == 0 and start == 1:
+                            filetype = deduce_filetype(line)
                         if nextline[0] == '%':
                             nextline = '%' + nextline
                         text += nextline
                     rfp.close()
-                    if nofilter or nontrivial(text):
-                        # We do this here in order to avaoid losing
+                    if nofilter or nontrivial(text, filetype):
+                        # We do this here in order to avoid losing
                         # the error message in noise if the user needs
                         # -d and fails to supply it.
                         if count == 0:
@@ -92,15 +107,15 @@ def report_common():
                             print "Shred-Size: %d" % shredsize
                             print "%%"
                         count += 1
+                        lines += end - start + 1
                         print "%% %s:%s-%s: (%d matches)" % (file, start, end, len(locations))
                         sys.stdout.write(text)
-                        #print `nontrivial(text)`
                     locations = []
                     break
                 except IOError:
                     sys.stderr.write("filterator: can't open %s\n" % file)
                     sys.exit(0)
-    print "%d overlaps." % count
+    print "%d lines in %d overlaps." % (lines, count)
 
 if __name__ == '__main__':
     try:
