@@ -52,16 +52,16 @@ makeregress:
 
 regress:
 	@for n in 1 2 3; do \
-	    comparator -C -d test test$${n}-a test$${n}-b >test/out$${n}.log 2>/dev/null;\
+	    comparator -C -d test test$${n}-a test$${n}-b >test/out$${n}.log;\
 	    if diff -c test/out$${n}.good test/out$${n}.log; \
 	    then \
 		echo "Test $${n} from trees passed."; \
 	    else \
 		echo "Test $${n} from trees failed."; \
 	    fi; \
-	    comparator -C -d test -c test$${n}-a >test$${n}-a.scf 2>/dev/null; \
-	    comparator -C -d test -c test$${n}-b >test$${n}-b.scf 2>/dev/null; \
-	    comparator -C test$${n}-a.scf test$${n}-b.scf >test/out$${n}.log 2>/dev/null;\
+	    comparator -C -d test -c test$${n}-a >test$${n}-a.scf; \
+	    comparator -C -d test -c test$${n}-b >test$${n}-b.scf; \
+	    comparator -C test$${n}-a.scf test$${n}-b.scf >test/out$${n}.log;\
 	    rm test$${n}-a.scf test$${n}-b.scf; \
 	    if diff -u test/out$${n}.good test/out$${n}.log; \
 	    then \
