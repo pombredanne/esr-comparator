@@ -189,5 +189,6 @@ if __name__ == '__main__':
         report_time("Match list complete")
         for (source, target) in matches:
             print source, "->", target
-            sys.stdout.write(source.fetch())
+            if verbose:
+                sys.stdout.write(source.fetch())
 
