@@ -243,23 +243,23 @@ static int merge_tree(char *tree)
 static void init_scf(char *file)
 /* add to the in-core list of sorthash structures from a SCF file */
 {
-    struct scf_t	*new;
+    struct scf_t	*scf;
     char	buf[BUFSIZ];
 
-    new = (struct scf_t *)malloc(sizeof(struct scf_t));
+    scf = (struct scf_t *)malloc(sizeof(struct scf_t));
 
     /* read in the SCF metadata block and add it to the in-core list */
-    new->name = strdup(file);
-    new->fp   = fopen(new->name, "r");
-    fgets(buf, sizeof(buf), new->fp);
+    scf->name = strdup(file);
+    scf->fp   = fopen(scf->name, "r");
+    fgets(buf, sizeof(buf), scf->fp);
     if (strncmp(buf, "#SCF-A ", 6))
     {
 	fprintf(stderr, 
 		"shredcompare: %s is not a SCF-A file.\n", 
-		new->name);
+		scf->name);
 	exit(1);
     }
-    while (fgets(buf, sizeof(buf), new->fp) != NULL)
+    while (fgets(buf, sizeof(buf), scf->fp) != NULL)
     {
 	char	*value;
 
@@ -272,18 +272,17 @@ static void init_scf(char *file)
 	strchr(value, '\n')[0] = '\0';
 
 	if (!strcmp(buf, "Normalization"))
-	    new->normalization = strdup(value);
+	    scf->normalization = strdup(value);
 	else if (!strcmp(buf, "Shred-Size"))
-	    new->shred_size = atoi(value);
+	    scf->shred_size = atoi(value);
 	else if (!strcmp(buf, "Hash-Method"))
-	    new->hash_method = strdup(value);
+	    scf->hash_method = strdup(value);
 	else if (!strcmp(buf, "Generator-Program"))
-	    new->generator_program = strdup(value);
+	    scf->generator_program = strdup(value);
     }
 
-    new->name = strdup(file);
-    new->next = scflist;
-    scflist = new;
+    scf->next = scflist;
+    scflist = scf;
 }
 
 static void dump_array(struct sorthash_t *obarray, 
@@ -501,7 +500,7 @@ main(int argc, char *argv[])
     {
 	char	buf[BUFSIZ];
 
-	dummy_scf.hash_method = "MD5";
+	scflist->hash_method = "MD5";
 	buf[0] = '\0';
 	if (remove_whitespace)
 	    strcat(buf, "remove-whitespace, ");
@@ -513,9 +512,9 @@ main(int argc, char *argv[])
 	    buf[strlen(buf)-1] = '\0';
 	else
 	    strcpy(buf, "none");
-	dummy_scf.normalization = strdup(buf);
-	dummy_scf.shred_size = shredsize;
-	dummy_scf.generator_program = "comparator 1.0";
+	scflist->normalization = strdup(buf);
+	scflist->shred_size = shredsize;
+	scflist->generator_program = "comparator " VERSION;
     }
     else
     {
