@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 #
-# shredfilter -- filter and format the output of shredcompare
+# filterator -- filter and format the output of comparator
 #
 import os, sys, re, getopt
 
-# Template for parsing the output from shredfilter.  Grabs from second tree.
+# Template for parsing the output from comparator.
 shredline = re.compile("([^:]*):([0-9]+):([0-9]+)")
 
 # Tokens to be removed when checking whether a shred is significant
@@ -18,6 +18,8 @@ C_junk = [r'\bbreak\b',  r'\bcase\b',r'\bcontinue\b', r'\bdefault\b',
           r'\b0\b', r'\b1\b',
           # Common preprocessor macros, not significant by themselves.
           r'\bASSERT\b', r'\bFALSE\b', r'\bNULL\b', r'\bSTATIC\b', r'\bTRUE\b',
+          # Macro include lines are noise, too.
+          r'^#include', 
           # Common error macros.
           r'\bEINVAL\b', r'\bENOSYS\b', 
           # Conventional variables frequently found in kernel code.
@@ -54,7 +56,7 @@ if __name__ == '__main__':
     try:
         (optlist, args) = getopt.getopt(sys.argv[1:], 'd:n')
     except getopt.GetoptError:
-        sys.stderr.write("usage: shredfilter [-d dir] [-n]\n")
+        sys.stderr.write("usage: filterator [-d dir] [-n]\n")
         sys.exit(2)
     nofilter = False
     for (opt, val) in optlist:
