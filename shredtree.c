@@ -13,7 +13,7 @@
 /* control bits, meant to be set at startup */
 int c_only = 0;
 int rws = 0;
-int shredsize = 5;
+int shredsize = 3;
 
 struct item
 {
