@@ -295,7 +295,7 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
 	if (strncmp(buf, "#SCF-A 2.0", 9))
 	{
 	    fprintf(stderr, 
-		    "shredcompare: %s is not a SCF-A file.\n", 
+		    "comparator: %s is not a SCF-A file.\n", 
 		    scf->name);
 	    exit(1);
 	}
@@ -536,44 +536,47 @@ main(int argc, char *argv[])
 	}
     }
 
-	/* consistency checks on the SCFs */
-	for (scf = scflist; scf->next->next; scf = scf->next)
+    /* are we running the right instance of comparator? */
+    for (scf = scflist; scf->next; scf = scf->next)
+	if (strcmp(scf->hash_method, HASHMETHOD))
 	{
-	    if (!scf->fp)
-		continue;
-
-	    if (strcmp(scf->normalization, scf->next->normalization))
-	    {
-		fprintf(stderr, 
-			"shredcompare: normalizations of %s and %s don't match\n",
-			scf->name, scf->next->name);
-		exit(1);
-	    }
-	    else if (scf->shred_size != scf->next->shred_size)
-	    {
-		fprintf(stderr, 
-			"shredcompare: shred sizes of %s and %s don't match\n",
-			scf->name, scf->next->name);
-		exit(1);
-
-	    }
-	    else if (strcmp(scf->hash_method, scf->next->hash_method))
-	    {
-		fprintf(stderr, 
-			"shredcompare: hash methods of %s and %s don't match\n",
-			scf->name, scf->next->name);
-		exit(1);
-	    }
+	    fprintf(stderr, 
+		    "comparator: hash method %s of %s is not compiled in.\n",
+		    scf->hash_method, scf->name);
+	    exit(1);
 	}
 
-	/* finish reading in all SCFs */
-	for (scf = scflist; scf->next; scf = scf->next)
-	    if (scf->fp)
-	    {
-		read_scf(scf);
-		scf->name[strlen(scf->name) - strlen(".scf")] = '\0';
-		fclose(scf->fp);
-	    }
+    /* consistency checks on the SCFs */
+    for (scf = scflist; scf->next->next; scf = scf->next)
+    {
+	if (!scf->fp)
+	    continue;
+
+	if (strcmp(scf->normalization, scf->next->normalization))
+	{
+	    fprintf(stderr, 
+		    "comparator: normalizations of %s and %s don't match\n",
+		    scf->name, scf->next->name);
+	    exit(1);
+	}
+	else if (scf->shred_size != scf->next->shred_size)
+	{
+	    fprintf(stderr, 
+		    "comparator: shred sizes of %s and %s don't match\n",
+		    scf->name, scf->next->name);
+	    exit(1);
+
+	}
+    }
+
+    /* finish reading in all SCFs */
+    for (scf = scflist; scf->next; scf = scf->next)
+	if (scf->fp)
+	{
+	    read_scf(scf);
+	    scf->name[strlen(scf->name) - strlen(".scf")] = '\0';
+	    fclose(scf->fp);
+	}
 
     if (!compile_only)
     {
