@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include "shred.h"
 
 int debug = 0;
@@ -44,7 +45,7 @@ static int is_scf_file(const char *file)
 }
 
 /* 
- * We differentiate these two functions in order to avaid the memory
+ * We differentiate these two functions in order to avoid the memory
  * overhead of the extra (char *) when assembling shred lists to be written
  * to a file.  This is only worth bothering with because the data sets
  * can get quite large.
@@ -208,7 +209,7 @@ static void merge_tree(char *tree)
     list = sorted_file_list(tree, &file_count);
     if (!file_count)
     {
-	fprintf(stderr, "comparator: couldn't open %s\n", tree);
+	fprintf(stderr, "comparator: couldn't open %s, %s\n", tree, strerror(errno));
 	exit(1);
     }
     i = 0;
