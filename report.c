@@ -47,6 +47,7 @@ struct range_t
 struct match_t
 {
     struct match_t *next;
+    struct match_t *last;
     int            nmatches;
     struct range_t *matches;
 }
@@ -216,10 +217,11 @@ void init_intern(const int count)
      return hashcount;
  }
 
-static int mergeable(struct range_t *s, struct range_t *t)
-/* can two ranges be merged? */
+static int merge(struct range_t *s, struct range_t *t)
+/* merge t into s */
 {
-    return 1;
+    /* merge attempt unsuccessful */
+    return(0);
 }
 
 static int sametree(const char *s, const char *t)
@@ -255,7 +257,6 @@ struct match_t *reduce_matches(int localdups)
 		 else
 		     nmatches++;
 
-#ifdef FOO
 	     /* if all these matches are within the same tree, toss them */
 	     heterogenous = 0;
 	     for (mp = np; mp < np + nmatches; mp++)
@@ -263,12 +264,13 @@ struct match_t *reduce_matches(int localdups)
 		     heterogenous++;
 	     if (!heterogenous)
 		 continue;
-#endif /* FOO */
 
 	     printf("%d has %d in its clique\n", np-obarray, nmatches);
 	     /* passed all tests, keep this set of ranges */
 	     new = (struct match_t *)malloc(sizeof(struct match_t));
+	     new->last = NULL;
 	     new->next  = reduced;
+	     reduced->last = new;
 	     reduced = new;
 	     new->nmatches = nmatches;
 	     new->matches=(struct range_t *)calloc(sizeof(struct range_t),new->nmatches);
@@ -283,14 +285,13 @@ struct match_t *reduce_matches(int localdups)
      }
      free(obarray);
 
-#ifdef FOO
      /* time to remove duplicates */
      retry = 1;
      while (retry)
      {
 	 retry = 0;
 	 for (sp = reduced; sp->next; sp = sp->next)
-	     for (tp = reduced; tp->next; tp = reduced->next)
+	     for (tp = reduced; tp->next; tp = tp->next)
 	     {
 		 /* intersection is symmetrical */
 		 if (sp >= tp)
@@ -298,13 +299,18 @@ struct match_t *reduce_matches(int localdups)
 		 /* don't recheck deleted ranges */
 		 if (!sp->matches || !tp->matches)
 		     continue;
-		 /* ranges must intersect or be tossed */
-		 if (!mergeable(sp->matches, tp->matches))
+		 /* attempt the merge */
+		 if (!merge(sp->matches, tp->matches))
 		     continue;
+		 /* clean up */
+		 free(tp->matches);
+		 tp->last->next = tp->next;
+		 tp->next->last = tp->last;
+		 free(tp);
+		 /* list is altered, do another merge pass */
 	         retry = 1;
 	     }
      }
-#endif /* FOO */
      return reduced;
 }
 
