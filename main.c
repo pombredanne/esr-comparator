@@ -22,6 +22,8 @@ static void filehook(struct hash_t hash, const char *file)
     chunk_buffer = (struct hash_t *)realloc(chunk_buffer, 
 				      sizeof(struct hash_t) * (chunk_count+1));
     
+    hash.start = TONET(hash.start);
+    hash.end = TONET(hash.end);
     chunk_buffer[chunk_count++] = hash;
 }
 
@@ -47,7 +49,7 @@ static void generate_shredfile(const char *tree, FILE *ofp)
     list = sorted_file_list(tree, &file_count);
 
     fputs("#SHIF-A 1.0\n", ofp);
-    fputs("Generator-Program: shredtree 1.0\n", ofp);
+    fputs("Generator-Program: comparator 1.0\n", ofp);
     fputs("Hash-Method: MD5\n", ofp);
     fprintf(ofp, "Normalization: %s\n", rws ? "remove_whitespace" : "none");
     fprintf(ofp, "Shred-Size: %d\n", shredsize);
@@ -173,12 +175,19 @@ main(int argc, char *argv[])
 	generate_shredfile(argv[optind], stdout);
     else if (exec_direct)
     {
+	struct shif_t	localblock;
+
+	localblock.hash_method = "MD5";
+	localblock.normalization = rws ? "remove_whitespace" : "none";
+	localblock.shred_size = shredsize;
+	localblock.generator_program = "comparator 1.0";
+
 	report_time(NULL);
 	generate_shredlist(argc-optind, argv+optind);
 	report_time("Hash merge done, %d entries", sort_count);
 	sort_hashes(sort_buffer, sort_count);
 	report_time("Sort done");
-	emit_report(NULL, sort_buffer, sort_count);	
+	emit_report(&localblock, sort_buffer, sort_count);	
     }
     else
     {

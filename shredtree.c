@@ -102,8 +102,8 @@ static struct hash_t emit_chunk(shred *display, int linecount)
 	if (display[i].line)
 	    firstline = i;
     firstline = display[firstline].number;
-    out.start = TONET(firstline);
-    out.end = TONET(linecount);
+    out.start = firstline;
+    out.end = linecount;
 
     return(out);
 }

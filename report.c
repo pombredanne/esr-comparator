@@ -448,7 +448,7 @@ void emit_report(struct shif_t *shif,
 
     puts("#SHIF-B 1.0");
     printf("Hash-Method: %s\n", shif->hash_method);
-    puts("Merge-Program: shredcompare 1.0");
+    puts("Merge-Program: comparator 1.0");
     printf("Normalization: %s\n", shif->normalization);
     printf("Shred-Size: %d\n", shif->shred_size);
     puts("%%");
