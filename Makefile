@@ -18,7 +18,7 @@ comparator: main.o shredtree.o md5.o shredcompare.o
 	$(CC) main.o shredtree.o md5.o shredcompare.o -o comparator
 
 clean:
-	rm -f comparator shredtree.o md5.o shredcompare.o TEST1 TEST2
+	rm -f comparator shredtree.o md5.o shredcompare.o *~
 
 comparator.1: comparator.xml
 	xmlto man comparator.xml
