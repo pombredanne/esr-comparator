@@ -99,7 +99,7 @@ if __name__ == '__main__':
         elif opt == '-x':
             debug = True
     if args:
-        print "#SCF-A 1.0"
+        print "#SCF-A 1.1"
         print "Generator-Program: shredtree.py 1.0"
         print "Hash-Method: MD5"
         print "Normalization: %s" % ",".join(normalization);
@@ -108,7 +108,8 @@ if __name__ == '__main__':
         if ws: normalization.append("remove_whitespace")
         if not normalization:
             normalization.append("none")
-        print "%%"        
+        print "%%"
+        totalbytes = 0
         filenames = []
         for root, dirs, files in os.walk(args[0]):
             for file in files:
@@ -118,5 +119,6 @@ if __name__ == '__main__':
         filenames.sort()
         sys.stdout.write(struct.pack("!i", len(filenames)))
         for path in filenames:
-            shredfile(path)
+            totalbytes = totalbytes + shredfile(path)
+        sys.stdout.write(struct.pack("!i", totalbytes))
 # End

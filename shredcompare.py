@@ -9,6 +9,7 @@ class SCF:
     def __init__(self, name):
         self.name = name
         self.fp = open(name)
+        shif.totallines = 0
         self.comments = []
         self.hashcount = 0
         id = self.fp.readline()
@@ -100,6 +101,7 @@ def merge_hashes(shif, dict):
         shif.hashcount += 1
         if hashcount % 10000 == 0:
             sys.stderr.write("\b\b\b%02.0f%%" % (shif.fp.tell() / (total * 0.01)))
+    (shif.totallines,) = struct.unpack("!i", shif.fp.read(4))
     return True
 
 def item_factory(db):
@@ -239,11 +241,14 @@ if __name__ == '__main__':
     print "After sorting:", matches
     report_time("Reduction done")
     # OK, dump all matches.
-    print "#SCF-B 1.0"
+    print "#SCF-B 1.1"
     print "Hash-Method: MD5"
     print "Normalization:", ",".join(shiflist[0].normalization)
-    print "Merge-Program: shredcompare.py 1.0"
+    print "Merge-Program: shredcompare.py 1.1"
     print "Shred-Size: %d" % shiflist[0].shredsize
+    print "%%"
+    for shif in shiflist:
+        print "%s:%d" % (shif.name,shif.totallines)
     print "%%"
     # FIXME: do something appropriate with comments
     for match in matches:
