@@ -41,6 +41,7 @@ extern struct hash_t *chunk_buffer;
 
 /* functions */
 extern void generate_shredfile(const char *, FILE *);
+extern struct sorthash_t *generate_shredlist(const int, const char *argv[]);
 extern void shredreport(int argc, char *argv[]);
 
 /* shred.h ends here */

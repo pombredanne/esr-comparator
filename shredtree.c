@@ -259,17 +259,23 @@ void generate_shredfile(const char *tree, FILE *ofp)
     }
 }
 
-struct sorthash_t *generate_shredlist(const char *tree)
+struct sorthash_t *generate_shredlist(const int argc, const char *argv[])
 /* generate an in-core list of sorthash structures */
 {
-    char	**place, **list;
+    int	i;
 
     sort_buffer = (struct sorthash_t*)calloc(sizeof(struct sorthash_t),1);
     sort_count = 0;
 
-    list = sorted_file_list(tree);
-    for (place = list; place < list + file_count; place++)
-	shredfile(*place, corehook);
+    for (i = 0; i < argc; i++)
+    {
+	char	**place, **list;
+
+	list = sorted_file_list(argv[i]);
+	for (place = list; place < list + file_count; place++)
+	    shredfile(*place, corehook);
+	free(list);
+    }
 
     /* caller is responsible for freeing this */
     return(sort_buffer);
