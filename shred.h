@@ -35,13 +35,8 @@ extern int rws;
 extern int debug;
 extern int shredsize;
 
-/* globally visible data; chunk_buffer should be a malloc area set by the caller */
-extern int file_count, chunk_count;
-extern struct hash_t *chunk_buffer;
-
-/* functions */
-extern void generate_shredfile(const char *, FILE *);
-extern struct sorthash_t *generate_shredlist(const int, const char *argv[]);
-extern void shredreport(int argc, char *argv[]);
+/* shredtree.c functions */
+extern char **sorted_file_list(const char *, int *);
+extern void shredfile(const char *, void (*hook)(struct hash_t, const char *));
 
 /* shred.h ends here */
