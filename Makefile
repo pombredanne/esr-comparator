@@ -7,7 +7,7 @@ VERS=2.1
 
 CODE    = shredtree.c shred.h report.c hash.c linebyline.c main.c \
 		hash.h hashtab.h \
-		filterator 
+		filterator comparator.py 
 SCRIPTS = hashgen.py setup.py
 DOCS    = README NEWS comparator.xml scf-standard.xml COPYING
 EXTRAS  = shredtree.py shredcompare.py
@@ -101,6 +101,6 @@ dist: comparator-$(VERS).tar.gz
 
 RPMROOT=/usr/src/redhat
 rpm: dist
-	rpmbuild --define 'version $(VERS)' -ta comparator-$(VERS).tar.gz
+	rpmbuild --define 'myversion $(VERS)' -ta comparator-$(VERS).tar.gz
 	cp $(RPMROOT)/RPMS/*/comparator-$(VERS)*.rpm .
 	cp $(RPMROOT)/SRPMS/comparator-$(VERS)*.src.rpm .

@@ -1,6 +1,6 @@
 Summary: fast comparison of large source-code trees
 Name: comparator
-Version: %{version}
+Version: %{myversion}
 Release: 1
 License: GPL
 Group: Utilities
