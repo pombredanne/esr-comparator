@@ -103,12 +103,12 @@ def merge_hashes(fp, dict):
 
 def item_factory(db):
     "Hide the ugliness that is sequential DB access in a generator."
-    yield db.first()
-    while True:
-        try:
+    try:
+        yield db.first()
+        while True:
             yield db.next()
-        except:
-            yield None
+    except:
+        yield None
 
 mark_time = None
 
@@ -127,6 +127,9 @@ def report_time(legend=None):
 
 def filesize(file):
     return os.stat(file)[stat.ST_SIZE]
+
+def treefromfile(file):
+    return file.split("/")[0]
 
 if __name__ == '__main__':
     try:
@@ -163,8 +166,9 @@ if __name__ == '__main__':
     for shif in shiflist:
         while merge_hashes(shif.fp, hashdict):
             continue
-    report_time("Hash merge done, %d hashes" % hashcount)
+    report_time("Hash merge done, %d entries" % hashcount)
     # Nuke all unique hashes
+    nonuniques = 0
     db_cursor = item_factory(hashdict)
     while True:
         item = db_cursor.next()
@@ -173,11 +177,9 @@ if __name__ == '__main__':
         (key, match) = item
         if match.count("\n") == 1:
             del hashdict[key]
-    report_time("Global duplicates removed")
-    # Maybe nuke all match sets that don't cross a tree boundary
-    if not local_duplicates:
-        pass
-    report_time("Local duplicates removed")
+        else:
+            nonuniques += 1
+    report_time("%d range groups after removing unique hashes" % nonuniques);
     # Turn the remaining matches into match objects, because we're
     # going to want to do logic on them.  We deferred it this long
     # to lower memory usage.
@@ -192,6 +194,13 @@ if __name__ == '__main__':
         # the bsddb key and value constraint.
         match = map(lambda x: x.split("\t"), match.rstrip().split("\n"))
         match = map(lambda x: Shred(x[0], int(x[1]), int(x[2])), match)
+        # Ignore matches in which all ranges are from the same tree
+        for i in range(len(match)):
+            if treefromfile(match[i].file) != treefromfile(match[(i+1)%len(match)].file):
+                break
+        else:
+            continue
+        # Test passed, record it
         matches.append(match)
     # We're done with the database file.
     hashdict.close()
@@ -227,7 +236,7 @@ if __name__ == '__main__':
                 retry = True
     matches = filter(lambda x: x, matches)
     matches.sort(lambda x, y: cmp(x[0], y[0]))	# by source chunk
-    report_time("Merge complete")
+    report_time("Reduction done")
     # OK, dump all matches.
     print "#SHIF-B 1.0"
     print "Merge-Program: shredcompare.py 1.0"
