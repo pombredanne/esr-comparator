@@ -213,14 +213,9 @@ def report_common(state):
             if start == 1 and end == state.files[file]:
                 print "%% %s:%d-%d: entire (%d matches)" % (file, start, end, len(clique))
                 continue
-            (text_type, text) = state.extract_text(clique)
-            if not dofilter or nontrivial(text_type, text):
-                 if list:
-                    print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(clique))
-                    sys.stdout.write(text)
-            break
-            #print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(clique))
-            #sys.stdout.write(state.extract_text(clique)[1])
+        (text_type, text) = state.extract_text(clique)
+        print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(clique))
+        sys.stdout.write(state.extract_text(clique)[1])
 
 if __name__ == '__main__':
     try:
@@ -247,8 +242,8 @@ if __name__ == '__main__':
     state = CommonReport(sys.stdin)
     if minsize:
         state.filter_by_size(minsize)
-    #if dofilter:
-    #    state.filter_by_significance()
+    if dofilter:
+        state.filter_by_significance()
 
     if stats:
         print "%d overlaps" % state.segment_count()
