@@ -80,7 +80,7 @@ if __name__ == '__main__':
         elif opt == '-h':
 	    sys.stderr.write("usage: shredtree [-c] [-s size] [-w] path\n");
 	    sys.stderr.write(" -c      = do .c, .h, and .txt files only.\n");
-            sys.stderr.write(" -d      = go to directory before digesting\n");
+            sys.stderr.write(" -d dir  = go to directory before digesting\n");
 	    sys.stderr.write(" -h      = help (display this message).\n");
 	    sys.stderr.write(" -s size = set shred size (default %d)\n",
 		    shredsize);
