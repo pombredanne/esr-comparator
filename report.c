@@ -310,7 +310,7 @@ static int sametree(const char *s, const char *t)
     int sn = strchr(s, '/') - s;
     int tn = strchr(t, '/') - t;
 
-    return (sn == tn) && strncmp(s, t, sn); 
+    return (sn == tn) && !strncmp(s, t, sn); 
 }
 
 struct match_t *reduce_matches(void)
@@ -318,7 +318,7 @@ struct match_t *reduce_matches(void)
 {
      static struct match_t dummy; 
      struct match_t *reduced = &dummy, *sp, *tp;
-     int retry, nonuniques;
+     unsigned int retry, nonuniques;
 
      /* build list of hashes with more than one range associated with */
      nonuniques = 0;
@@ -499,7 +499,25 @@ main(int argc, char *argv[])
 
 #ifdef ODEBUG
     for (np = obarray; np < obarray + hashcount; np++)
-	printf("%d: %s:%d:%d (%02x%02x)\n", np-obarray, np->file, np->hash.start, np->hash.end, np->hash.hash[0], np->hash.hash[1]);
+	printf("%d: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x %s:%d:%d\n", 
+	       np-obarray, 
+	       np->hash.hash[0], 
+	       np->hash.hash[1], 
+	       np->hash.hash[2], 
+	       np->hash.hash[3], 
+	       np->hash.hash[4], 
+	       np->hash.hash[5], 
+	       np->hash.hash[6], 
+	       np->hash.hash[7], 
+	       np->hash.hash[8], 
+	       np->hash.hash[9], 
+	       np->hash.hash[10], 
+	       np->hash.hash[11], 
+	       np->hash.hash[12], 
+	       np->hash.hash[13], 
+	       np->hash.hash[14], 
+	       np->hash.hash[15],
+	       np->file, np->hash.start, np->hash.end);
 #endif /* ODEBUG */
 
     hitlist = reduce_matches();
