@@ -29,9 +29,9 @@ dummy_match;
 static struct match_t *reduced = &dummy_match;
 
 static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
-/* merge t into s, if the ranges in the match are compatible */
+/* merge p into q, if the ranges in the match are compatible */
 {
-    int	i;
+    int	i, mc, overlap;
     /*
      * The general problem: you have two lists of shreds, of the same
      * lengths.  Within each list, all shreds have the same hash.
@@ -54,37 +54,26 @@ static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
 	}
  
     /*
-     * There are two possible overlap cases.  Either the start line of s is
-     * within t or vice-versa.  In either case, all shreds must overlap by
-     * the same offset for this to be an eligible match.
+     * There are two possible overlap cases.  Either the start line of
+     * each rane in p is within the corresponding range in q or
+     * vice-versa.  If we know all pairs of shreds intersect, we
+     * assume they intersect in the same way because the same 
+     * hash pair (the same text) is involved each time.
      */
-    if (p->start >= q->start && p->start <= q->end)
-    {
-	int offset = p->start - q->start;
-
-	for (i = 1; i < nmatches; i++)
-	    if (p[i].start - q[i].start != offset)
-	    {
-#ifdef DEBUG
-		printf("Mismatched offset (A)\n");
-#endif /* DEBUG */
-		return(0);
-	    }
-    }
-    else if (q->start >= p->start && q->start <= p->end)
-    {
-	int offset = q->start - p->start;
-
-	for (i = 1; i < nmatches; i++)
-	    if (q[i].start - p[i].start != offset)
-	    {
-#ifdef DEBUG
-		printf("Mismatched offset (B)\n");
-#endif /* DEBUG */
-		return(0);
-	    }
-    }
-    else
+    overlap = 0;
+    mc = 0;
+    for (i = 0; i < nmatches; i++)
+	if (p[i].start >= q[i].start && p[i].start <= q[i].end)
+	    mc++;
+    if (mc == nmatches)
+	overlap = 1;
+    mc = 0;
+    for (i = 0; i < nmatches; i++)
+	if (q[i].start >= p[i].start && q[i].start <= p[i].end)
+	    mc++;
+    if (mc == nmatches)
+	overlap = 1;
+    if (!overlap)
     {
 #ifdef DEBUG
 	printf("Intervals don't intersect\n");
