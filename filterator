@@ -40,12 +40,13 @@ junk = {
         # Idioms that don't convey any meaning in isolation
         r"exit *[01];?",
         # Bare shell keywords
-        r"\bcase\b", r"\bdone\b", r"\bdo\b", r"\belse\b", r"\besac\b",
-        r"\bfi\b", r"\bif\b", r"\bwhile\b", 
+        r"\bbreak\b", r"\bcase\b", r"\bdone\b", r"\bdo\b", r"\belse\b",
+        r"\besac\b", r"\bfi\b", r"\bif\b", r"\breturn\b", r"\bshift\b",
+        r"\btrue\b", r"\bwhile\b", 
         # Blank comment
         "^#\n",
         # Ounctuation and whitespace
-        ':', '\n','\t', '\v'
+        ':', ';', '\n','\t', '\v'
         )),
     }
 
@@ -117,12 +118,14 @@ def report_common():
                         # -d and fails to supply it.
                         if count == 0:
                             print "Filter-Program: filterator 1.0"
-                            print "Filtering:", ("C-syntax", "none")[nofilter]
+                            print "Filtering:", ("language", "none")[nofilter]
                             print "Hash-Method: MD5"
                             if merge_program:
                                 print "Merge-Program:", merge_program
                             print "Normalization:", normalization
                             print "Shred-Size: %d" % shredsize
+                            if minsize:
+                                print "Minimum-Size: %d" % minsize
                             print "%%"
                         count += 1
                         lines += end - start + 1
