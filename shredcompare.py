@@ -39,10 +39,28 @@
 #
 # In this implementation, lines are preprocessed to remove whitespace
 # differences.
-import sys, os, os.path, re, md5
+import sys, os, os.path, re, md5, getopt
 
 shredsize = 5
 ws = re.compile(r"\s+")
+
+# These just make the code more readable.
+name = 0
+start = 1
+end = 2
+source = 0
+target = 1
+
+class Range:
+    "Represent a range of lines."
+    def __init__(self, file, start, end):
+        self.file = file
+        self.start = start
+        self.end = end
+    def __str__(self):
+        # 0-origin line numbers internally, 1-origin externally.
+        return "%s:%d-%d" % (self.file, self.start+1, self.end)
+    __repr__ = __str__
 
 def smash_whitespace(line):
     "Replace each string of whitespace in a line with a single space."
@@ -59,7 +77,7 @@ def shredfile(file, tree):
         for j in range(shredsize):
             m.update(lines[i+j])
         # Merging shreds into a dict automatically suppresses duplicates
-        shreds[m.digest()] = [file, i, i+shredsize]
+        shreds[m.digest()] = Range(file, i, i+shredsize)
     return shreds
 
 def eligible(file):
@@ -78,7 +96,7 @@ def shredtree(tree):
     return shreds
 
 def shredcompare(tree1, tree2):
-    "Compare two trees."
+    "Compare two trees.  Returns a list of matching Range pairs"
     shreds1 = shredtree(tree1)
     shreds2 = shredtree(tree2)
     # Nuke everything but checksum matches between the trees
@@ -92,7 +110,34 @@ def shredcompare(tree1, tree2):
     matches = []
     for key in shreds1.keys():
         matches.append((shreds1[key], shreds2[key]))
+    # Merge adjacent ranges if possible
+    matches.sort()	# Sort in natural order
+    merge_hit = True
+    while merge_hit:
+        merge_hit = False
+        for i in range(1,len(matches)):
+            j = len(matches) - i
+            this = matches[j]
+            last = matches[j-1]
+            if last[source].file == this[source].file \
+		   and last[target].file==this[target].file \
+                   and last[source].start==this[source].start-1:
+                merge_hit = True
+                last[source].end += 1
+                last[target].end +=1
+                matches = matches[:j] + matches[j+1:]
     return matches
 
 if __name__ == '__main__':
-    print shredcompare(sys.argv[1], sys.argv[2])
+    try:
+        (optlist, args) = getopt.getopt(sys.argv[1:], 's:')
+    except getopt.GetoptError:
+        sys.stderr.write("usage: shredcompare [-s shredsize] tree1 tree2\n")
+        sys.exit(2)
+    for (opt, val) in optlist:
+        if opt == '-s':
+            shredsize = int(val)
+    matches = shredcompare(args[0], args[1])
+    for (source, target) in matches:
+        print source, "->", target
+
