@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+#
+# shredfilter -- filter and format the output of shredcompare
+#
+import os, sys, re, getopt
+
+# Template for parsing the output from shredfilter.  Grabs from second tree.
+shredline = re.compile("-> ([^:]*):([0-9]+)-([0-9]+)")
+
+# Tokens to be removed when checking whether a shred is significant
+C_junk = [r'\bbreak\b', r'\bcontinue\b', r'\bdefault\b',
+          r'\belse\b', r'\breturn\b',
+          r'\bint\b', r'\blong\b', r'\bshort\b', r'\bstatic\b', r'\bvoid\b',
+          '#endif', '#else', r'#if\b', r'\bNULL\b',
+          r'/\*+', r'\*+/', r'\*+',
+          r'\b0\b', r'\b1\b',]
+
+# C junk to be removed from matches; inclues all single-lowercase-letter vars. 
+junk = re.compile("|".join(C_junk + map(lambda x: r'\b' + chr(x) + r'\b',
+                                        range(ord('a'), ord('z')))))
+
+def nontrivial(text):
+    "Identify a shred as trivial or nontrivial."
+    # Basic theory of this function is that if we throw out all C syntax, and
+    # there is still an identifier with a name longer than one char left,
+    # we're looking at something that might be interesting.
+    text = ' ' + text
+    for ch in ('{','}', '(',')',
+               ';', ':', ',',
+               '+', '-', '/', '=', '!', '\n','\t'):
+        text = text.replace(ch, ' ')
+    while True:
+        reduced = junk.sub('', text)
+        if reduced == text:
+            break
+        else:
+            text = reduced
+            continue
+    return reduced.strip()
+
+if __name__ == '__main__':
+    try:
+        (optlist, args) = getopt.getopt(sys.argv[1:], 'd:n')
+    except getopt.GetoptError:
+        sys.stderr.write("usage: shredfilter [-d dir] [-n]\n")
+        sys.exit(2)
+    nofilter = False
+    for (opt, val) in optlist:
+        if opt == '-d':
+            os.chdir(val)
+        elif opt == '-n':
+            nofilter = True
+
+    count = 0
+    while True:
+        line = sys.stdin.readline()
+        if not line:
+            break
+        m = shredline.search(line)
+        file = m.group(1)
+        start = int(m.group(2))
+        end = int(m.group(3))
+        rfp = open(file)
+        for i in range(start):
+            rfp.readline()
+        text = ""
+        for i in range(start, end):
+            text += rfp.readline()
+        rfp.close()
+        if nofilter or nontrivial(text):
+            count += 1
+            print "%s:%s-%s:" % (file, start, end)
+            #sys.stdout.write(text)
+            print `nontrivial(text)`
+    print "%d overlaps." % count
