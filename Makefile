@@ -3,7 +3,7 @@
 # By building with -DLARGEFILES you can go to all 32-byte offsets.
 # This increases working-set size by 20% but handles > 65336 lines per file.
 
-VERS=1.5
+VERS=1.6
 
 CODE    = shredtree.c shred.h report.c main.c md5.c md5.h filterator
 DOCS    = README NEWS comparator.xml scf-standard.xml COPYING
