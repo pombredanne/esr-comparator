@@ -99,12 +99,79 @@ static int sametree(const char *s, const char *t)
     return (sn == tn) && !strncmp(s, t, sn); 
 }
 
-struct match_t *reduce_matches(struct sorthash_t *obarray, int hashcount)
+static void collapse_ranges(struct match_t *reduced, int *nonuniques)
+/* collapse together overlapping ranges in the hit list */
+{ 
+    unsigned int retry;
+    struct match_t *sp, *tp;
+
+#ifdef DEBUG
+     for (sp = reduced; sp->next; sp = sp->next)
+     {
+	 struct range_t	*rp;
+
+	 printf("Clique beginning at %d:\n", sp->index);
+	 for (rp = sp->matches; rp < sp->matches + sp->nmatches; rp++)
+	     printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
+     }
+#endif /* DEBUG */
+
+     /* time to merge overlapping shreds */
+     do {
+	 retry = 0;
+	 for (sp = reduced; sp->next; sp = sp->next)
+	     for (tp = reduced; tp->next; tp = tp->next)
+	     {
+		 /* intersection is symmetrical */
+		 if (sp >= tp)
+		     continue;
+#ifdef DEBUG
+		 printf("Trying merge of %d into %d\n", tp->index, sp->index);
+#endif /* DEBUG */
+		 /* neither must have been deleted */
+		 if (!sp->matches || !tp->matches)
+		 {
+#ifdef DEBUG
+		     printf("Null match pointer: %d=%p, %d=%p\n", 
+			    sp->index, sp->matches, tp->index, tp->matches);
+#endif /* DEBUG */
+		     continue;
+		 }
+		 /* ranges must be the same length */
+		 if (sp->nmatches != tp->nmatches)
+		 {
+#ifdef DEBUG
+		     printf("Range length mismatch\n");
+#endif /* DEBUG */
+		     continue;
+		 }
+		 /* attempt the merge */
+		 if (merge_ranges(sp->matches, tp->matches, sp->nmatches))
+ 		 {		 
+#ifdef DEBUG
+		     struct range_t	*rp;
+
+		     printf("Merged %d into %d\n", tp->index, sp->index);
+		     for (rp=sp->matches; rp < sp->matches+sp->nmatches; rp++)
+			 printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
+#endif /* DEBUG */
+		     free(tp->matches);
+		     (*nonuniques)--;
+		     tp->matches = NULL;
+		     /* list is altered, do another merge pass */
+		     retry++;
+		 }
+	     }
+     } while
+	 (retry);
+}
+
+struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 /* assemble list of duplicated hashes */
 {
      static struct match_t dummy; 
      struct match_t *reduced = &dummy, *sp, *tp;
-     unsigned int retry, nonuniques, progress;
+     unsigned int nonuniques, progress, hashcount = *hashcountp;
      struct sorthash_t *mp, *np;
 
      /*
@@ -199,66 +266,7 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int hashcount)
 
      report_time("%d range groups after removing unique hashes", nonuniques);
 
-#ifdef DEBUG
-     for (sp = reduced; sp->next; sp = sp->next)
-     {
-	 struct range_t	*rp;
-
-	 printf("Clique beginning at %d:\n", sp->index);
-	 for (rp = sp->matches; rp < sp->matches + sp->nmatches; rp++)
-	     printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
-     }
-#endif /* DEBUG */
-
-     /* time to merge overlapping shreds */
-     do {
-	 retry = 0;
-	 for (sp = reduced; sp->next; sp = sp->next)
-	     for (tp = reduced; tp->next; tp = tp->next)
-	     {
-		 /* intersection is symmetrical */
-		 if (sp >= tp)
-		     continue;
-#ifdef DEBUG
-		 printf("Trying merge of %d into %d\n", tp->index, sp->index);
-#endif /* DEBUG */
-		 /* neither must have been deleted */
-		 if (!sp->matches || !tp->matches)
-		 {
-#ifdef DEBUG
-		     printf("Null match pointer: %d=%p, %d=%p\n", 
-			    sp->index, sp->matches, tp->index, tp->matches);
-#endif /* DEBUG */
-		     continue;
-		 }
-		 /* ranges must be the same length */
-		 if (sp->nmatches != tp->nmatches)
-		 {
-#ifdef DEBUG
-		     printf("Range length mismatch\n");
-#endif /* DEBUG */
-		     continue;
-		 }
-		 /* attempt the merge */
-		 if (merge_ranges(sp->matches, tp->matches, sp->nmatches))
- 		 {		 
-#ifdef DEBUG
-		     struct range_t	*rp;
-
-		     printf("Merged %d into %d\n", tp->index, sp->index);
-		     for (rp=sp->matches; rp < sp->matches+sp->nmatches; rp++)
-			 printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
-#endif /* DEBUG */
-		     free(tp->matches);
-		     nonuniques--;
-		     tp->matches = NULL;
-		     /* list is altered, do another merge pass */
-		     retry++;
-		 }
-	     }
-     } while
-	 (retry);
-     report_time("%d range groups after merging", nonuniques);
+     *hashcountp = hashcount;
      return reduced;
 }
 
@@ -283,7 +291,9 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
     struct match_t *hitlist, *sorted, *match;
     int i, matchcount;
 
-    hitlist = reduce_matches(obarray, hashcount);
+    hitlist = reduce_matches(obarray, &hashcount);
+    collapse_ranges(hitlist, &hashcount);
+    report_time("%d range groups after merging", hashcount);
     report_time("Reduction done");
 
     /* we go through a little extra effort to emit a sorted list */
