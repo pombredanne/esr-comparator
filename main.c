@@ -74,8 +74,7 @@ static void generate_shredfile(const char *tree, FILE *ofp)
     }
 }
 
-static struct sorthash_t *generate_shredlist(const int argc, 
-					     const char *argv[])
+static void generate_shredlist(const int argc, const char *argv[])
 /* generate an in-core list of sorthash structures */
 {
     int	i, file_count;
@@ -92,9 +91,6 @@ static struct sorthash_t *generate_shredlist(const int argc,
 	    shredfile(*place, corehook);
 	free(list);
     }
-
-    /* caller is responsible for freeing this */
-    return(sort_buffer);
 }
 
 void report_time(char *legend, ...)
