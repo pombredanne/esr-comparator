@@ -219,7 +219,7 @@ main(int argc, char *argv[])
 
     compile_only = file_only = 0;
     dir = NULL;
-    while ((status = getopt(argc, argv, "cd:hs:w")) != EOF)
+    while ((status = getopt(argc, argv, "cd:hs:wx")) != EOF)
     {
 	switch (status)
 	{
