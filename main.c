@@ -513,17 +513,13 @@ main(int argc, char *argv[])
 		olddir = getcwd(NULL, 0);	/* may fail off Linux */
 		chdir(dir);
 	    }
+	    init_scf(NULL, scf);
 	    merge_tree(source);
 	    if (dir)
 		chdir(olddir);
 	}
     }
 
-    /* if there were no SCFs, create a dummy one */
-    if (scflist == &dummy_scf)
-	init_scf(NULL, &dummy_scf);
-    else
-    {
 	/* consistency checks on the SCFs */
 	for (scf = scflist; scf->next->next; scf = scf->next)
 	{
@@ -561,8 +557,6 @@ main(int argc, char *argv[])
 		read_scf(scf);
 		fclose(scf->fp);
 	    }
-
-    }
 
     if (!compile_only)
     {
