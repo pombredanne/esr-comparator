@@ -60,7 +60,7 @@ if __name__ == '__main__':
             state.filter_by_significance()
 
         if stats:
-            sys.stdout.write(str(comparator.CommonStatistics(state)))
+            sys.stdout.write(str(state.statistics()))
         else:
             report_common(state)
     except comparator.ComparatorException, e:

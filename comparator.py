@@ -207,6 +207,10 @@ class CommonReport:
                 filtered.append(clique)
         self.cliques = filtered
 
+    def statistics(self):
+        "Return a statistical summary object for the current report."
+        return CommonStatistics(self)
+
 class CommonStatistics:
     "Statistical information from a report."
     def __init__(self, report):
