@@ -23,9 +23,13 @@ comparator: main.o shredtree.o md5.o shredcompare.o
 
 clean:
 	rm -f comparator shredtree.o md5.o shredcompare.o main.o *~
+	rm -f comparator.1 filterator.1 
 
 comparator.1: comparator.xml
 	xmlto man comparator.xml
+
+comparator.html: comparator.xml
+	xmlto html-nochunks comparator.xml
 
 test-a: comparator
 	comparator test1 test2
