@@ -249,5 +249,5 @@ if __name__ == '__main__':
     for match in matches:
         for range in match:
             print `range`
-        print "-"
+        print "%%"
 
