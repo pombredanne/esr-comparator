@@ -540,7 +540,7 @@ main(int argc, char *argv[])
 	exit(0);
 
     /* are we running the right instance of comparator? */
-    for (scf = scflist; scf; scf = scf->next)
+    for (scf = scflist; scf->next; scf = scf->next)
 	if (strcmp(scf->hash_method, HASHMETHOD))
 	{
 	    fprintf(stderr, 
