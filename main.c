@@ -236,6 +236,7 @@ static void read_scf(struct scf_t *scf)
     fprintf(stderr, "\b\b\b100%%...done, %d shreds\n", hashcount);
 
     fread(&scf->totallines, sizeof(linecount_t), 1, scf->fp);
+    scf->totallines = ntohl(scf->totallines);
 }
 
 static int merge_tree(char *tree)
