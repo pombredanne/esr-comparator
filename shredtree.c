@@ -13,7 +13,6 @@
 /* control bits, meant to be set at startup */
 int c_only = 0;
 int rws = 0;
-int debug = 0;
 int shredsize = 5;
 
 struct item
@@ -94,24 +93,6 @@ static struct hash_t emit_chunk(shred *display, int linecount)
     int  		i, firstline;
     unsigned char	*cp;
     struct hash_t	out;
-
-    if (debug)
-    {
-	for (i = 0; i < shredsize; i++)
-	    if (display[i].line)
-	    {
-		fputc('\'', stderr);
-		for (cp = display[i].line; *cp; cp++)
-		    if (*cp == '\n')
-			fputs("\\n", stderr);
-		    else if (*cp == '\t')
-			fputs("\\t", stderr);
-		    else
-			fputc(*cp, stderr);
-		fputc('\'', stderr);
-	        fputc('\n', stderr);
-	    }    
-    }
 
     /* build completed chunk onto end of array */
     md5_init_ctx(&ctx);

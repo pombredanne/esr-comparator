@@ -6,6 +6,8 @@
 #include <string.h>
 #include "shred.h"
 
+int debug = 0;
+
 struct scf_t
 {
     char	*name;
@@ -111,7 +113,7 @@ static void merge_tree(char *tree)
     int	oldcount, file_count;
 
     oldcount = sort_count;
-    fprintf(stderr, "%% Reading %s...", tree);
+    fprintf(stderr, "%% Reading tree %s...", tree);
     list = sorted_file_list(tree, &file_count);
     for (place = list; place < list + file_count; place++)
 	shredfile(*place, corehook);
