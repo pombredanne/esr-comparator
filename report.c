@@ -103,7 +103,7 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 
 	 printf("Clique beginning at %d:\n", sp - reduced);
 	 for (rp = sp->matches; rp < sp->matches + sp->nmatches; rp++)
-	     printf("%s:%d:%d\n",  rp->file, rp->hash.start, rp->hash.end);
+	     printf("%s:%d:%d\n",  rp->file->name, rp->hash.start, rp->hash.end);
      }
 #endif /* DEBUG */
 
@@ -140,7 +140,7 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 
 		 printf("*** Merged %d into %d\n", tp-reduced, sp-reduced);
 		 for (rp=sp->matches; rp < sp->matches+sp->nmatches; rp++)
-		     printf("%s:%d:%d\n",rp->file,rp->hash.start,rp->hash.end);
+		     printf("%s:%d:%d\n",rp->file->name,rp->hash.start,rp->hash.end);
 #endif /* DEBUG */
 		 removed++;
 		 tp->nmatches = 0;
@@ -154,7 +154,7 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 
 	 printf("Clique beginning at %d (%d):\n", sp - reduced, sp->nmatches);
 	 for (rp = sp->matches; rp < sp->matches + sp->nmatches; rp++)
-	     printf("%s:%d:%d\n",  rp->file, rp->hash.start, rp->hash.end);
+	     printf("%s:%d:%d\n",  rp->file->name, rp->hash.start, rp->hash.end);
      }
 #endif /* DEBUG */
 
