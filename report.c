@@ -222,6 +222,7 @@ struct match_t *reduce_matches(int localdups)
      static struct match_t dummy; 
      struct match_t *reduced = &dummy;
 
+     /* build list of hashes with more than one range associated with */
      for (np = obarray; np < obarray + hashcount; np++)
      {
 	 if (np < obarray + hashcount - 1 && !HASHCMP(np, np+1))
@@ -249,8 +250,10 @@ struct match_t *reduce_matches(int localdups)
 	     np = mp-1;
 	}
      }
-
      free(obarray);
+
+     /* time to remove duplicates */
+
      return reduced;
 }
 
@@ -306,8 +309,7 @@ main(int argc, char *argv[])
 	{
 	    struct range_t	*rp = reduced->matches+i;
 
-	    printf("%s:%d:%d\n", 
-		   rp->file, rp->start, rp->end);
+	    printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
 	}
 	printf("-\n");
     }
