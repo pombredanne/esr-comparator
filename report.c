@@ -283,7 +283,7 @@ static int sortmatch(const void *a, const void *b)
 void emit_report(struct sorthash_t *obarray, int hashcount)
 /* report our results */
 {
-    struct match_t *hitlist, *match;
+    struct match_t *hitlist, *match, *copy;
     int mergecount;
 
     hitlist = reduce_matches(obarray, &hashcount);
@@ -292,20 +292,27 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
     report_time("%d range groups after merging", mergecount);
     report_time("Reduction done");
 
-    qsort(hitlist, hashcount, sizeof(struct match_t), sortmatch);
-    for (match = hitlist; match < hitlist + hashcount; match++)
-	if (match->nmatches)
+    /*
+     * A little extra effort so we can generate a sirted report.
+     * Compact the match list in order to cut the n log n qsort time
+     */
+    for (copy = match = hitlist; match < hitlist + hashcount; match++)
+	if (match->nmatches && copy < match)
+	    *copy++ = *match;
+    qsort(hitlist, mergecount, sizeof(struct match_t), sortmatch);
+
+    for (match = hitlist; match < hitlist + mergecount; match++)
+    {
+	int	i;
+
+	for (i=0; i < match->nmatches; i++)
 	{
-	    int	i;
+	    struct sorthash_t	*rp = match->matches+i;
 
-	    for (i=0; i < match->nmatches; i++)
-	    {
-		struct sorthash_t	*rp = match->matches+i;
-
-		printf("%s:%d:%d\n",  rp->file, rp->hash.start, rp->hash.end);
-	    }
-	    printf("%%%%\n");
+	    printf("%s:%d:%d\n",  rp->file, rp->hash.start, rp->hash.end);
 	}
+	printf("%%%%\n");
+    }
     /* free(hitlist); */
 }
 
