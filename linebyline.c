@@ -4,6 +4,7 @@ NAME:
    linebyline.c -- line-oriented feature analyzer four source comparisons
 
 ******************************************************************************/
+#include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <regex.h>
@@ -166,7 +167,7 @@ static int filter_pass(const char *line)
     {
 	char	*sp, *tp;
 	char	buf[BUFSIZ];
-	int	changed, insignificant;
+	int	changed;
 
 	/* change all punctuation to spaces */
 	buf[0] = ' ';
@@ -264,7 +265,7 @@ feature_t *analyzer_get(const struct filehdr_t *file, FILE *fp, linenum_t *linen
 void analyzer_free(const char *text)
 /* free a piece of storage previously handed to shredtree */
 {
-    free(text);
+    free((char *)text);
 }
 
 void analyzer_dump(char *buf)

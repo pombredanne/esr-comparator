@@ -115,8 +115,7 @@ int shredfile(struct filehdr_t *file,
 /* emit hash section for specified file */
 {
     FILE *fp;
-    char buf[BUFSIZ];
-    int i, linecount, accepted;
+    int i, accepted;
     linenum_t	linenumber;
     shred *display;
     feature_t *feature;
