@@ -3,11 +3,39 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <string.h>
 #include "shred.h"
+
+struct scf_t
+{
+    char	*name;
+    FILE	*fp;
+    char	*normalization;
+    int		shred_size;
+    char	*hash_method;
+    char	*generator_program;
+    struct scf_t *next;
+};
+static struct scf_t dummy_scf, *scf_head = &dummy_scf;
 
 static int chunk_count, sort_count;
 static struct hash_t *chunk_buffer;
 static struct sorthash_t *sort_buffer;
+
+static int is_scf_file(const char *file)
+/* is the specified file an SCF hash list? */
+{
+    char	buf[10];
+    FILE	*fp = fopen(file, "r");
+
+    if (!fgets(buf, sizeof(buf), fp))
+    {
+	fclose(fp);
+	return(0);
+    }
+    fclose(fp);
+    return(!strncmp(buf, "#SCF-A ", 7));
+}
 
 /* 
  * We differentiate these two functions in order to avaid the memory
@@ -28,7 +56,7 @@ static void filehook(struct hash_t hash, const char *file)
 }
 
 
-static void corehook(struct hash_t hash, const char *file)
+void corehook(struct hash_t hash, const char *file)
 /* hook to store hash and file */
 {
     sort_buffer = (struct sorthash_t *)realloc(sort_buffer, 
@@ -48,7 +76,7 @@ static void generate_shredfile(const char *tree, FILE *ofp)
 
     list = sorted_file_list(tree, &file_count);
 
-    fputs("#SCIF-A 1.0\n", ofp);
+    fputs("#SCF-A 1.0\n", ofp);
     fputs("Generator-Program: comparator 1.0\n", ofp);
     fputs("Hash-Method: MD5\n", ofp);
     fprintf(ofp, "Normalization: %s\n", rws ? "remove_whitespace" : "none");
@@ -76,30 +104,69 @@ static void generate_shredfile(const char *tree, FILE *ofp)
     }
 }
 
-static void generate_shredlist(int argc, char *argv[])
-/* generate an in-core list of sorthash structures */
+static void merge_tree(char *tree)
+/* add to the in-core list of sorthash structures from a tree */
 {
-    int	i, file_count;
+    char	**place, **list;
+    int	oldcount, file_count;
 
-    sort_buffer = (struct sorthash_t*)calloc(sizeof(struct sorthash_t),1);
-    sort_count = 0;
+    oldcount = sort_count;
+    fprintf(stderr, "%% Reading %s...", tree);
+    list = sorted_file_list(tree, &file_count);
+    for (place = list; place < list + file_count; place++)
+	shredfile(*place, corehook);
+    fprintf(stderr, "%d entries\n", sort_count - oldcount);
+    free(list);
+}
 
-    for (i = 0; i < argc; i++)
+static void init_scf(char *file)
+/* add to the in-core list of sorthash structures from a SCF file */
+{
+    struct scf_t	*new;
+    char	buf[BUFSIZ];
+
+    new = (struct scf_t *)malloc(sizeof(struct scf_t));
+
+    /* read in the SCF metadata block and add it to the in-core list */
+    new->name = strdup(file);
+    new->fp   = fopen(new->name, "r");
+    fgets(buf, sizeof(buf), new->fp);
+    if (strncmp(buf, "#SCF-A ", 8))
     {
-	char	**place, **list;
-	int	oldcount;
-
-	oldcount = sort_count;
-	fprintf(stderr, "%% Reading %s...", argv[i]);
-	list = sorted_file_list(argv[i], &file_count);
-	for (place = list; place < list + file_count; place++)
-	    shredfile(*place, corehook);
-	fprintf(stderr, "%d entries\n", sort_count - oldcount);
-	free(list);
+	fprintf(stderr, 
+		"shredcompare: %s is not a SCF-A file.", 
+		new->name);
+	exit(1);
     }
+    while (fgets(buf, sizeof(buf), new->fp) != NULL)
+    {
+	char	*value;
+
+	if (!strcmp(buf, "%%\n"))
+	    break;
+	value = strchr(buf, ':');
+	*value++ = '\0';
+	while(*value == ' ')
+	    value++;
+	strchr(value, '\n')[0] = '\0';
+
+	if (!strcmp(buf, "Normalization"))
+	    new->normalization = strdup(value);
+	else if (!strcmp(buf, "Shred-Size"))
+	    new->shred_size = atoi(value);
+	else if (!strcmp(buf, "Hash-Method"))
+	    new->hash_method = strdup(value);
+	else if (!strcmp(buf, "Generator-Program"))
+	    new->generator_program = strdup(value);
+    }
+
+    new->name = strdup(file);
+    new->next = scf_head;
+    scf_head = new;
 }
 
 void report_time(char *legend, ...)
+/* report on time since last report_mark */
 {
     static time_t mark_time;
     time_t endtime = time(NULL);
@@ -126,6 +193,7 @@ main(int argc, char *argv[])
     extern int	optind;		/* set by getopt */
 
     int status, file_only, compile_only;
+    struct scf_t	*scf;
 
     compile_only = file_only = 0;
     while ((status = getopt(argc, argv, "cd:hs:w")) != EOF)
@@ -155,7 +223,7 @@ main(int argc, char *argv[])
 	case 'h':
 	default:
 	    fprintf(stderr,"usage: shredtree [-c] [-d dir ] [-h] [-s shredsize] [-w] [-x] path\n");
-	    fprintf(stderr,"  -c      = generate SCIF files\n");
+	    fprintf(stderr,"  -c      = generate SCF files\n");
 	    fprintf(stderr,"  -d dir  = change directory before digesting.\n");
 	    fprintf(stderr,"  -h      = help (display this message).\n");
 	    fprintf(stderr,"  -s size = set shred size (default %d)\n",
@@ -166,41 +234,104 @@ main(int argc, char *argv[])
 	}
     }
 
-    if (compile_only)
-	generate_shredfile(argv[optind], stdout);
+    if (!compile_only)
+    {
+	sort_buffer = (struct sorthash_t*)calloc(sizeof(struct sorthash_t),1);
+	sort_count = 0;
+    }
+
+    report_time(NULL);
+    for(; optind < argc; optind++)
+    {
+	char	*source = argv[optind];
+
+	if (is_scf_file(source))
+	    init_scf(source);
+	else if (compile_only)
+	{
+	    char	*outfile = alloca(strlen(source) + 4);
+	    FILE	*ofp;
+
+	    strcpy(outfile, source);
+	    strcat(outfile, ".scf");
+	    ofp = fopen(outfile, "w");
+	    if (!ofp)
+	    {
+		fprintf(stderr, "comparator: couldn't open output file %s\n",
+			outfile);
+		exit(1);
+	    }
+	    generate_shredfile(source, ofp);
+	    fclose(ofp);
+	}
+	else
+	    merge_tree(source);
+    }
+
+    /* if there were no SCFs, create a dummy one */
+    if (scf_head == &dummy_scf)
+    {
+	dummy_scf.hash_method = "MD5";
+	dummy_scf.normalization = rws ? "remove_whitespace" : "none";
+	dummy_scf.shred_size = shredsize;
+	dummy_scf.generator_program = "comparator 1.0";
+    }
     else
     {
-	struct scif_t	localblock;
+	/* consistency checks on the SCFs */
+	for (scf = scf_head; scf->next; scf = scf->next)
+	{
+	    struct scf_t	*next = scf + 1;
 
-	localblock.hash_method = "MD5";
-	localblock.normalization = rws ? "remove_whitespace" : "none";
-	localblock.shred_size = shredsize;
-	localblock.generator_program = "comparator 1.0";
+	    if (strcmp(scf->normalization, next->normalization))
+	    {
+		fprintf(stderr, 
+			"shredcompare: normalizations of %s and %s don't match\n",
+			scf->name, next->name);
+		exit(1);
+	    }
+	    else if (scf->shred_size != next->shred_size)
+	    {
+		fprintf(stderr, 
+			"shredcompare: shred sizes of %s and %s don't match\n",
+			scf->name, next->name);
+		exit(1);
 
-	report_time(NULL);
-	generate_shredlist(argc-optind, argv+optind);
+	    }
+	    else if (strcmp(scf->hash_method, next->hash_method))
+	    {
+		fprintf(stderr, 
+			"shredcompare: hash methods of %s and %s don't match\n",
+			scf->name, next->name);
+		exit(1);
+	    }
+	}
+
+	/* finish reading in all SCFs */
+	for (scf = scf_head; scf->next; scf = scf->next)
+	{
+	    merge_scf(scf->name, scf->fp);
+	    fclose(scf->fp);
+	}
+
+    }
+
+    if (!compile_only)
+    {
+	/* now we're ready to emit the report */
+	puts("#SCF-B 1.0");
+	printf("Hash-Method: %s\n", scf_head->hash_method);
+	puts("Merge-Program: comparator 1.0");
+	printf("Normalization: %s\n", scf_head->normalization);
+	printf("Shred-Size: %d\n", scf_head->shred_size);
+	puts("%%");
+
 	report_time("Hash merge done, %d entries", sort_count);
 	sort_hashes(sort_buffer, sort_count);
 	report_time("Sort done");
-	emit_report(&localblock, sort_buffer, sort_count);	
-    }
 
-#if 0
-    else
-    {
-	int	hashcount;
-	struct sorthash_t *obarray;
-	struct scif_t	*sciflist;
-
-	report_time(NULL);
-	sciflist = init_merge(argc-optind, argv+optind);
-	obarray = merge_hashes(sciflist, argc-optind, &hashcount);
-	report_time("Hash merge done, %d entries", hashcount);
-	sort_hashes(obarray, hashcount);
-	report_time("Sort done");
-	emit_report(sciflist, obarray, hashcount);
+	emit_report(sort_buffer, sort_count);
     }
-#endif /* FOO */
 
     exit(0);
 }

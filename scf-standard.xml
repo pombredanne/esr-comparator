@@ -1,4 +1,4 @@
-$Id: interchange,v 1.1 2003/09/03 03:04:51 esr Exp esr $
+$Id: interchange,v 1.2 2003/09/03 03:43:41 esr Exp esr $
 
 As of September 2003 there are several individuals and research groups engaged
 in building tools for doing analysis of similarities among source-code trees.
@@ -100,7 +100,7 @@ We also need a common format for match lists.  The format should be
 able to describe what reduction and filtering steps were performed.
 
 The remainder of this document describes file formats to fill these needs.
-These formats will be known as SCIF (source Comparison Interchange Format)
+These formats will be known as SCF (source Comparison Interchange Format)
 files, pronounced "skiff".
 
 Each format consists of three sections: an identification line,
@@ -118,9 +118,9 @@ Metadata tags short be written out in ASCII sort order of the tag.
 The ordering rules give every data-set a canonical form so that
 operations like diff(1) or comm(1) can give meaningful results.
 
-SCIF-A:
+SCF-A:
 
-This is the format for hash lists.  The identifier is 'SCIF-A'.  At version
+This is the format for hash lists.  The identifier is 'SCF-A'.  At version
 1.0, the following metadata tags are defined:
 
 Normalization: (mandatory)
@@ -171,9 +171,9 @@ This unpleasant binary format has been chosen to make processing as
 fast as possible, because shred data sets are quite large in holding
 down I/O is an important consideration.
 
-SCIF-B:
+SCF-B:
 
-This is the format for match lists. The identifier is 'SCIF-B'.  At version
+This is the format for match lists. The identifier is 'SCF-B'.  At version
 1.0, the following metadata tags are defined:
 
 Filtering: (optional)
@@ -205,6 +205,6 @@ then by end line.  Ranges within range sets should be sorted by natural
 order.  Range sets should be sorted by the natural order of their first
 member.
 
-It is strongly recommended that when a SCIF-B file is generated from
-SCIF-A files, the Normalization and Shred-Size headers should be copied
+It is strongly recommended that when a SCF-B file is generated from
+SCF-A files, the Normalization and Shred-Size headers should be copied
 into the result.

@@ -30,33 +30,23 @@ struct sorthash_t
     char		*file;
 };
 
-struct scif_t
-{
-    char	*name;
-    FILE	*fp;
-    char	*normalization;
-    int		shred_size;
-    char	*hash_method;
-    char	*generator_program;
-    int		hashcount;
-};
-
 /* control bits, meant to be set at startup */
 extern int c_only;
 extern int rws;
 extern int debug;
 extern int shredsize;
 
+/* main.c functions */
+extern void report_time(char *legend, ...);
+extern void corehook(struct hash_t hash, const char *file);
+
 /* shredtree.c functions */
 extern char **sorted_file_list(const char *, int *);
 extern void shredfile(const char *, void (*hook)(struct hash_t, const char *));
-extern struct scif_t *init_merge(int argc, char *argv[]);
-extern struct sorthash_t *merge_hashes(struct scif_t *scif, int sciflen, 
-				       int *count);
 extern void sort_hashes(struct sorthash_t *hashlist, int hashcount);
-extern void emit_report(struct scif_t *, 
-			struct sorthash_t *obarray, int hashcount);
-extern void report_time(char *legend, ...);
 
+/* shredcompare.c functions */
+extern void merge_scf(const char *, FILE *);
+extern void emit_report(struct sorthash_t *obarray, int hashcount);
 
 /* shred.h ends here */

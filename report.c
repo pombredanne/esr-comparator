@@ -19,7 +19,7 @@ struct item
 dummy_item;
 static struct item *head = &dummy_item;
 
-static struct scif_t *sciflist;
+static struct scf_t *scflist;
 
 struct range_t
 {
@@ -39,156 +39,46 @@ struct match_t
 dummy_match;
 static struct match_t *reduced = &dummy_match;
 
-static void file_intern(const char *file)
-/* stash the name of a file */
-{
-    struct item *new;
-
-    new = (struct item *)malloc(sizeof(struct item));
-    new->file = strdup(file);
-    new->next = head;
-    head = new;
-}
-
-struct scif_t *init_merge(int argc, char *argv[])
-{
-    struct scif_t *sp;
-
-    /* set up metadata blocks for the hash files */
-    sciflist = (struct scif_t *)calloc(sizeof(struct scif_t), argc);
-    for (sp = sciflist; sp < sciflist + argc; sp++)
-    {
-	char	buf[BUFSIZ];
-
-	sp->name = strdup(argv[sp - sciflist]);
-	sp->fp   = fopen(sp->name, "r");
-	fgets(buf, sizeof(buf), sp->fp);
-	if (strncmp(buf, "#SCIF-A ", 8))
-	{
-	    fprintf(stderr, 
-		    "shredcompare: %s is not a SCIF-A file.", 
-		    sp->name);
-	    exit(1);
-	}
-	while (fgets(buf, sizeof(buf), sp->fp) != NULL)
-	{
-	    char	*value;
-
-	    if (!strcmp(buf, "%%\n"))
-		break;
-	    value = strchr(buf, ':');
-	    *value++ = '\0';
-	    while(*value == ' ')
-		value++;
-	    strchr(value, '\n')[0] = '\0';
-
-	    if (!strcmp(buf, "Normalization"))
-		sp->normalization = strdup(value);
-	    else if (!strcmp(buf, "Shred-Size"))
-		sp->shred_size = atoi(value);
-	    else if (!strcmp(buf, "Hash-Method"))
-		sp->hash_method = strdup(value);
-	    else if (!strcmp(buf, "Generator-Program"))
-		sp->generator_program = strdup(value);
-	}
-    }
-
-    /* consistency checks */
-    for (sp = sciflist; sp < sciflist + argc-1; sp++)
-    {
-	struct scif_t	*next = sp + 1;
-
-	if (strcmp(sp->normalization, next->normalization))
-	{
-	    fprintf(stderr, 
-		    "shredcompare: normalizations of %s and %s don't match\n",
-		    sp->name, next->name);
-	    exit(1);
-	}
-	else if (sp->shred_size != next->shred_size)
-	{
-	    fprintf(stderr, 
-		    "shredcompare: shred sizes of %s and %s don't match\n",
-		    sp->name, next->name);
-	    exit(1);
-
-	}
-	else if (strcmp(sp->hash_method, next->hash_method))
-	{
-	    fprintf(stderr, 
-		    "shredcompare: hash methods of %s and %s don't match\n",
-		    sp->name, next->name);
-	    exit(1);
-	}
-    }
-
-    return(sciflist);
-}
-
-struct sorthash_t *merge_hashes(struct scif_t *sciflist, int sciflen, int *count)
+void merge_scf(const char *name, FILE *fp)
 /* merge hashes from specified files into an in-code list */
 {
-    struct scif_t *sp;
-    long total;
-    struct sorthash_t *obarray;
-    int hashcount;
-    struct stat sb;
+    u_int32_t	sectcount;
+    int hashcount = 0;
 
-    /* compute total data to be read, we'll use this for the progress meter */
-    total = 0;
-    for (sp = sciflist; sp < sciflist + sciflen; sp++)
+    fprintf(stderr, "%% Reading %s...   ", name);
+    fread(&sectcount, sizeof(u_int32_t), 1, fp);
+    sectcount = ntohl(sectcount);
+    while (sectcount--)
     {
-	stat(sp->name, &sb);
-	total += sb.st_size - ftell(sp->fp);
-    }
-    obarray=(struct sorthash_t *)calloc(sizeof(struct sorthash_t),
-					   total/sizeof(struct hash_t));
-    if (!obarray)
-    {
-	fprintf(stderr, "shredcompare: insufficient memory\n");
-	exit(1);
-    }
+	char	buf[BUFSIZ];
+	linenum_t	chunks;
+	struct item *new;
 
-    /* read in all hashes */
-    hashcount = 0;
-    for (sp = sciflist; sp < sciflist + sciflen; sp++)
-    {
-	u_int32_t	sectcount;
+	fgets(buf, sizeof(buf), fp);
+	*strchr(buf, '\n') = '\0';
+	new = (struct item *)malloc(sizeof(struct item));
+	new->file = strdup(name);
+	new->next = head;
+	head = new;
+	fread(&chunks, sizeof(linenum_t), 1, fp);
+	chunks = FROMNET(chunks);
 
-	fprintf(stderr, "Reading %s...   ", sp->name);
-	fread(&sectcount, sizeof(u_int32_t), 1, sp->fp);
-	sectcount = ntohl(sectcount);
-	while (sectcount--)
+	while (chunks--)
 	{
-	    char	buf[BUFSIZ];
-	    linenum_t	chunks;
+	    struct hash_t	this;
 
-	    fgets(buf, sizeof(buf), sp->fp);
-	    *strchr(buf, '\n') = '\0';
-	    file_intern(buf);			/* real work done here */
-	    fread(&chunks, sizeof(linenum_t), 1, sp->fp);
-	    chunks = FROMNET(chunks);
-
-	    while (chunks--)
-	    {
-		struct hash_t	this;
-
-		fread(&this, sizeof(struct hash_t), 1, sp->fp);
-		this.start = FROMNET(this.start);
-		this.end = FROMNET(this.end);
-		obarray[hashcount].file = head->file;
-		obarray[hashcount].hash = this;
-		hashcount++;
-		sp->hashcount++;
-		if (hashcount % 10000 == 0)
-		    fprintf(stderr, "\b\b\b%02.0f%%", (ftell(sp->fp) / (total * 0.01)));
-	    }
+	    fread(&this.hash, sizeof(struct hash_t), 1, fp);
+	    this.start = FROMNET(this.start);
+	    this.end = FROMNET(this.end);
+	    corehook(this, head->file);
+	    hashcount++;
+#ifdef FIXME
+	    if (hashcount % 10000 == 0)
+		fprintf(stderr,"\b\b\b%02.0f%%",(ftell(fp) / (total * 0.01)));
+#endif
 	}
-	fprintf(stderr, "\b\b\b100%%...done, %d entries\n", sp->hashcount);
     }
-
-    *count = hashcount;
-    return obarray;
+    fprintf(stderr, "\b\b\b100%%...done, %d entries\n", hashcount);
 }
 
 static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
@@ -414,13 +304,14 @@ static int sortmatch(void *a, void *b)
     return(0);
 }
 
-void emit_report(struct scif_t *scif, 
-		 struct sorthash_t *obarray, int hashcount)
+void emit_report(struct sorthash_t *obarray, int hashcount)
 {
     struct match_t *hitlist, *sorted, *match;
     int i, matchcount;
 
 #ifdef ODEBUG
+    struct sorthash_t	*np;
+
     for (np = obarray; np < obarray + hashcount; np++)
 	printf("%d: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x %s:%d:%d\n", 
 	       np-obarray, 
@@ -446,13 +337,6 @@ void emit_report(struct scif_t *scif,
     hitlist = reduce_matches(obarray, hashcount);
     report_time("Reduction done");
 
-    puts("#SCIF-B 1.0");
-    printf("Hash-Method: %s\n", scif->hash_method);
-    puts("Merge-Program: comparator 1.0");
-    printf("Normalization: %s\n", scif->normalization);
-    printf("Shred-Size: %d\n", scif->shred_size);
-    puts("%%");
-
     /* we go through a little extra effort to emit a sorted list */
     matchcount = 0;
     for (match = hitlist; match->next; match = match->next)
@@ -476,7 +360,7 @@ void emit_report(struct scif_t *scif,
 
 	    printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
 	}
-	printf("-\n");
+	printf("%%%%\n");
     }
 }
 
