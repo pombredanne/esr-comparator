@@ -344,9 +344,20 @@ comparisons.</para>
 </variablelist>
 
 <para>The data section consists of a statistics block followed by a
-sequence of range sets.  The statistics block consists of ant number 
+sequence of range sets.  The statistics block consists of any number 
 of count lines followed by a %%\n section marker. Each linecount line
-consists of two colon-separated fields, a tree name and a line count.</para>
+consists of four colon-separated fields, 
+
+<orderedlist>
+<listitem><para>The name of a tree</para></listitem>
+<listitem><para>A count of chunks containing files from the tree</para></listitem>
+<listitem><para>A count of common lines from the tree</para></listitem>
+<listitem><para>The total line count of the tree</para></listitem>
+</orderedlist>
+
+
+
+a tree name and a line count.</para>
 
 <para>Each range set consists of two or more ranges followed by a line
 containing a %%\n section marker.  A range is represented as four

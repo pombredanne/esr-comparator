@@ -67,6 +67,9 @@ extern int shredfile(struct filehdr_t *,
 extern void sort_hashes(struct sorthash_t *hashlist, int hashcount);
 
 /* shredcompare.c functions */
-extern void emit_report(struct sorthash_t *obarray, int hashcount);
+extern void emit_report1(struct sorthash_t *obarray, int hashcount);
+extern void emit_report2(void);
+extern int match_count(const char *name);
+extern int line_count(const char *name);
 
 /* shred.h ends here */

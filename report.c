@@ -339,11 +339,13 @@ static int sortmatch(const void *a, const void *b)
     return(0);
 }
 
-void emit_report(struct sorthash_t *obarray, int hashcount)
-/* report our results */
+static struct match_t *hitlist;
+static int mergecount;
+
+void emit_report1(struct sorthash_t *obarray, int hashcount)
+/* report our results (header portion) */
 {
-    struct match_t *hitlist, *match, *copy;
-    int mergecount;
+    struct match_t *match, *copy;
 
     hitlist = reduce_matches(obarray, &hashcount);
     if (debug)
@@ -360,6 +362,15 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
 	if (match->nmatches > 0 && copy < match)
 	    *copy++ = *match;
     mergecount = (copy - hitlist);
+
+    printf("Matches: %d\n", mergecount);
+ }
+
+void emit_report2(void)
+/* report our results (matches) */
+{
+    struct match_t *match;
+
     qsort(hitlist, mergecount, sizeof(struct match_t), sortmatch);
 
     for (match = hitlist; match < hitlist + mergecount; match++)
@@ -396,5 +407,40 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
     }
     /* free(hitlist); */
 }
+
+int match_count(const char *name)
+/* return count of matches with given tree in them */
+{
+    struct match_t *match;
+    int i, count = 0;
+
+    for (match = hitlist; match < hitlist + mergecount; match++)
+	for (i=0; i < match->nmatches; i++)
+	    if (strncmp(name, match->matches[i].file->name, strlen(name)))
+	    {
+		count++;
+		break;
+	    }
+
+    return(count);
+}
+
+int line_count(const char *name)
+/* return number of lines from given tree in matching segments */
+{
+    struct match_t *match;
+    int i, count = 0;
+
+    for (match = hitlist; match < hitlist + mergecount; match++)
+	for (i=0; i < match->nmatches; i++)
+	    if (strncmp(name, match->matches[i].file->name, strlen(name)))
+	    {
+		count += match->matches[i].hash.end -  match->matches[i].hash.start + 1;
+		break;
+	    }
+
+    return(count);
+}
+
 
 /* report.c ends here */

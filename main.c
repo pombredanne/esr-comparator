@@ -601,15 +601,23 @@ main(int argc, char *argv[])
     puts("Merge-Program: comparator " VERSION);
     printf("Normalization: %s\n", scflist->normalization);
     printf("Shred-Size: %d\n", scflist->shred_size);
-    puts("%%");
-    for (scf = scflist; scf->next; scf = scf->next)
-	printf("%s:%d\n", scf->name, scf->totallines);
-    puts("%%");
 
     report_time("Hash merge done, %d shreds", sort_count);
     sort_hashes(sort_buffer, sort_count);
     report_time("Sort done");
-    emit_report(sort_buffer, sort_count);
+
+    emit_report1(sort_buffer, sort_count);
+
+    puts("%%");
+    for (scf = scflist; scf->next; scf = scf->next)
+	printf("%s:%d:%d:%d\n", 
+	       scf->name, 
+	       match_count(scf->name), 
+	       line_count(scf->name), 
+	       scf->totallines);
+    puts("%%");
+
+    emit_report2();
 
     exit(0);
 }
