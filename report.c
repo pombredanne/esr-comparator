@@ -107,30 +107,30 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int hashcount)
      unsigned int retry, nonuniques, progress;
      struct sorthash_t *mp, *np;
 
-	/*
-	 * To reduce the size of the in-core working set, we do a 
-	 * a pre-elimination of duplicates based on hash key alone, in
-	 * linear time.  This may leave in the the array hashes that
-	 * all point to the same tree.  We'll catch those in a later phase.
-	 * The technique: first mark...
-	 */
-	if (!HASHCMP(obarray, obarray+1))
-	    obarray[0].hash.start = UNIQUE_FLAG;
-	for (np = obarray+1; np < obarray + hashcount-1; np++)
-	    if (!HASHCMP(np, np-1) && !HASHCMP(np, np+1))
-		np->hash.start = UNIQUE_FLAG;
-	if (!HASHCMP(obarray+hashcount-2, obarray+hashcount-1))
-	    obarray[hashcount-1].hash.start = UNIQUE_FLAG;
-	/* ...then sweep. */
-	for (mp = np = obarray; np < obarray + hashcount; np++)
-	    if (np->hash.start != UNIQUE_FLAG && mp < np)
-		*mp++ = *np;
-	/* now we get to reduce the memory footprint */
-	report_time("Compaction reduced %d shreds to %d", 
-		    hashcount, mp - obarray);
-	hashcount = mp - obarray;
-	obarray = (struct sorthash_t *)realloc(obarray, 
-			       sizeof(struct sorthash_t)* hashcount);
+    /*
+     * To reduce the size of the in-core working set, we do a 
+     * a pre-elimination of duplicates based on hash key alone, in
+     * linear time.  This may leave in the the array hashes that
+     * all point to the same tree.  We'll catch those in a later phase.
+     * The technique: first mark...
+     */
+    if (!HASHCMP(obarray, obarray+1))
+	obarray[0].hash.start = UNIQUE_FLAG;
+    for (np = obarray+1; np < obarray + hashcount-1; np++)
+	if (!HASHCMP(np, np-1) && !HASHCMP(np, np+1))
+	    np->hash.start = UNIQUE_FLAG;
+    if (!HASHCMP(obarray+hashcount-2, obarray+hashcount-1))
+	obarray[hashcount-1].hash.start = UNIQUE_FLAG;
+    /* ...then sweep. */
+    for (mp = np = obarray; np < obarray + hashcount; np++)
+	if (np->hash.start != UNIQUE_FLAG && mp < np)
+	    *mp++ = *np;
+    /* now we get to reduce the memory footprint */
+    report_time("Compaction reduced %d shreds to %d", 
+		hashcount, mp - obarray);
+    hashcount = mp - obarray;
+    obarray = (struct sorthash_t *)realloc(obarray, 
+			   sizeof(struct sorthash_t)* hashcount);
 
      /* build list of hashes with more than one range associated with */
      nonuniques = progress = 0;
@@ -200,7 +200,7 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int hashcount)
      }
 #endif /* DEBUG */
 
-     /* time to remove duplicates */
+     /* time to merge overlapping shreds */
      do {
 	 retry = 0;
 	 for (sp = reduced; sp->next; sp = sp->next)
