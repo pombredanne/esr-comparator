@@ -71,10 +71,21 @@ static int normalize(char *buf)
 {
     if (remove_comments && remove_braces)	/* remove_c_comments */
     {
-	char *start = strstr(buf, "/*"), *end = strstr(buf, "*/");
+	char	*ss = strstr(buf, "//");
 
-	if (start && end && start < end)
-	    strcpy(start, end+2);
+	if (ss)
+	    *ss = '\0';
+	else
+	{
+	    char *start = strstr(buf, "/*"), *end = strstr(buf, "*/");
+
+	    if (start && end && start < end)
+		strcpy(start, end+2);
+	    else if (start && !end)
+		*start = '\0';
+	    else if (end && !start)
+		*end = '\0';
+	}
     }
     if (remove_whitespace)	/* strip whitespace, ignore blank lines */
     {

@@ -100,8 +100,11 @@ applies C-language-specific normalization; { and } characters are
 removed.  This is recommended for comparing C code; it prevents the
 comparison from being fooled by differences in indent style.</para>
 
-<para>The <option>-r</option> option removes comments.  This is 
-only effective in conjunction with <option>-C</option>.</para>
+<para>The <option>-r</option> option removes comments.  This is only
+effective in conjunction with <option>-C</option>. All // comments,
+but only "winged" /* comments with the start and end of comment on the
+same line are ignored.  Block /* comments are retained, but the
+beginning /* and ending */ are ignored, </para>
 
 <para>The <option>-x</option> enables some debugging output.  It
 is for developers; if you need to understand it, read the code.</para>
