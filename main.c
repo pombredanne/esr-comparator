@@ -370,6 +370,21 @@ void report_time(char *legend, ...)
     mark_time = endtime;
 }
 
+static FILE *redirect(const char *outfile)
+/* reditrect output to specified file */
+{
+    if (outfile)
+    {
+	if (freopen(outfile, "w", stdout) == NULL)
+	{
+	    perror("comparator");
+	    exit(1);
+	}
+    }
+
+    return(stdout);
+}
+
 static void usage(void)
 {
     fprintf(stderr,"usage: comparator [-c] [-C] [-d dir ] [-r] [-o file] [-s shredsize] [-v] [-w] [-x] path...\n");
@@ -455,15 +470,6 @@ main(int argc, char *argv[])
 
     report_time(NULL);
 
-    if (outfile)
-    {
-	if (freopen(outfile, "w", stdout) == NULL)
-	{
-	    perror("comparator");
-	    exit(1);
-	}
-    }
-
     /* special case if user gave exactly one tree */
     if (!compile_only && argcount == 1)
     {
@@ -474,7 +480,7 @@ main(int argc, char *argv[])
 	    olddir = getcwd(NULL, 0);	/* may fail off Linux */
 	    chdir(dir);
 	}
-	write_scf(argv[optind], stdout);
+	write_scf(argv[optind], redirect(outfile));
 	exit(0);
     }
 
@@ -586,6 +592,7 @@ main(int argc, char *argv[])
 	dump_array("Consolidated hash list:\n", sort_buffer, sort_count);
 
     /* now we're ready to emit the report */
+    redirect(outfile);
     puts("#SCF-B 2.0");
     printf("Hash-Method: %s\n", scflist->hash_method);
     puts("Merge-Program: comparator " VERSION);
