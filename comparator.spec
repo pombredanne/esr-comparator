@@ -46,7 +46,7 @@ cp comparator.py "$RPM_BUILD_ROOT"${pylib}
 %changelog
 * Tue Mar  9 2004 Eric S. Raymond <esr@snark.thyrsus.com> 2.4-1
 - Fixed strtok() bug apparently introduced by C library change.
-  Added -d and -f options to filterator.
+  Added -n, -f, and -F options to filterator.
 
 * Mon Dec 29 2003 Eric S. Raymond <esr@snark.thyrsus.com> 2.3-1
 - Source RPMs no longer depend on myversion symbol.
