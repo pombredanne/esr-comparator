@@ -418,7 +418,8 @@ static FILE *redirect(const char *outfile)
 
 static void usage(void)
 {
-    fprintf(stderr,"usage: comparator [-c] [-C] [-d dir ] [-m minsize] [-n] [-r] [-o file] [-s shredsize] [-v] [-w] [-x] path...\n");
+    fprintf(stderr,"usage: comparator [-h] [-c] [-C] [-d dir ] [-m minsize] [-n] [-o file] [-s shredsize] [-v] [-x] path...\n");
+    fprintf(stderr,"  -h      = print this help\n");
     fprintf(stderr,"  -c      = generate SCF files\n");
     fprintf(stderr,"  -d dir  = change directory before digesting.\n");
     fprintf(stderr,"  -m size = set minimum size of span to be output.\n");
@@ -443,7 +444,7 @@ main(int argc, char *argv[])
 
     compile_only = file_only = nofilter = 0;
     dir = outfile = NULL;
-    while ((status = getopt(argc, argv, "cd:hm:nN:o:rs:vx")) != EOF)
+    while ((status = getopt(argc, argv, "cd:hm:nN:o:s:vx")) != EOF)
     {
 	switch (status)
 	{
