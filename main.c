@@ -358,8 +358,8 @@ void dump_flags(const int flags, FILE *fp)
 /* dump tokens corresponding to a flag set */
 {
     fputc(' ', fp);
-    if (flags & SIGNIFICANT)
-	fputs(" significant", fp);
+    if (flags & INSIGNIFICANT)
+	fputs(" insignificant", fp);
     if (flags & C_CODE)
 	fputs(" C", fp);
     if (flags & SHELL_CODE)

@@ -65,7 +65,12 @@ static int merge_ranges(struct sorthash_t *p,
     {
 	p[i].hash.start = min(p[i].hash.start, q[i].hash.start);
 	p[i].hash.end   = max(p[i].hash.end, q[i].hash.end);
-	p[i].hash.flags |= q[i].hash.flags;
+	/*
+	 * The insignificance bit in the merged range should be cleared
+	 * if the range being merged in is significant.  This is important;
+	 * it means that significance propagates as spabs merge.
+	 */
+	p[i].hash.flags &=~ q[i].hash.flags;
 	q[i].hash.flags = INTERNAL_FLAG;	/* used only in debug code */
     }
     return(1);
@@ -400,6 +405,15 @@ void emit_report2(void)
 
 	    if (matchsize >= maxsize)
 		maxsize = matchsize;
+
+	    /*
+	     * This odd-looking bit of logic, deals with an
+	     * annoying edge case.  Sometimes we'll get boilerplate C
+	     * stuff in both a C and a text file. To cope, propagate
+	     * insignificance -- if we know from one context that a
+	     * particular span of text is not interesting, declare it
+	     * uninteresting everywhere.
+	     */
 	    flags |= rp->hash.flags;
 	}
 
@@ -408,7 +422,7 @@ void emit_report2(void)
 	 * point of doing it this way is to allow significance bits to 
 	 * propagate through range merges.
 	 */
-	if (maxsize < minsize || !(nofilter || (flags & SIGNIFICANT)))
+	if (maxsize < minsize || (!nofilter && (flags & INSIGNIFICANT)))
 	    continue;
 
 	for (i=0; i < match->nmatches; i++)

@@ -83,12 +83,12 @@ int filter_pass(const char *line)
 /* return flags that apply to this line */
 {
     if (active == 0)
-	return(SIGNIFICANT);
+	return(0);
     else
     {
 	char	*sp, *tp;
 	char	buf[BUFSIZ];
-	int	changed, significant;
+	int	changed, insignificant;
 
 	/* change all punctuation to spaces */
 	buf[0] = ' ';
@@ -132,10 +132,7 @@ int filter_pass(const char *line)
 	} while
 	    (changed);
 
-
-	significant = !(buf[0] == '\0' || strspn(buf, " ") == strlen(buf));
-
-	return (active | (significant ? SIGNIFICANT : 0));
+	return (buf[0] == '\0' || strspn(buf, " ") == strlen(buf));
     }
 }
 

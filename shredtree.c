@@ -228,7 +228,7 @@ int shredfile(struct filehdr_t *file,
 	/* create new shred */
 	display[shredsize-1].line = strdup(buf);
 	display[shredsize-1].start = linecount;
-	display[shredsize-1].flags = filter_pass(buf);
+	display[shredsize-1].flags = filter_pass(buf) ? INSIGNIFICANT : 0;
 
 	/* flush completed chunk */
 	if (accepted >= shredsize)

@@ -31,7 +31,7 @@ struct hash_t
     linenum_t   	start, end;
     hashval_t		hash;
     flag_t		flags;
-#define SIGNIFICANT	0x40	/* something in this is not pure syntax */
+#define INSIGNIFICANT	0x40	/* pure syntax in  a programming language */
 #define C_CODE		0x01	/* identified as C code */
 #define SHELL_CODE	0x02	/* identified as shell code */
 #define CATEGORIZED	0x03	/* we can significance-test this */
