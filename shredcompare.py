@@ -184,7 +184,9 @@ def shredcompare(tree1, tree2, shredsize, verbose):
                 matches[j][1].merge(matches[i][1])
                 matches[i] = None
                 retry = True
-    return filter(lambda x: x, matches)
+    matches = filter(lambda x: x, matches)
+    matches.sort(lambda x, y: cmp(x[0], y[0]))	# by source chunk
+    return matches
 
 if __name__ == '__main__':
     mark_time = None
