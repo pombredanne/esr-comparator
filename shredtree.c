@@ -246,4 +246,6 @@ main(int argc, char *argv[])
 
     for (place = list; place < list + filecount; place++)
 	shredfile(*place);
+
+    exit(0);
 }
