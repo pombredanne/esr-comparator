@@ -25,8 +25,10 @@ class SHIF:
                 self.normalization.sort()
             elif tag == "Shred-Size":
                 self.shredsize = int(value)
-            elif tag == "Hash":
+            elif tag == "Hash-Method":
                 self.hash = value
+            elif tag == "Generator-Program":
+                self.generator = value
             elif tag == "Comment":
                 self.comments.append(value)
     def __check_match(self, other, attr):
@@ -165,8 +167,8 @@ if __name__ == '__main__':
     matches.sort(lambda x, y: cmp(x[0], y[0]))	# by source chunk
     # OK, dump all matches.
     print "#SHIF-B 1.0"
-    print "Filter-Program: shredcompare.py 1.0"
-    print "Hash: MD5"
+    print "Merge-Program: shredcompare.py 1.0"
+    print "Hash-Method: MD5"
     print "Shred-Size: %d" % shiflist[0].shredsize
     print "Normalization:", ",".join(shiflist[0].normalization)
     print "%%"

@@ -222,8 +222,8 @@ main(int argc, char *argv[])
     }
 
     puts("#SHIF-A 1.0");
-    puts("Generator: shredtree 1.0");
-    puts("Hash: MD5");
+    puts("Generator-Program: shredtree 1.0");
+    puts("Hash-Method: MD5");
     printf("Shred-Size: %d\n", shredsize);
     printf("Normalization: %s\n", rws ? "remove_whitespace" : "none");
     puts("%%");

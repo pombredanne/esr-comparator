@@ -93,8 +93,8 @@ if __name__ == '__main__':
             ws = True
     if args:
         print "#SHIF-A 1.0"
-        print "Generator: shredtree.py 1.0"
-        print "Hash: MD5"
+        print "Generator-Program: shredtree.py 1.0"
+        print "Hash-Method: MD5"
         print "Shred-Size: %d" % shredsize
         normalization = []
         if ws: normalization.append("remove_whitespace")
