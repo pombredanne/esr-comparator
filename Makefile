@@ -3,7 +3,7 @@
 VERS=1.0
 
 CODE    = shredtree.c shred.h report.c main.c md5.c md5.h filterator
-DOCS    = README comparator.xml
+DOCS    = README comparator.xml scf-standard.xml
 EXTRAS  = shredtree.py shredcompare.py
 TEST    = test1 test2 test3 test4
 SOURCES = $(CODE) $(DOCS) $(EXTRAS) $(TEST) comparator.spec Makefile
@@ -29,6 +29,9 @@ comparator.1: comparator.xml
 
 comparator.html: comparator.xml
 	xmlto html-nochunks comparator.xml
+
+scf-standard.html: scf-standard.xml
+	xmlto html-nochunks scf-standard.xml
 
 test-a: comparator
 	@comparator test1 test2
