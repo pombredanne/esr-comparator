@@ -7,7 +7,6 @@
 #include <errno.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include "md5.h"
 #include "shred.h"
 
 /* control bits, meant to be set at startup */
@@ -130,12 +129,11 @@ shred;
 static struct hash_t emit_chunk(shred *display, int linecount) 
 /* emit chunk corresponding to current display */
 {
-    struct md5_ctx	ctx;
     int  		i, firstline;
     struct hash_t	out;
 
     /* build completed chunk onto end of array */
-    md5_init_ctx(&ctx);
+    hash_init();
     if (debug)
 	fprintf(stderr, "Chunk:\n");
     for (i = 0; i < shredsize; i++)
@@ -143,9 +141,9 @@ static struct hash_t emit_chunk(shred *display, int linecount)
 	{
 	    if (debug)
 		fprintf(stderr, "%d: '%s'\n", i, display[i].line);
-	    md5_process_bytes(display[i].line, strlen(display[i].line), &ctx);
+	    hash_update(display[i].line, strlen(display[i].line));
 	}
-    md5_finish_ctx(&ctx, (void *)&out.hash);
+    hash_complete(&out.hash);
     firstline = shredsize;
     for (i = shredsize - 1; i >= 0; i--)
 	if (display[i].line)
