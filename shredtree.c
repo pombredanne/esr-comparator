@@ -61,7 +61,7 @@ static int eligible(const char *file)
 		printable++;
 
 	/* are we over the critical percentage? */
-	return (printable/strlen(buf) >= MIN_PRINTABLE);
+	return (printable >= MIN_PRINTABLE * strlen(buf));
     }
 }
 
