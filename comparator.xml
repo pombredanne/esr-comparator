@@ -65,9 +65,9 @@ with the next-error function of Emacs.</para>
 
 <para>A consequence of the method is that
 <application>comparator</application> will find common code segments
-wherever they are.  It is insenstive to rearrangements of the source
+wherever they are.  It is insensitive to rearrangements of the source
 trees.  With appropriate options, code can be normalized at input to
-ignore differences in whitespace and (in C code) brace placenent.  An
+ignore differences in whitespace and (in C code) brace placement.  An
 option to strip comments also exists</para>
 
 <para>The program is capable of generating a hash list for a source
@@ -121,7 +121,7 @@ of unshared things near them, while minimum span size defines the
 smallest features we want to see in the output report.</para>
 
 <para>Normally, <application>comparator</application> performs 
-insignificance filtering before emitting a span into the common-segment
+significance filtering before emitting a span into the common-segment
 report. The <option>-n</option> suppresses this, emitting all common
 spans. See the discussion of significance filtering below.</para>
 
@@ -263,7 +263,7 @@ no possibility of false negatives.</para>
 
 <para>The design of this program accepts some size limits to get high
 performance in the typical case.  The RXOR hash function's performance
-will degrade, possibly leading to comparison errors, on shreds of 512
+will degrade, possibly leading to false positives, on shreds of 512
 or more characters.  Also, comparison will handle maximum of 65536
 lines per file (you will be warned if if this limit is exceeded).  A
 full integer line-number range would increase working-set size by
