@@ -382,6 +382,7 @@ static void usage(void)
     fprintf(stderr,"  -v      = enable progress messages on stderr.\n");
     fprintf(stderr,"  -w      = remove whitespace.\n");
     fprintf(stderr,"  -x      = debug, display chunks in output.\n");
+    fprintf(stderr,"This is comparator version " VERSION ".\n");
     exit(0);
 }
 
