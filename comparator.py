@@ -114,8 +114,8 @@ class CommonReport:
             line = self.fp.readline()
             if not line or line == '%%\n':
                 break
-            (tag, value) = line.split(":")
-            self.trees[tag] = int(value.strip())
+            (tag, chunks, lines, totallines) = line.split(":")
+            self.trees[tag] = (int(value), int(chunks), int(lines))
         # Now read the common-segment stuff
         self.cliques = []
         self.files = {}
@@ -223,7 +223,7 @@ class CommonStatistics:
         self.chunks = report.segment_count()
         self.trees = []
         self.normalization = report.normalization
-        for (tree, totallines) in report.trees.items():
+        for (tree, chunks, lines, totallines) in report.trees.items():
             lines = report.line_count(tree)
             self.trees.append((tree, lines, totallines))
 
