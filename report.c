@@ -55,7 +55,7 @@ static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
  
     /*
      * There are two possible overlap cases.  Either the start line of
-     * each rane in p is within the corresponding range in q or
+     * each range in p is within the corresponding range in q or
      * vice-versa.  If we know all pairs of shreds intersect, we
      * assume they intersect in the same way because the same 
      * hash pair (the same text) is involved each time.
