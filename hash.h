@@ -11,5 +11,6 @@ typedef unsigned char	hashval_t[16];
 void hash_init(void);
 void hash_update(unsigned char *buffer, const int len);
 void hash_complete(hashval_t *hp);
+char *hash_dump(hashval_t hash);
 
 /* hash.h ends */
