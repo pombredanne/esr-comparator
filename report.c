@@ -165,7 +165,7 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int hashcount)
 	}
      }
      free(obarray);
-     fprintf(stderr, "\b\b\b100%% done.");
+     fprintf(stderr, "\b\b\b100%% done.\n");
 
      report_time("%d range groups after removing unique hashes", nonuniques);
 
