@@ -7,13 +7,15 @@ junk = {
         r"return *\(?[a-z]+\)? *;", r"return *\(?-?[01]+\)? *;",
         r"goto +[a-z]+;", r"exit *\([01]\);",
         # Pragmas
-        r'/\* *ARGSUSED *\*/', r'/\* *NOTREACHED *\*/', 
+        r'/\* *ARGSUSED *\*/',
+        r'/\* *NOTREACHED *\*/', 
+        r'/\* *FALL *THRO?UG?H? *\*/',
         # Bare C keywords
         r'\bbreak\b',  r'\bcase\b',r'\bcontinue\b', r'\bdefault\b',
         r'\bdo\b', r'\belse\b', r'\benum\b', r'\bif\b', r'\bgoto\b',
         r'\breturn\b', r'\bswitch\b', r'\bwhile\b',
         r'enum', r'\bint\b', r'\blong\b', r'\bshort\b', r'\bstatic\b',
-        r'\bstruct\b', r'typedef', r'\bunion\b', r'\bvoid\b',
+        r'\bstruct\b', r'\btypedef\b', r'\bunion\b', r'\bvoid\b',
         r'# *define',r'# *endif',r'# *else',r'# *if\b',
         r'# *ifdef\b',r'# *ifndef\b',
         # Comment delimiters with no content
