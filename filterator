@@ -66,7 +66,7 @@ class CommonReport:
     def line_count(self, tree):
         "Number of common lines from a specified tree."
         lines = 0
-        for clique in state.cliques:
+        for clique in self.cliques:
             for (file, start, end) in clique:
                 # We find only the first match in the clique that
                 # is part of the specified tree.  There could be others,
@@ -81,21 +81,23 @@ class CommonReport:
         "Return text corresponding to the nth clique."
         for (file, start, end) in clique:
             try:
-                # Try to deduce the deletia
-                deletia = None
+                # Try to deduce the text_type
+                text_type = None
                 if file.endswith(".c") or file.endswith(".h"):
-                    deletia = "C"
+                    text_type = "C"
                 # Skip to the relevant chunk
                 rfp = open(file)
                 for i in range(start-1):
                     line = rfp.readline()
-                    if not deletia and i == 0:
-                        deletia = deduce_deletia(line)
+                    if not text_type and i == 0:
+                        if "sh" in line:
+                            text_type = "shell"
                 text = ""
                 for i in range(start, end+1):
                     nextline = rfp.readline()
-                    if not deletia and i == 0 and start == 1:
-                        deletia = deduce_deletia(line)
+                    if not text_type and i == 0 and start == 1:
+                        if "sh" in line:
+                            text_type = "shell"
                     if nextline[0] == '%':
                         nextline = '%' + nextline
                     text += nextline
@@ -104,7 +106,17 @@ class CommonReport:
             except IOError:
                 sys.stderr.write("filterator: can't open %s\n" % file)
                 sys.exit(0)
-        return (deletia, text)
+        return (text_type, text)
+
+    def filter_by_size(self, minsize):
+        "Throw out all common segments below a specified size."
+        filtered = []
+        for clique in self.cliques:
+            for (file, start, end) in clique:
+                if end - start + 1 >= minsize:
+                    filtered.append(clique)
+                    break
+        self.cliques = filtered
 
 # Tokens to be removed when checking whether a shred is significant
 junk = {
@@ -172,10 +184,6 @@ def nontrivial(text, filetype):
                 continue
     return text.strip()
 
-def deduce_deletia(line):
-    if "sh" in line:
-        return "shell"
-
 def report_common(state, stats=1,list=1):
     "Generate a report on common code."
     print "Filter-Program: filterator 1.0"
@@ -199,10 +207,8 @@ def report_common(state, stats=1,list=1):
             if start == 1 and end == state.files[file]:
                 print "%% %s:%d-%d: entire (%d matches)" % (file, start, end, len(clique))
                 continue
-            if end - start + 1 < minsize:
-                continue
-            (deletia, text) = state.extract_text(clique)
-            if nofilter or nontrivial(text, deletia):
+            (text_type, text) = state.extract_text(clique)
+            if nofilter or nontrivial(text, text_type):
                  if list:
                     print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(clique))
                     sys.stdout.write(text)
@@ -228,4 +234,7 @@ if __name__ == '__main__':
             debug = 1
 
     state = CommonReport(sys.stdin)
+    if minsize:
+        state.filter_by_size(minsize)
+
     report_common(state)
