@@ -47,6 +47,8 @@ def nontrivial(text, filetype):
                        ';', ':', ',', '.', '%', '^', '&', '|', '*','?',
                        '+', '-', '/', '=', '!', '\n','\t', '\v'):
                 text = text.replace(ch, ' ')
+            if debug:
+                print "Reduced:", `text`
             if savecopy == text:
                 break
             else:
@@ -82,12 +84,12 @@ def report_common():
                     rfp = open(file)
                     for i in range(start-1):
                         line = rfp.readline()
-                        if i == 0:
+                        if not filetype and i == 0:
                             filetype = deduce_filetype(line)
                     text = ""
                     for i in range(start, end+1):
                         nextline = rfp.readline()
-                        if i == 0 and start == 1:
+                        if not filetype and i == 0 and start == 1:
                             filetype = deduce_filetype(line)
                         if nextline[0] == '%':
                             nextline = '%' + nextline
@@ -119,11 +121,11 @@ def report_common():
 
 if __name__ == '__main__':
     try:
-        (optlist, args) = getopt.getopt(sys.argv[1:], 'd:ns:')
+        (optlist, args) = getopt.getopt(sys.argv[1:], 'd:ns:x')
     except getopt.GetoptError:
-        sys.stderr.write("usage: filterator [-d dir] [-n] [-s size]\n")
+        sys.stderr.write("usage: filterator [-d dir] [-n] [-s size] [-x]\n")
         sys.exit(2)
-    nofilter = False
+    nofilter = debug = False
     minsize = 0
     for (opt, val) in optlist:
         if opt == '-d':
@@ -132,6 +134,8 @@ if __name__ == '__main__':
             nofilter = True
         elif opt == '-s':
             minsize = int(val)
+        elif opt == '-x':
+            debug = True
 
     # Read the SCF header
     hash_method = "MD5"
