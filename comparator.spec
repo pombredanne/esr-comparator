@@ -1,13 +1,12 @@
-Summary: fast comparison of large source-code trees
 Name: comparator
-Version: %{myversion}
+Summary: fast comparison of large source-code trees
+Version: 2.3
 Release: 1
 License: GPL
 Group: Utilities
 URL: http://www.catb.org/~esr/comparator/
 Source0: %{name}-%{version}.tar.gz
-#BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-%undefine __check_files
+BuildRoot: %{_tmppath}/%{name}-root
 
 %description
 comparator and filterator are a pair of tools for rapidly finding common
@@ -19,25 +18,36 @@ detecting copyright infringement.
 
 %build
 make
+make comparator.1
 
 %install
-rm -rf $RPM_BUILD_ROOT
-make install
+[ "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf "$RPM_BUILD_ROOT"
+mkdir -p "$RPM_BUILD_ROOT"/usr/bin
+mkdir -p "$RPM_BUILD_ROOT"/usr/share/man/man1/
+pylib=`ls -d /usr/local/lib/python*/site-packages/`
+mkdir -p "$RPM_BUILD_ROOT"${pylib}
+cp comparator filterator "$RPM_BUILD_ROOT"/usr/bin
+cp comparator.1 "$RPM_BUILD_ROOT"/usr/share/man/man1/
+cp comparator.py "$RPM_BUILD_ROOT"${pylib}
 
 %clean
-rm -rf $RPM_BUILD_ROOT
-make uninstall
+[ "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf "$RPM_BUILD_ROOT"
 
 %files
 %defattr(-,root,root,-)
-%doc README comparator.1
-/usr/bin/comparator
-/usr/bin/filterator
-/usr/share/man/man1/comparator.1*
+%doc README COPYING
+%{_bindir}/comparator
+%{_bindir}/filterator
+%{_mandir}/man1/comparator.1*
 /usr/local/lib/python*/site-packages/comparator.py
-/usr/local/lib/python*/site-packages/comparator.pyc
 
 %changelog
+* Mon Dec 29 2003 Eric S. Raymond <esr@snark.thyrsus.com> 2.3-1
+- Source RPMs no longer depend on myversion symbol.
+
+* Wed Dec 24 2003 Eric S. Raymond <esr@snark.thyrsus.com> 2.2-1
+- Better error reporting in comparator.py.
+
 * Sun Sep  7 2003 Eric S. Raymond <esr@snark.thyrsus.com> 
 - Initial build.
 

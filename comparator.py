@@ -6,7 +6,7 @@ class ComparatorException(exceptions.Exception):
         self.retval = retval
 
 class CommonReport:
-    "Capture the state of common-segnent report."
+    "Capture the state of a common-segment report."
     # Template for parsing the output from comparator.
     shredline = re.compile("(.*):([0-9]+):([0-9]+):([0-9]+)")
 
@@ -103,7 +103,7 @@ class CommonReport:
                 rfp.close()
                 break
             except IOError:
-                pass
+                raise ComparatorException("no such file as %s" % file)
         if self.dir:
             os.chdir(olddir)
         return (file, start, end, text)
