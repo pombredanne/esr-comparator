@@ -197,12 +197,14 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int hashcount)
 	     if (!heterogenous)
 		 continue;
 
-#ifdef ODEBUG
-	     printf("*** %d has %d in its clique\n", np-obarray, nmatches);
-	     for (i = 0; i < nmatches; i++)
-		 printf("%d: %s:%d:%d\n", 
-			np-obarray+i, np[i].file, np[i].hash.start, np[i].hash.end);
-#endif /* ODEBUG */
+	     if (debug)
+	     {
+		 printf("*** %d has %d in its clique\n", np-obarray, nmatches);
+		 for (i = 0; i < nmatches; i++)
+		     printf("%d: %s:%d:%d\n", 
+			    np-obarray+i, np[i].file, np[i].hash.start, np[i].hash.end);
+	     }
+
 	     /* passed all tests, keep this set of ranges */
 	     new = (struct match_t *)malloc(sizeof(struct match_t));
 #ifdef DEBUG
@@ -305,6 +307,7 @@ static int sortmatch(void *a, void *b)
 }
 
 void emit_report(struct sorthash_t *obarray, int hashcount)
+/* report our results */
 {
     struct match_t *hitlist, *sorted, *match;
     int i, matchcount;
@@ -313,6 +316,7 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
     {
 	struct sorthash_t	*np;
 
+	puts("Chunk list before reduction.");
 	for (np = obarray; np < obarray + hashcount; np++)
 	    printf("%d: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x %s:%d:%d\n", 
 		   np-obarray, 
