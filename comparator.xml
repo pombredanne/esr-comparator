@@ -19,11 +19,11 @@
   <arg choice='opt'>-c</arg>
   <arg choice='opt'>-C</arg>
   <arg choice='opt'>-d <replaceable>dir</replaceable></arg>
+  <arg choice='opt'>-h</arg>
   <arg choice='opt'>-m <replaceable>minsize</replaceable></arg>
   <arg choice='opt'>-n</arg>
   <arg choice='opt'>-N <replaceable>normalization-spec</replaceable></arg>
   <arg choice='opt'>-o <replaceable>file</replaceable></arg>
-  <arg choice='opt'>-r</arg>
   <arg choice='opt'>-s <replaceable>shredsize</replaceable></arg>
   <arg choice='opt'>-v</arg>
   <arg choice='opt'>-w</arg>
