@@ -2,7 +2,7 @@
 #
 # shredcompare -- find common cliques in shred lists
 #
-import getopt, sys, bsddb
+import os, sys, time, stat, getopt, bsddb
 
 class SHIF:
     "SHIF-A file metadata container."
@@ -76,8 +76,11 @@ class Shred:
         return "%s:%d-%d" % (self.file, self.start, self.end)
     __repr__ = __str__
 
+hashcount = total = 0
+
 def merge_hashes(fp, dict):
     "Read and merge hashes corresponding to one file."
+    global hashcount
     file = fp.readline().rstrip()
     while True:
         line = fp.readline()
@@ -91,6 +94,9 @@ def merge_hashes(fp, dict):
         else:
             oldval = ""
         dict[hashval] = oldval + file + "\t" + start + "\t" + end + "\n"
+        hashcount += 1
+        if hashcount % 10000 == 0:
+            sys.stderr.write("%02.2f%% read.\n" % (fp.tell() / (total * 0.01)))
 
 def item_factory(db):
     "Hide the ugliness that is sequential DB access in a generator."
@@ -100,6 +106,24 @@ def item_factory(db):
             yield db.next()
         except:
             yield None
+
+mark_time = None
+
+def report_time(legend=None):
+    "Report time since last call."
+    global mark_time
+    endtime = time.time()
+    if mark_time:
+        elapsed = endtime - mark_time 
+        hours = elapsed/3600; elapsed %= 3600
+        minutes = elapsed/60; elapsed %= 60
+        seconds = elapsed
+        sys.stderr.write("%% %s: %dh, %dm, %ds\n" % \
+            (legend, hours, minutes, seconds))
+    mark_time = endtime
+
+def filesize(file):
+    return os.stat(file)[stat.ST_SIZE]
 
 if __name__ == '__main__':
     try:
@@ -117,6 +141,7 @@ if __name__ == '__main__':
 	    sys.stderr.write(" -h      = help (display this message).\n");
 	    sys.exit(0);
 
+    report_time()
     shiflist = []
     # Read input metadata
     for file in args:
@@ -124,11 +149,15 @@ if __name__ == '__main__':
     # Metadata sanity check
     for i in range(len(args)-1):
         shiflist[i].compatible(shiflist[i+1])
+    # Compute amount of data to be read
+    total = sum(map(filesize, args))
+    sys.stderr.write("%d bytes of data to be read\n" % total)
     # Read in all hashes
     hashdict = bsddb.hashopen(None, 'c')
     for shif in shiflist:
         while merge_hashes(shif.fp, hashdict):
             continue
+    report_time("Hash merge done, %d hashes" % hashcount)
     # Nuke all unique hashes
     db_cursor = item_factory(hashdict)
     while True:
@@ -138,9 +167,11 @@ if __name__ == '__main__':
         (key, match) = item
         if match.count("\n") == 1:
             del hashdict[key]
+    report_time("Global duplicates removed")
     # Maybe nuke all match sets that don't cross a tree boundary
     if not local_duplicates:
-        pass			# FIXME
+        pass
+    report_time("Local duplicates removed")
     # Turn the remaining matches into match objects, because we're
     # going to want to do logic on them.  We deferred it this long
     # to lower memory usage.
@@ -158,6 +189,7 @@ if __name__ == '__main__':
         matches.append(match)
     # We're done with the database file.
     hashdict.close()
+    report_time("Match objects converted")
     # Merge overlapping ranges if possible.
     # This is O(n**2) in the number of matching chunks.
     # Should performance ever become a problem, break this up into
@@ -189,6 +221,7 @@ if __name__ == '__main__':
                 retry = True
     matches = filter(lambda x: x, matches)
     matches.sort(lambda x, y: cmp(x[0], y[0]))	# by source chunk
+    report_time("Merge complete")
     # OK, dump all matches.
     print "#SHIF-B 1.0"
     print "Merge-Program: shredcompare.py 1.0"
