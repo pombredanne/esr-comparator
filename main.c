@@ -118,22 +118,6 @@ void report_time(char *legend, ...)
     mark_time = endtime;
 }
 
-static void shredreport(int argc, char *argv[])
-/* merge hashes from several files and generate a report to standard output */
-{
-    extern char	*optarg;	/* set by getopt */
-    extern int	optind;		/* set by getopt */
-    int	hashcount;
-    struct sorthash_t *obarray;
-
-    report_time(NULL);
-    obarray = merge_hashes(argc, argv, &hashcount);
-    report_time("Hash merge done, %d entries", hashcount);
-    sort_hashes(obarray, hashcount);
-    report_time("Sort done");
-    emit_report(obarray, hashcount);
-}
-
 main(int argc, char *argv[])
 {
     extern char	*optarg;	/* set by getopt */
@@ -187,8 +171,19 @@ main(int argc, char *argv[])
     if (file_only)
 	generate_shredfile(argv[optind], stdout);
     else
-	shredreport(argc - optind, argv + optind);
+    {
+	int	hashcount;
+	struct sorthash_t *obarray;
+
+	report_time(NULL);
+	obarray = merge_hashes(argc-optind, argv+optind, &hashcount);
+	report_time("Hash merge done, %d entries", hashcount);
+	sort_hashes(obarray, hashcount);
+	report_time("Sort done");
+	emit_report(obarray, hashcount);
+    }
     exit(0);
+
 }
 
 /* main.c ends here */
