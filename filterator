@@ -70,7 +70,7 @@ if __name__ == '__main__':
     merge_program = None
     id = sys.stdin.readline()
     if not id.startswith("#SCF-B "):
-        sys.stderr.write("filterator: input is not a SCF-B file.")
+        sys.stderr.write("filterator: input is not a SCF-B file.\n")
         sys.exit(1)
     while True:
         line = sys.stdin.readline()
@@ -87,11 +87,11 @@ if __name__ == '__main__':
         elif tag == "Hash-Method":
             hash_method = value
 
-    print "#SCF-C 1.0"
     print "Filter-Program: filterator 1.0"
+    print "Filtering:", ("C-syntax", "none")[nofilter]
     print "Hash-Method: MD5"
     if merge_program:
-        print "Merge=Program:", merge_program
+        print "Merge-Program:", merge_program
     print "Normalization:", normalization
     print "Shred-Size: %d" % shredsize
     print "%%"
