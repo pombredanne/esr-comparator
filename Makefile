@@ -5,7 +5,7 @@
 
 VERS=2.0
 
-CODE    = shredtree.c shred.h report.c hash.c filter.c main.c md5.c md5.h \
+CODE    = shredtree.c shred.h report.c hash.c filter.c main.c \
 		hash.h hashtab.h \
 		filterator 
 SCRIPTS = hashgen.py setup.py
@@ -28,8 +28,8 @@ shredtree.o: shredtree.c shred.h hash.h
 	$(CC) -c $(CFLAGS) shredtree.c 
 report.o: report.c shred.h hash.h
 	$(CC) -c $(CFLAGS) report.c 
-comparator: main.o hash.o filter.o shredtree.o md5.o report.o
-	$(CC) $(CFLAGS) main.o hash.o filter.o shredtree.o md5.o report.o $(LDFLAGS) -o comparator
+comparator: main.o hash.o filter.o shredtree.o report.o
+	$(CC) $(CFLAGS) main.o hash.o filter.o shredtree.o report.o $(LDFLAGS) -o comparator
 
 hashtab.h: hashgen.py
 	python hashgen.py >hashtab.h
