@@ -12,9 +12,9 @@ NAME:
 #include "shred.h"
 
 /* control bits */
-int remove_braces = 0;
-int remove_whitespace = 0;
-int remove_comments = 0;
+static int remove_braces = 0;
+static int remove_whitespace = 0;
+static int remove_comments = 0;
 
 static char *c_patterns[] = {
     /* Idioms that don't convey any meaning in isolation */
@@ -51,7 +51,7 @@ static regex_t shell_regexps[sizeof(shell_patterns)/sizeof(*shell_patterns)];
 
 static linenum_t	linecount;
 
-void analyzer_init(void)
+void analyzer_init(unsigned int flags)
 /* initialize line filtering */
 {
     int i;
@@ -70,6 +70,13 @@ void analyzer_init(void)
 		    shell_patterns[i]);
 	    exit(1);
 	}
+
+    if (flags & CAPC_FLAG)
+	remove_braces = remove_whitespace = 1;
+    if (flags & R_FLAG)
+	remove_comments = 1;
+    if (flags & W_FLAG)
+	remove_whitespace = 1;
 }
 
 static unsigned char	active = 0;
@@ -260,6 +267,20 @@ void analyzer_free(const char *text)
     free(text);
 }
 
+void analyzer_dump(char *buf)
+/* dump a Normalization line representing current options */
+{
+    strcpy(buf, "line-oriented, ");
+    if (remove_whitespace)
+	strcat(buf, "remove-whitespace, ");
+    if (remove_comments)
+	strcat(buf, "remove-comments, ");
+    if (remove_braces)
+	strcat(buf, "remove-braces, ");
+    if (buf[0])
+	buf[strlen(buf)-2] = '\0';
+}
+
 /* our method table */
 struct analyzer_t linebyline =
 {
@@ -267,6 +288,7 @@ struct analyzer_t linebyline =
     mode: analyzer_mode,
     get:  analyzer_get,
     free: analyzer_free,
+    dump: analyzer_dump,
 };
 
 #ifdef TEST

@@ -61,16 +61,18 @@ feature_t;
 
 struct analyzer_t	/* structure describing a feature analyzer */
 {
-    void (*init)(void);
+    unsigned int flags;
+#define CAPC_FLAG	0x01
+#define R_FLAG		0x02
+#define W_FLAG		0x04
+    void (*init)(unsigned int);
     void (*mode)(int);
     feature_t *(*get)(const struct filehdr_t *, FILE *, linenum_t *);
     void (*free)(const char *);
+    void (*dump)(char *);
 };
 
 /* control bits, meant to be set at startup */
-extern int remove_braces;
-extern int remove_whitespace;
-extern int remove_comments;
 extern int verbose, debug, nofilter;
 extern int shredsize, minsize;
 

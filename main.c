@@ -97,22 +97,6 @@ void extend_current_chunk(linenum_t linenumber)
 	chunk_buffer[chunk_count-1].end = linenumber;
 }
 
-static void write_options(char *buf)
-/* dump a Normalization line representing current options */
-{
-    buf[0] = '\0';
-    if (remove_whitespace)
-	strcat(buf, "remove-whitespace, ");
-    if (remove_comments)
-	strcat(buf, "remove-comments, ");
-    if (remove_braces)
-	strcat(buf, "remove-braces, ");
-    if (buf[0])
-	buf[strlen(buf)-2] = '\0';
-    else
-	strcpy(buf, "none");
-}
-
 static void write_scf(const char *tree, FILE *ofp)
 /* generate shred file for given tree */
 {
@@ -134,7 +118,7 @@ static void write_scf(const char *tree, FILE *ofp)
     fputs("#SCF-A 2.0\n", ofp);
     fputs("Generator-Program: comparator 1.0\n", ofp);
     fputs("Hash-Method: " HASHMETHOD "\n", ofp);
-    write_options(buf);
+    linebyline.dump(buf);
     fprintf(ofp, "Normalization: %s\n", buf);
     fprintf(ofp, "Root: %s\n", tree);
     fprintf(ofp, "Shred-Size: %d\n", shredsize);
@@ -346,7 +330,7 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
 	char	buf[BUFSIZ];
 
 	scf->hash_method = HASHMETHOD;
-	write_options(buf);
+	linebyline.dump(buf);
 	scf->normalization = strdup(buf);
 	scf->shred_size = shredsize;
 	scf->generator_program = "comparator " VERSION;
@@ -452,11 +436,11 @@ main(int argc, char *argv[])
     extern char	*optarg;	/* set by getopt */
     extern int	optind;		/* set by getopt */
 
-    int status, file_only, compile_only, argcount, mergecount;
+    int status, file_only, compile_only, argcount, mergecount, flags;
     struct scf_t	*scf;
     char *dir, *outfile;
 
-    compile_only = file_only = nofilter = 0;
+    compile_only = file_only = nofilter = flags = 0;
     dir = outfile = NULL;
     while ((status = getopt(argc, argv, "cCd:hm:no:rs:vwx")) != EOF)
     {
@@ -467,7 +451,7 @@ main(int argc, char *argv[])
 	    break;
 
 	case 'C':
-	    remove_whitespace = remove_braces = 1;
+	    flags |= CAPC_FLAG;
 	    break;
 
 	case 'd':
@@ -487,7 +471,7 @@ main(int argc, char *argv[])
 	    break;
 
 	case 'r':
-	    remove_comments = 1;
+	    flags |= R_FLAG;
 	    break;
 
 	case 's':
@@ -499,7 +483,7 @@ main(int argc, char *argv[])
 	    break;
 
 	case 'w':
-	    remove_whitespace = 1;
+	    flags |= W_FLAG;
 	    break;
 
 	case 'x':
@@ -522,7 +506,7 @@ main(int argc, char *argv[])
 	usage();
 
     report_time(NULL);
-    linebyline.init();
+    linebyline.init(flags);
 
     /* special case if user gave exactly one tree */
     if (!compile_only && argcount == 1)
