@@ -5,21 +5,10 @@
 #include <time.h>
 #include <string.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include "shred.h"
 
 #define min(x, y)	((x < y) ? (x) : (y)) 
 #define max(x, y)	((x > y) ? (x) : (y)) 
-
-struct item
-{
-    char	*file;
-    struct item *next;
-}
-dummy_item;
-static struct item *head = &dummy_item;
-
-static struct scf_t *scflist;
 
 struct range_t
 {
@@ -38,48 +27,6 @@ struct match_t
 }
 dummy_match;
 static struct match_t *reduced = &dummy_match;
-
-void merge_scf(const char *name, FILE *fp)
-/* merge hashes from specified files into an in-code list */
-{
-    u_int32_t	filecount;
-    int hashcount = 0;
-    struct stat sb;
-
-    stat(name, &sb);
-    fprintf(stderr, "%% Reading hash list %s...   ", name);
-    fread(&filecount, sizeof(u_int32_t), 1, fp);
-    filecount = ntohl(filecount);
-    while (filecount--)
-    {
-	char	buf[BUFSIZ];
-	linenum_t	chunks;
-	struct item *new;
-
-	fgets(buf, sizeof(buf), fp);
-	*strchr(buf, '\n') = '\0';
-	new = (struct item *)malloc(sizeof(struct item));
-	new->file = strdup(buf);
-	new->next = head;
-	head = new;
-	fread(&chunks, sizeof(linenum_t), 1, fp);
-	chunks = FROMNET(chunks);
-
-	while (chunks--)
-	{
-	    struct hash_t	this;
-
-	    fread(&this.hash, sizeof(struct hash_t), 1, fp);
-	    this.start = FROMNET(this.start);
-	    this.end = FROMNET(this.end);
-	    corehook(this, head->file);
-	    hashcount++;
-	    if (hashcount % 10000 == 0)
-		fprintf(stderr,"\b\b\b%02.0f%%",(ftell(fp) / (sb.st_size * 0.01)));
-	}
-    }
-    fprintf(stderr, "\b\b\b100%%...done, %d entries\n", hashcount);
-}
 
 static int merge_ranges(struct range_t *p, struct range_t *q, int nmatches)
 /* merge t into s, if the ranges in the match are compatible */

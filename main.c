@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <string.h>
+#include <sys/stat.h>
 #include "shred.h"
 
 int debug = 0;
@@ -132,6 +133,44 @@ static void generate_shredfile(const char *tree, FILE *ofp)
 	}
 	free(chunk_buffer);
     }
+}
+
+void merge_scf(const char *name, FILE *fp)
+/* merge hashes from specified files into an in-code list */
+{
+    u_int32_t	filecount;
+    int hashcount = 0;
+    struct stat sb;
+
+    stat(name, &sb);
+    fprintf(stderr, "%% Reading hash list %s...   ", name);
+    fread(&filecount, sizeof(u_int32_t), 1, fp);
+    filecount = ntohl(filecount);
+    while (filecount--)
+    {
+	char	buf[BUFSIZ];
+	linenum_t	chunks;
+	struct item *new;
+
+	fgets(buf, sizeof(buf), fp);
+	*strchr(buf, '\n') = '\0';
+	fread(&chunks, sizeof(linenum_t), 1, fp);
+	chunks = FROMNET(chunks);
+
+	while (chunks--)
+	{
+	    struct hash_t	this;
+
+	    fread(&this.hash, sizeof(struct hash_t), 1, fp);
+	    this.start = FROMNET(this.start);
+	    this.end = FROMNET(this.end);
+	    corehook(this, buf);
+	    hashcount++;
+	    if (hashcount % 10000 == 0)
+		fprintf(stderr,"\b\b\b%02.0f%%",(ftell(fp) / (sb.st_size * 0.01)));
+	}
+    }
+    fprintf(stderr, "\b\b\b100%%...done, %d entries\n", hashcount);
 }
 
 static void merge_tree(char *tree)

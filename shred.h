@@ -46,7 +46,6 @@ extern void shredfile(const char *, void (*hook)(struct hash_t, const char *));
 extern void sort_hashes(struct sorthash_t *hashlist, int hashcount);
 
 /* shredcompare.c functions */
-extern void merge_scf(const char *, FILE *);
 extern void emit_report(struct sorthash_t *obarray, int hashcount);
 
 /* shred.h ends here */
