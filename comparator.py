@@ -108,14 +108,17 @@ class CommonReport:
                 self.merge_program = value
             elif tag == "Hash-Method":
                 self.hash_method = value
-        # Read file statistics
+        # Read file properties
         self.trees = {}
         while 1:
             line = self.fp.readline()
             if not line or line == '%%\n':
                 break
-            (tag, chunks, lines, totallines) = line.split(":")
-            self.trees[tag] = (int(value), int(chunks), int(lines))
+            (tree, properties) = line.split(":")
+            self.trees[tree] = {}
+            for assignment in properties.split(", "):
+                (property, value) = assignment.split("=")
+                self.trees[tree][property] = int(value)
         # Now read the common-segment stuff
         self.cliques = []
         self.files = {}
@@ -230,6 +233,8 @@ class CommonStatistics:
     def __str__(self):
         rep = "Trees: " + " ".join(map(lambda x: x[0], self.trees))
         rep = "%d overlaps with %s normalization\n" % (self.chunks, self.normalization)
-        for (tree, lines, total) in self.trees:
+        for tree in self.trees:
+            lines = tree['lines']
+            total = tree['total']
             rep += "%s:\t%d of %d (%02.2f%%)\n" % (tree, lines, total, (lines * 100.0)/total)
         return rep
