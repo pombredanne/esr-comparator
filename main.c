@@ -178,19 +178,21 @@ main(int argc, char *argv[])
 	report_time("Hash merge done, %d entries", sort_count);
 	sort_hashes(sort_buffer, sort_count);
 	report_time("Sort done");
-	emit_report(sort_buffer, sort_count);	
+	emit_report(NULL, sort_buffer, sort_count);	
     }
     else
     {
 	int	hashcount;
 	struct sorthash_t *obarray;
+	struct shif_t	*shiflist;
 
 	report_time(NULL);
-	obarray = merge_hashes(argc-optind, argv+optind, &hashcount);
+	shiflist = init_merge(argc-optind, argv+optind);
+	obarray = merge_hashes(shiflist, argc-optind, &hashcount);
 	report_time("Hash merge done, %d entries", hashcount);
 	sort_hashes(obarray, hashcount);
 	report_time("Sort done");
-	emit_report(obarray, hashcount);
+	emit_report(shiflist, obarray, hashcount);
     }
     exit(0);
 

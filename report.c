@@ -19,16 +19,6 @@ struct item
 dummy_item;
 static struct item *head = &dummy_item;
 
-struct shif_t
-{
-    char	*name;
-    FILE	*fp;
-    char	*normalization;
-    int		shred_size;
-    char	*hash_method;
-    char	*generator_program;
-    int		hashcount;
-};
 static struct shif_t *shiflist;
 
 struct range_t
@@ -60,19 +50,9 @@ static void file_intern(const char *file)
     head = new;
 }
 
-void hash_intern(const struct hash_t *chunk)
-/* enter a has into the in-core array */
-{
-}
-
-struct sorthash_t *merge_hashes(int argc, char *argv[], int *count)
-/* merge hashes from specified files into an in-code list */
+struct shif_t *init_merge(int argc, char *argv[])
 {
     struct shif_t *sp;
-    struct stat sb;
-    long total;
-    struct sorthash_t *obarray;
-    int hashcount;
 
     /* set up metadata blocks for the hash files */
     shiflist = (struct shif_t *)calloc(sizeof(struct shif_t), argc);
@@ -142,14 +122,25 @@ struct sorthash_t *merge_hashes(int argc, char *argv[], int *count)
 	}
     }
 
+    return(shiflist);
+}
+
+struct sorthash_t *merge_hashes(struct shif_t *shiflist, int shiflen, int *count)
+/* merge hashes from specified files into an in-code list */
+{
+    struct shif_t *sp;
+    long total;
+    struct sorthash_t *obarray;
+    int hashcount;
+    struct stat sb;
+
     /* compute total data to be read, we'll use this for the progress meter */
     total = 0;
-    for (sp = shiflist; sp < shiflist + argc; sp++)
+    for (sp = shiflist; sp < shiflist + shiflen; sp++)
     {
 	stat(sp->name, &sb);
 	total += sb.st_size - ftell(sp->fp);
     }
-
     obarray=(struct sorthash_t *)calloc(sizeof(struct sorthash_t),
 					   total/sizeof(struct hash_t));
     if (!obarray)
@@ -160,7 +151,7 @@ struct sorthash_t *merge_hashes(int argc, char *argv[], int *count)
 
     /* read in all hashes */
     hashcount = 0;
-    for (sp = shiflist; sp < shiflist + argc; sp++)
+    for (sp = shiflist; sp < shiflist + shiflen; sp++)
     {
 	u_int32_t	sectcount;
 
@@ -423,7 +414,8 @@ static int sortmatch(void *a, void *b)
     return(0);
 }
 
-void emit_report(struct sorthash_t *obarray, int hashcount)
+void emit_report(struct shif_t *shif, 
+		 struct sorthash_t *obarray, int hashcount)
 {
     struct match_t *hitlist, *sorted, *match;
     int i, matchcount;
@@ -455,10 +447,10 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
     report_time("Reduction done");
 
     puts("#SHIF-B 1.0");
-    printf("Hash-Method: %s\n", shiflist[0].hash_method);
+    printf("Hash-Method: %s\n", shif->hash_method);
     puts("Merge-Program: shredcompare 1.0");
-    printf("Normalization: %s\n", shiflist[0].normalization);
-    printf("Shred-Size: %d\n", shiflist[0].shred_size);
+    printf("Normalization: %s\n", shif->normalization);
+    printf("Shred-Size: %d\n", shif->shred_size);
     puts("%%");
 
     /* we go through a little extra effort to emit a sorted list */
