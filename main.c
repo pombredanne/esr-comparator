@@ -132,7 +132,7 @@ static void write_scf(const char *tree, FILE *ofp)
 
     fputs("#SCF-A 2.0\n", ofp);
     fputs("Generator-Program: comparator 1.0\n", ofp);
-    fputs("Hash-Method: MD5\n", ofp);
+    fputs("Hash-Method: " HASHMETHOD "\n", ofp);
     write_options(buf);
     fprintf(ofp, "Normalization: %s\n", buf);
     fprintf(ofp, "Shred-Size: %d\n", shredsize);
@@ -172,30 +172,14 @@ static void write_scf(const char *tree, FILE *ofp)
 
 	    if (debug)
 		fprintf(stderr,
-		       "%d: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x %s:%d:%d\n", 
-		       np-chunk_buffer, 
-		       this.hash[0], 
-		       this.hash[1], 
-		       this.hash[2], 
-		       this.hash[3], 
-		       this.hash[4], 
-		       this.hash[5], 
-		       this.hash[6], 
-		       this.hash[7], 
-		       this.hash[8], 
-		       this.hash[9], 
-		       this.hash[10], 
-		       this.hash[11], 
-		       this.hash[12], 
-		       this.hash[13], 
-		       this.hash[14], 
-		       this.hash[15],
+			"%d: %s %s:%d:%d\n",
+			np-chunk_buffer, hash_dump(this.hash),
 		       *place, this.start, this.end);
 	    this.start = TONET(this.start);
 	    this.end   = TONET(this.end);
 	    fwrite(&this.start, sizeof(linenum_t), 1, ofp);
 	    fwrite(&this.end,   sizeof(linenum_t), 1, ofp);
-	    fwrite(&this.hash,  sizeof(char), HASHSIZE, ofp);
+	    fwrite(&this.hash,  sizeof(hashval_t), 1, ofp);
 	}
 	totalchunks += chunk_count;
 	free(chunk_buffer);
@@ -243,7 +227,7 @@ static void read_scf(struct scf_t *scf)
 
 	    fread(&this.start, sizeof(linenum_t), 1, scf->fp);
 	    fread(&this.end,  sizeof(linenum_t), 1, scf->fp);
-	    fread(this.hash, sizeof(char), HASHSIZE, scf->fp);
+	    fread(&this.hash, sizeof(hashval_t), 1, scf->fp);
 	    this.start = FROMNET(this.start);
 	    this.end = FROMNET(this.end);
 	    corehook(this, filehdr);
@@ -308,7 +292,7 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
 	/* read in the SCF metadata block and add it to the in-core list */
 	scf->fp   = fopen(scf->name, "r");
 	fgets(buf, sizeof(buf), scf->fp);
-	if (strncmp(buf, "#SCF-A 1.1", 9))
+	if (strncmp(buf, "#SCF-A 2.0", 9))
 	{
 	    fprintf(stderr, 
 		    "shredcompare: %s is not a SCF-A file.\n", 
@@ -341,7 +325,7 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
     {
 	char	buf[BUFSIZ];
 
-	scf->hash_method = "MD5";
+	scf->hash_method = HASHMETHOD;
 	write_options(buf);
 	scf->normalization = strdup(buf);
 	scf->shred_size = shredsize;
@@ -357,30 +341,10 @@ void dump_array(const char *legend,
 
     fputs(legend, stdout);
     for (np = obarray; np < obarray + hashcount; np++)
-    {
-	struct hash_t scratch;
-
-	scratch = np->hash;
-	printf("%d: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x %s:%d:%d\n", 
+	fprintf(stdout, "%2d: %s %s:%d:%d\n",
 	       np-obarray, 
-	       scratch.hash[0], 
-	       scratch.hash[1], 
-	       scratch.hash[2], 
-	       scratch.hash[3], 
-	       scratch.hash[4], 
-	       scratch.hash[5], 
-	       scratch.hash[6], 
-	       scratch.hash[7], 
-	       scratch.hash[8], 
-	       scratch.hash[9], 
-	       scratch.hash[10], 
-	       scratch.hash[11], 
-	       scratch.hash[12], 
-	       scratch.hash[13], 
-	       scratch.hash[14], 
-	       scratch.hash[15],
-	       np->file->name, scratch.start, scratch.end);
-    }
+	       hash_dump(np->hash.hash),
+	       np->file->name, np->hash.start, np->hash.end);
 }
 
 void report_time(char *legend, ...)
