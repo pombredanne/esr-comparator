@@ -76,13 +76,23 @@ static void write_scf(const char *tree, FILE *ofp)
     char	**place, **list;
     int		file_count;
     u_int32_t	netfile_count;
+    char	buf[BUFSIZ];
 
     list = sorted_file_list(tree, &file_count);
 
     fputs("#SCF-A 1.0\n", ofp);
     fputs("Generator-Program: comparator 1.0\n", ofp);
     fputs("Hash-Method: MD5\n", ofp);
-    fprintf(ofp, "Normalization: %s\n", rws ? "remove_whitespace" : "none");
+    buf[0] = '\0';
+    if (rws)
+	strcat(buf, "remove-whitespace,");
+    if (c_normalization)
+	strcat(buf, "c-normalization,");
+    if (buf[0])
+	buf[strlen(buf)-1] = '\0';
+    else
+	strcpy(buf, "none");
+    fprintf(ofp, "Normalization: %s\n", buf);
     fprintf(ofp, "Shred-Size: %d\n", shredsize);
     fputs("%%\n", ofp);
 
