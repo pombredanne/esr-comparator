@@ -1,6 +1,6 @@
 Name: comparator
 Summary: fast comparison of large source-code trees
-Version: 2.3
+Version: 2.4
 Release: 1
 License: GPL
 Group: Utilities
@@ -24,7 +24,9 @@ make %{?_smp_mflags} comparator comparator.1
 [ "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf "$RPM_BUILD_ROOT"
 mkdir -p "$RPM_BUILD_ROOT"%{_bindir}
 mkdir -p "$RPM_BUILD_ROOT"%{_mandir}/man1/
-pylib=`ls -d %{_libdir}/python*/site-packages/`
+set -- `ls -d %{_libdir}/python*/site-packages/`
+while [ "$2" ]; do shift; done;
+pylib=$1
 mkdir -p "$RPM_BUILD_ROOT"${pylib}
 cp comparator filterator "$RPM_BUILD_ROOT"%{_bindir}
 cp comparator.1 "$RPM_BUILD_ROOT"%{_mandir}/man1/
@@ -42,6 +44,10 @@ cp comparator.py "$RPM_BUILD_ROOT"${pylib}
 %{_libdir}/python*/site-packages/comparator.py
 
 %changelog
+* Tue Mar  9 2004 Eric S. Raymond <esr@snark.thyrsus.com> 2.4-1
+- Fixed strtok() bug apparently introduced by C library change.
+  Added -d and -f options to filterator.
+
 * Mon Dec 29 2003 Eric S. Raymond <esr@snark.thyrsus.com> 2.3-1
 - Source RPMs no longer depend on myversion symbol.
 

@@ -197,14 +197,27 @@ of shell keywords and punctuation.</para></listitem>
 
 <para><application>filterator</application> is a postprocessor for the
 SCF-B output of <application>comparator</application> that produces an
-actual code listing. The <option>-d</option> acts as it does for
-<application>comparator</application>.  The <option>-m</option> option
-sets the minimum size of overlap to be reported. Setting this to a
-slightly larger number than the <application>comparator</application>
-shred size is a useful way to filter out spurious matches; thus, while
+actual code listing.</para>
+
+<para>The <option>-d</option> acts as it does for
+<application>comparator</application>.</para>
+
+<para>The <option>-m</option> option sets the minimum size of overlap
+to be reported. Setting this to a slightly larger number than the
+<application>comparator</application> shred size is a useful way to
+filter out spurious matches; thus, while
 <application>comparator</application> defaults to a shred size of 3,
 <application>filterator</application> defaults to a minimum size of
 5.</para>
+
+<para>The -f option takes a Python regexp as argument and throws out
+all cliques for which no assocoated filename matches the regexp.  This
+might be useful if you want to see a common-segment report only for
+files with a particular extension such as .h or .S.</para>
+
+<para>The -n option suppresses code listing, so that an SCF-B output
+is produced instead.  You can use this to filter common-segment
+reports with -m and -f options of the tool.</para>
 
 <para>Each <application>filterator</application> line beginning with %
 is the filename from which the following common span of lines is displayed 

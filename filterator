@@ -2,58 +2,70 @@
 #
 # filterator -- filter and format the output of comparator
 #
-import sys, comparator
+import sys, comparator, re
+
+def report_common(state):
+    "Generate a report on common code."
+    print "Filter-Program: filterator 1.0"
+    print "Hash-Method: RXOR"
+    if state.merge_program:
+        print "Merge-Program:", state.merge_program
+    print "Normalization:", state.normalization
+    print "Shred-Size: %d" % state.shredsize
+    if minsize:
+        print "Minimum-Size: %d" % minsize
+    print 75 * '-'
+    for tree in state.trees:
+        rep = tree + ":"
+        for (key, value) in state.trees[tree].items():
+            rep += " %s=%s," % (key, value)
+        sys.stdout.write(rep[:-1] + "\n")
+    print 75 * '-'
+    state.read_matches()
+    for clique in state.cliques:
+        (file, start, end, text) = state.extract_text(clique)
+        if start == 1 and end == state.files[file]:
+            print "%% %s:%d-%d: entire (%d matches)" % \
+                  (file, start, end, len(clique))
+        else:
+            print "%% %s:%d-%d: (%d matches)" % \
+                  (file, start, end, len(clique))
+        sys.stdout.write(text)
 
 if __name__ == '__main__':
-    def report_common(state):
-        "Generate a report on common code."
-        print "Filter-Program: filterator 1.0"
-        print "Hash-Method: MD5"
-        if state.merge_program:
-            print "Merge-Program:", state.merge_program
-        print "Normalization:", state.normalization
-        print "Shred-Size: %d" % state.shredsize
-        if minsize:
-            print "Minimum-Size: %d" % minsize
-        print 75 * '-'
-        for tree in state.trees:
-            rep = tree + ":"
-            for (key, value) in state.trees[tree].items():
-                rep += " %s=%s," % (key, value)
-            sys.stdout.write(rep[:-1] + "\n")
-        print 75 * '-'
-        state.read_matches()
-        for clique in state.cliques:
-            (file, start, end, text) = state.extract_text(clique)
-            if start == 1 and end == state.files[file]:
-                print "%% %s:%d-%d: entire (%d matches)" % \
-                      (file, start, end, len(clique))
-            else:
-                print "%% %s:%d-%d: (%d matches)" % \
-                      (file, start, end, len(clique))
-            sys.stdout.write(text)
     # Main line begins here
     import getopt
     try:
-        (optlist, args) = getopt.getopt(sys.argv[1:], 'd:m:')
+        (optlist, args) = getopt.getopt(sys.argv[1:], 'd:f:m:n')
     except getopt.GetoptError:
-        sys.stderr.write("usage: filterator [-d dir] [-m size]\n")
+        sys.stderr.write("usage: filterator [-n] [-d dir] [-m size] [-f filter]\n")
         sys.exit(2)
-    minsize = 5
     dir = None
+    filter = None
+    minsize = 5
+    expand = True
     linecounts = {}
     for (opt, val) in optlist:
         if opt == '-d':
             dir = val
+        elif opt == '-f':
+            filter = val
         elif opt == '-m':
             minsize = int(val)
+        elif opt == '-n':
+            expand = False
 
     try:
         state = comparator.CommonReport(sys.stdin, dir)
         if minsize:
             state.filter_by_size(minsize)
+        if filter:
+            state.filter_by_filename(re.compile(filter))
         try:
-            report_common(state)
+            if expand:
+                report_common(state)
+            else:
+                state.dump(sys.stdout)
         except (KeyboardInterrupt, IOError):
             pass
     except comparator.ComparatorException, e:

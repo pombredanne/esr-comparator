@@ -23,6 +23,7 @@ class CommonReport:
         self.dir = dir
         self.hash_method = "RXOR"
         self.merge_program = None
+        self.filtering = None
         id = self.fp.readline()
         if not id.startswith("#SCF-B "):
             raise ComparatorException("input is not a SCF-B file.\n")
@@ -42,6 +43,8 @@ class CommonReport:
                 self.hash_method = value
             elif tag == "Matches":
                 self.matches = int(value)
+            elif tag == "Filtering":
+                self.filtering = value
         # Read file properties
         self.trees = {}
         while 1:
@@ -108,13 +111,12 @@ class CommonReport:
             os.chdir(olddir)
         return (file, start, end, text)
 
-    def filter_by_size(self, minsize):
-        "Throw out all common segments below a specified size."
+    def cliquefilter(self, predicate):
         self.read_matches()
         filtered = []
         for clique in self.cliques:
             for (file, start, end) in clique:
-                if end - start + 1 >= minsize:
+                if predicate(file, start, end):
                     filtered.append(clique)
                     break
             else:
@@ -122,6 +124,44 @@ class CommonReport:
                 properties['matches'] -= 1
                 properties['matchlines'] -= end - start + 1
         self.cliques = filtered
+
+    def filter_by_size(self, minsize):
+        "Throw out all common segments below a specified size."
+        self.cliquefilter(lambda file, start, end: end - start + 1 >= minsize)
+
+    def filter_by_filename(self, regexp):
+        "Filter by name of involved file."
+        self.cliquefilter(lambda file, start, end: regexp.search(file))
+
+    def metadump(self, fp=sys.stdout, divider="%%n", fmt=None):
+        "Dump the header in a canonical format."
+        fp.write("Filter-Program: filterator 1.0\n")
+        fp.write("Hash-Method: RXOR\n")
+        if self.merge_program:
+            fp.write("Merge-Program: %s\n" % self.merge_program)
+        fp.write("Normalization: %s\n" % self.normalization)
+        fp.write("Shred-Size: %d\n" %  self.shredsize)
+        fp.write("Filtering: %s\n" %  self.filtering)
+        #if minsize:
+        #    fp.write("Minimum-Size: %d\n" % minsize)
+        fp.write(divider)
+        for tree in self.trees:
+            rep = tree + ":"
+            for (key, value) in self.trees[tree].items():
+                rep += " %s=%s," % (key, value)
+            fp.write(rep[:-1] + "\n")
+        fp.write(divider)
+        if fmt:
+            for clique in self.cliques:
+                for (file, start, end) in clique:
+                    fp.write(fmt(file, start, end, self.files[file]))
+                fp.write(divider)
+
+    def dump(self, fp):
+        "Dump this in the same format as the input."
+        fp.write("#SCF-B\n")
+        self.metadump(fp=fp, divider="%%\n",
+                      fmt=lambda f,s,e, z: "%s:%d:%d:%d\n" % (f,s,e,z))
 
 # Property flags
 C_CODE		= 0x01
