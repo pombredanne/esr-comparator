@@ -312,8 +312,8 @@ struct match_t *reduce_matches(int localdups)
 
 	     /* if all these matches are within the same tree, toss them */
 	     heterogenous = 0;
-	     for (mp = np; mp < np + nmatches; mp++)
-		 if (sametree(mp[0].file,mp[1].file))
+	     for (i = 0; i < nmatches; i++)
+		 if (sametree(mp[i].file,mp[(i+1) % nmatches].file))
 		     heterogenous++;
 	     if (!heterogenous)
 		 continue;
@@ -451,7 +451,7 @@ main(int argc, char *argv[])
 #endif /* ODEBUG */
 
     hitlist = reduce_matches(local_duplicates);
-    report_time("Reduction done.");
+    report_time("Reduction done");
 
     for (; hitlist->next; hitlist = hitlist->next)
 	if (hitlist->matches)
@@ -466,4 +466,6 @@ main(int argc, char *argv[])
 	    }
 	    printf("-\n");
 	}
+
+    exit(0);
 }
