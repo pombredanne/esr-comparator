@@ -164,7 +164,7 @@ if __name__ == '__main__':
         sys.stderr.write("Reading %s...   " % shif.name)
         while merge_hashes(shif, hashdict):
             continue
-        sys.stderr.write("\b\b\b100%...done, %d entries\n" % shif->hashcount)
+        sys.stderr.write("\b\b\b100%%...done, %d entries\n" % shif.hashcount)
     report_time("Hash merge done, %d entries" % hashcount)
     # Nuke all unique hashes
     nonuniques = 0
