@@ -12,7 +12,7 @@ class SHIF:
         self.comments = []
         id = self.fp.readline()
         if not id.startswith("#SHIF-A "):
-            sys.stderr.write("shredcompare: %s is not a SHIF-A file."%fp.name)
+            sys.stderr.write("shredcompare: %s is not a SHIF-A file."%self.fp.name)
             sys.exit(1)
         while True:
             line = self.fp.readline()
