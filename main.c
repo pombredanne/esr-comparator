@@ -94,6 +94,22 @@ void extend_current_chunk(void)
 	sort_buffer[sort_count-1].hash.end++;
 }
 
+static void write_options(char *buf)
+/* dump a Nirmalization line representing current options */
+{
+    buf[0] = '\0';
+    if (remove_whitespace)
+	strcat(buf, "remove-whitespace, ");
+    if (remove_comments)
+	strcat(buf, "remove-comments, ");
+    if (remove_braces)
+	strcat(buf, "remove-braces, ");
+    if (buf[0])
+	buf[strlen(buf)-2] = '\0';
+    else
+	strcpy(buf, "none");
+}
+
 static void write_scf(const char *tree, FILE *ofp)
 /* generate shred file for given tree */
 {
@@ -107,17 +123,7 @@ static void write_scf(const char *tree, FILE *ofp)
     fputs("#SCF-A 1.1\n", ofp);
     fputs("Generator-Program: comparator 1.0\n", ofp);
     fputs("Hash-Method: MD5\n", ofp);
-    buf[0] = '\0';
-    if (remove_whitespace)
-	strcat(buf, "remove-whitespace,");
-    if (remove_comments)
-	strcat(buf, "remove-comments,");
-    if (remove_braces)
-	strcat(buf, "remove-braces,");
-    if (buf[0])
-	buf[strlen(buf)-1] = '\0';
-    else
-	strcpy(buf, "none");
+    write_options(buf);
     fprintf(ofp, "Normalization: %s\n", buf);
     fprintf(ofp, "Shred-Size: %d\n", shredsize);
     fputs("%%\n", ofp);
@@ -319,17 +325,7 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
 	char	buf[BUFSIZ];
 
 	scf->hash_method = "MD5";
-	buf[0] = '\0';
-	if (remove_whitespace)
-	    strcat(buf, "remove-whitespace, ");
-	if (remove_comments)
-	    strcat(buf, "remove-comments, ");
-	if (remove_braces)
-	    strcat(buf, "remove-braces, ");
-	if (buf[0])
-	    buf[strlen(buf)-1] = '\0';
-	else
-	    strcpy(buf, "none");
+	write_options(buf);
 	scf->normalization = strdup(buf);
 	scf->shred_size = shredsize;
 	scf->generator_program = "comparator " VERSION;
