@@ -164,10 +164,9 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 /* assemble list of duplicated hashes */
 {
-     static struct match_t dummy; 
-     struct match_t *reduced, *sp, *tp;
      unsigned int nonuniques, nreduced, progress, hashcount = *hashcountp;
      struct sorthash_t *mp, *np;
+     struct match_t	*reduced;
 
      if (debug)
 	 dump_array("Chunk list before reduction.\n",obarray, hashcount);
@@ -217,7 +216,6 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
      reduced = (struct match_t *)malloc(sizeof(struct match_t) * nreduced);
      for (np = obarray; np < obarray + hashcount; np = mp)
      {
-	 struct match_t *new;
 	 int i, heterogenous, nmatches;
 
 	 if (!debug && progress++ % 10000 == 0)
@@ -244,7 +242,7 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 	     printf("*** %d has %d in its clique\n", np-obarray, nmatches);
 	     for (i = 0; i < nmatches; i++)
 		 printf("%d: %s:%d:%d\n", 
-			np-obarray+i, np[i].file, np[i].hash.start, np[i].hash.end);
+			np-obarray+i, np[i].file->name, np[i].hash.start, np[i].hash.end);
 	 }
 
 	 /* passed all tests, keep this set of ranges */

@@ -7,7 +7,6 @@
 #include <errno.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <netinet/in.h>
 #include "md5.h"
 #include "shred.h"
 
@@ -71,6 +70,7 @@ static int normalize(char *buf)
 /* normalize a buffer in place, return 0 if it should be skipped */
 {
     if (remove_comments)
+    {
 	if (remove_braces)	/* remove C comments */
 	{
 	    char	*ss = strstr(buf, "//");
@@ -96,6 +96,7 @@ static int normalize(char *buf)
 	    if (ss)
 		*ss = '\0';
 	}
+    }
 
     if (remove_whitespace)	/* strip whitespace, ignore blank lines */
     {
@@ -168,7 +169,7 @@ int shredfile(struct filehdr_t *file,
     if ((fp = fopen(file->name, "r")) == NULL)
     {
 	fprintf(stderr, "shredtree: couldn't open %s, error %d\n",
-		file, errno);
+		file->name, errno);
 	exit(1);
     }
 

@@ -1,6 +1,7 @@
 /* shred.h -- types for shred similarity tools */
 
 #include <sys/types.h>
+#include <netinet/in.h>
 
 /*
  * 65,536 lines should be enough, but maybe someday this will be 32 bits.

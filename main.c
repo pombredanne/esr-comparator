@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <time.h>
 #include "shred.h"
 
 int debug = 0;
@@ -98,7 +99,7 @@ static void write_scf(const char *tree, FILE *ofp)
 {
     char	**place, **list;
     int		file_count, progress, totalchunks;
-    u_int32_t	netfile_count, lines, totallines = 0;
+    u_int32_t	netfile_count, totallines = 0;
     char	buf[BUFSIZ];
 
     list = sorted_file_list(tree, &file_count);
@@ -194,7 +195,7 @@ static void write_scf(const char *tree, FILE *ofp)
 static void read_scf(struct scf_t *scf)
 /* merge hashes from specified files into an in-code list */
 {
-    u_int32_t	filecount, totallines;
+    u_int32_t	filecount;
     int hashcount = 0;
     struct stat sb;
 
@@ -414,7 +415,6 @@ main(int argc, char *argv[])
     int status, file_only, compile_only, argcount;
     struct scf_t	*scf;
     char *dir, *outfile;
-    struct sorthash_t *np;
 
     compile_only = file_only = 0;
     dir = outfile = NULL;
@@ -490,7 +490,7 @@ main(int argc, char *argv[])
     /* two or more arguments */
     for(; optind < argc; optind++)
     {
-	char	*olddir, *source = argv[optind];
+	char	*olddir = NULL, *source = argv[optind];
 
 	scf = (struct scf_t *)calloc(sizeof(struct scf_t), 1);
 	scf->next = scflist;
