@@ -30,7 +30,9 @@ static int is_scf_file(const char *file)
     char	buf[10];
     FILE	*fp = fopen(file, "r");
 
-    if (!fgets(buf, sizeof(buf), fp))
+    if (!fp)
+	return(0);
+    else if (!fgets(buf, sizeof(buf), fp))
     {
 	fclose(fp);
 	return(0);
@@ -196,8 +198,10 @@ main(int argc, char *argv[])
 
     int status, file_only, compile_only;
     struct scf_t	*scf;
+    char *dir;
 
     compile_only = file_only = 0;
+    dir = NULL;
     while ((status = getopt(argc, argv, "cd:hs:w")) != EOF)
     {
 	switch (status)
@@ -243,9 +247,18 @@ main(int argc, char *argv[])
     }
 
     report_time(NULL);
+
+    /* special case if user gave exactly one tree */
+    if (optind == argc - 1)
+    {
+	generate_shredfile(argv[optind], stdout);
+	exit(0);
+    }
+
+    /* two or more arguments */
     for(; optind < argc; optind++)
     {
-	char	*source = argv[optind];
+	char	*olddir, *source = argv[optind];
 
 	if (is_scf_file(source))
 	    init_scf(source);
@@ -263,7 +276,15 @@ main(int argc, char *argv[])
 			outfile);
 		exit(1);
 	    }
+
+	    if (dir)
+	    {
+		olddir = getcwd(NULL, 0);	/* may fail off Linux */
+		chdir(dir);
+	    }
 	    generate_shredfile(source, ofp);
+	    if (dir)
+		chdir(olddir);
 	    fclose(ofp);
 	}
 	else
