@@ -19,7 +19,7 @@ C_junk = [r'\bbreak\b',  r'\bcase\b',r'\bcontinue\b', r'\bdefault\b',
           # Common preprocessor macros, not significant by themselves.
           r'\bASSERT\b', r'\bFALSE\b', r'\bNULL\b', r'\bSTATIC\b', r'\bTRUE\b',
           # Macro include lines are noise, too.
-          r'^#include', 
+          r'\s*#include.*', 
           # Common error macros.
           r'\bEINVAL\b', r'\bENOSYS\b', 
           # Conventional variables frequently found in kernel code.
