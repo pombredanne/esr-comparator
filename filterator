@@ -2,7 +2,7 @@
 #
 # filterator -- filter and format the output of comparator
 #
-import os, sys, re
+import os, sys, re, exceptions
 
 # Tokens to be removed when checking whether a shred is significant
 junk = {
@@ -70,6 +70,11 @@ def nontrivial(filetype, text):
                 continue
     return text.strip()
 
+class ComparatorException(exceptions.Exception):
+    def __init__(self, message, retval=1):
+        self.message = message
+        self.retval = retval
+
 class CommonReport:
     "Capture the state of common-segnent report."
     # Template for parsing the output from comparator.
@@ -82,9 +87,7 @@ class CommonReport:
         self.merge_program = None
         id = fp.readline()
         if not id.startswith("#SCF-B "):
-            sys.stderr.write("filterator: input is not a SCF-B file.\n")
-            sys.exit(1)
-        # Read metadata
+            raise ComparatorException("input is not a SCF-B file.\n")
         while 1:
             line = fp.readline()
             if not line or line == '%%\n':
@@ -146,6 +149,7 @@ class CommonReport:
 
     def extract_text(self, clique):
         "Return text corresponding to the given clique."
+        text = text_type = None
         if self.dir:
             olddir = os.getcwd()
             os.chdir(dir)
@@ -174,8 +178,7 @@ class CommonReport:
                 rfp.close()
                 break
             except IOError:
-                sys.stderr.write("filterator: can't open %s\n" % file)
-                sys.exit(0)
+                pass
         if self.dir:
             os.chdir(olddir)
         return (text_type, text)
@@ -192,9 +195,14 @@ class CommonReport:
 
     def filter_by_significance(self):
         "Throw out all cliques that aren't significant."
-        self.cliques = filter(
-            		lambda x: apply(nontrivial,self.extract_text(x)),
-                        self.cliques)
+        filtered = []
+        for clique in self.cliques:
+            (type, text) = self.extract_text(clique)
+            if text:
+                filtered.append(clique)
+            else:
+                raise ComparatorException("couldn't extracrt file text")
+        self.cliques = filtered
 
 if __name__ == '__main__':
     def report_common(state):
@@ -248,16 +256,23 @@ if __name__ == '__main__':
         elif opt == '-x':
             debug = 1
 
-    state = CommonReport(sys.stdin, dir)
-    if minsize:
-        state.filter_by_size(minsize)
-    if dofilter:
-        state.filter_by_significance()
+    try:
+        state = CommonReport(sys.stdin, dir)
+        if minsize:
+            state.filter_by_size(minsize)
+        if dofilter:
+            state.filter_by_significance()
 
-    if stats:
-        print "%d overlaps" % state.segment_count()
-        for (tree, totallines) in state.trees.items():
-            lines = state.line_count(tree)
-            print "%s:%d:%d" % (tree, lines, state.trees[tree])
-    else:
-        report_common(state)
+        if stats:
+            print "%d overlaps" % state.segment_count()
+            for (tree, totallines) in state.trees.items():
+                lines = state.line_count(tree)
+                print "%s:%d:%d" % (tree, lines, state.trees[tree])
+        else:
+            report_common(state)
+    except ComparatorException, e:
+        sys.stderr.write("filterator: " + e.message + "\n")
+        sys.exit(1)
+
+# End
+
