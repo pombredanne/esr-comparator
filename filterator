@@ -2,7 +2,7 @@
 #
 # filterator -- filter and format the output of comparator
 #
-import os, sys, re, getopt
+import os, sys, re
 
 # Tokens to be removed when checking whether a shred is significant
 junk = {
@@ -196,34 +196,36 @@ class CommonReport:
             		lambda x: apply(nontrivial,self.extract_text(x)),
                         self.cliques)
 
-def report_common(state):
-    "Generate a report on common code."
-    print "Filter-Program: filterator 1.0"
-    print "Filtering:", ("none", "language")[dofilter]
-    print "Hash-Method: MD5"
-    if state.merge_program:
-        print "Merge-Program:", state.merge_program
-    print "Normalization:", state.normalization
-    print "Shred-Size: %d" % state.shredsize
-    if minsize:
-        print "Minimum-Size: %d" % minsize
-    if stats:
-        print 75 * '-'
-        print "# %d overlaps." % state.segment_count()
-        for (tree, totallines) in state.trees.items():
-            lines = state.line_count(tree)
-            print "# %f%% of %s" % ((lines*100.0)/totallines, tree)
-    print 75 * '-'
-    for clique in state.cliques:
-        for (file, start, end) in clique:
-            if start == 1 and end == state.files[file]:
-                print "%% %s:%d-%d: entire (%d matches)" % (file, start, end, len(clique))
-                continue
-        (text_type, text) = state.extract_text(clique)
-        print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(clique))
-        sys.stdout.write(state.extract_text(clique)[1])
-
 if __name__ == '__main__':
+    def report_common(state):
+        "Generate a report on common code."
+        print "Filter-Program: filterator 1.0"
+        print "Filtering:", ("none", "language")[dofilter]
+        print "Hash-Method: MD5"
+        if state.merge_program:
+            print "Merge-Program:", state.merge_program
+        print "Normalization:", state.normalization
+        print "Shred-Size: %d" % state.shredsize
+        if minsize:
+            print "Minimum-Size: %d" % minsize
+        if stats:
+            print 75 * '-'
+            print "# %d overlaps." % state.segment_count()
+            for (tree, totallines) in state.trees.items():
+                lines = state.line_count(tree)
+                print "# %f%% of %s" % ((lines*100.0)/totallines, tree)
+        print 75 * '-'
+        for clique in state.cliques:
+            for (file, start, end) in clique:
+                if start == 1 and end == state.files[file]:
+                    print "%% %s:%d-%d: entire (%d matches)" % \
+                          (file, start, end, len(clique))
+                    continue
+            (text_type, text) = state.extract_text(clique)
+            print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(clique))
+            sys.stdout.write(state.extract_text(clique)[1])
+    # Main line begins here
+    import getopt
     try:
         (optlist, args) = getopt.getopt(sys.argv[1:], 'd:ns:Sx')
     except getopt.GetoptError:
