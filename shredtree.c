@@ -181,6 +181,12 @@ int shredfile(struct filehdr_t *file,
 	int	braceline = 0;
 
 	linecount++;
+	if (linecount >= MAX_LINENUM)
+	{
+	    fprintf(stderr, "comparator: %s too large, only first %d lines will be compared.\n", file->name, MAX_LINENUM-1);
+	    break;
+	}
+
 	if (remove_braces)
 	{
 	    char *cp;
