@@ -15,8 +15,8 @@ struct item
     char	*file;
     struct item *next;
 }
-dummy;
-static struct item *head = &dummy;
+dummy_item;
+static struct item *head = &dummy_item;
 
 struct shif_t
 {
@@ -33,6 +33,19 @@ struct sorthash_t
     struct hash_t	hash;
     char		*file;
 };
+#define HASHCMP(s, t)	memcmp((s)->hash.hash, (t)->hash.hash, HASHSIZE)
+
+static struct sorthash_t *obarray, *np;
+static int hashcount;
+
+struct match_t
+{
+    char	*file;
+    linenum_t	start, end;
+    struct match_t *next;
+}
+dummy_match;
+static struct match_t *reduced = &dummy_match;
 
 static void report_time(char *legend)
 {
@@ -52,12 +65,14 @@ static void report_time(char *legend)
     mark_time = endtime;
 }
 
-static struct sorthash_t *obarray, *np;
-
 void init_intern(const int count)
 /* prepare an alllocation area of a given size */
 {
     np=obarray=(struct sorthash_t *)calloc(sizeof(struct sorthash_t),count);
+    if (!np)
+    {
+	fprintf(stderr, "shredcompare: insufficient memory\n");
+    }
 }
 
 void file_intern(const char *file)
@@ -65,8 +80,7 @@ void file_intern(const char *file)
 {
     struct item *new;
 
-    printf("Interning: %s\n", file);
-    new = (struct item *)malloc(sizeof(new));
+    new = (struct item *)malloc(sizeof(struct item));
     new->file = strdup(file);
     new->next = head;
     head = new;
@@ -74,7 +88,6 @@ void file_intern(const char *file)
 
 void hash_intern(const struct hash_t *chunk)
 {
-    printf("Chunk: %d, %d\n", chunk->start, chunk->end);
     np->file = head->file;
     np->hash = *chunk;
     np++;
@@ -197,19 +210,42 @@ static long merge_hashes(int argc, char *argv[])
     return hashcount;
 }
 
+struct match_t *reduce_matches(int localdups)
+{
+    static struct match_t dummy; 
+    struct match_t *reduced;
+
+    for (np = obarray; np < obarray + hashcount; np++)
+	if (np < obarray + hashcount - 1 && !HASHCMP(np, np+1))
+	    for (;;)
+	    {
+		struct match_t *new;
+
+		printf("Foo %d\n", np - obarray);
+		new = (struct match_t *)malloc(sizeof(struct match_t));
+		new->file  = np->file;
+		new->start = np->hash.start;
+		new->end   = np->hash.end;
+		new->next  = reduced;
+		reduced = new;
+		if (HASHCMP(np, np+1))
+		    break;
+		np++;
+	    }
+}
+
 int sortchunk(void *a, void *b)
 /* sort by hash */
 {
-    return memcmp(((struct sorthash_t *)a)->hash.hash, 
-		  ((struct sorthash_t *)b)->hash.hash, 
-		  HASHSIZE);
+    return HASHCMP((struct sorthash_t *)a, (struct sorthash_t *)b);
 }
 
 main(int argc, char *argv[])
 {
     extern char	*optarg;	/* set by getopt */
     extern int	optind;		/* set by getopt */
-    int	status, hashcount;
+    int	status;
+    struct match_t *reduced;
 
     while ((status = getopt(argc, argv, "dh")) != EOF)
     {
@@ -234,7 +270,17 @@ main(int argc, char *argv[])
 
     /* the magic CPU-eating moment; sort the whole thing */ 
     qsort(obarray, hashcount, sizeof(struct sorthash_t), sortchunk);
+    report_time("Sort done.");
 
     for (np = obarray; np < obarray + hashcount; np++)
-	printf("%s:%d:%d\n", np->file, np->hash.start, np->hash.end);
+	printf("%d: %s:%d:%d (%02x%02x)\n", np-obarray, np->file, np->hash.start, np->hash.end, np->hash.hash[0], np->hash.hash[1]);
+
+    reduced = reduce_matches(local_duplicates);
+    report_time("Reduction done.\n");
+
+    for (; reduced; reduced = reduced->next)
+    {
+	printf("%s:%d:%d\n", reduced->file, reduced->start, reduced->end);
+
+    }
 }
