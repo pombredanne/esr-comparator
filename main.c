@@ -140,7 +140,7 @@ static void write_scf(const char *tree, FILE *ofp)
     }
 }
 
-void merge_scf(const char *name, FILE *fp)
+void read_scf(const char *name, FILE *fp)
 /* merge hashes from specified files into an in-code list */
 {
     u_int32_t	filecount;
@@ -458,7 +458,7 @@ main(int argc, char *argv[])
 	/* finish reading in all SCFs */
 	for (scf = scf_head; scf->next; scf = scf->next)
 	{
-	    merge_scf(scf->name, scf->fp);
+	    read_scf(scf->name, scf->fp);
 	    fclose(scf->fp);
 	}
 
