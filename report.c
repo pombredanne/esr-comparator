@@ -135,7 +135,7 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 
      /* time to merge overlapping shreds */
      for (sp = reduced; sp < reduced + nonuniques; sp++)
-	 for (tp = sp + 1; !compare_files(sp, tp); tp++)
+	 for (tp = sp + 1; !compare_files(sp, tp) && tp < reduced + nonuniques; tp++)
 	 {
 #ifdef DEBUG
 	     printf("Trying merge of %d into %d\n", tp-reduced, sp-reduced);
