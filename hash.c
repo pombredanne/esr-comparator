@@ -56,7 +56,7 @@ This was Ron Rivest's suggestion:
 > a random "salt", e.g. T[i,j] = MD5(salt||i||j); if the salt is
 > chosen at run time it would be essentially impossible even for
 > an adversary to game the system, since he won't know the salt.
- 
+
 Other good material is at <http://burtleburtle.net/bob/hash/>.
 
 ****************************************************************************/
@@ -80,7 +80,8 @@ void hash_update(unsigned char *buffer, const int len)
     unsigned char *p;
     
     for (p = buffer; *p; p++)
-	hstate ^= magicbits[*p][cind++ % sizeof(magicbits[0])];
+	hstate ^= magicbits[*p][cind++ % sizeof(magicbits[0]) /
+				sizeof(magicbits[0][0])];
 }
 
 void hash_complete(hashval_t *hp)
