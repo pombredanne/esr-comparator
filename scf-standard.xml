@@ -287,9 +287,9 @@ as "Filtering: none".</para>
 </listitem>
 
 <listitem>
-<para><emphasis>C-syntax</emphasis>: Any chunk consisting entirely of
-whitespace, C keywords, syntax, and certain common constants (thus,
-with no references to variables or functions) has been
+<para><emphasis>language</emphasis>: Any chunk consisting
+entirely of whitespace, language keywords, syntax, and certain common
+constants (thus,with no references to variables or functions) has been
 discarded.</para>
 </listitem>
 </itemizedlist>
