@@ -43,7 +43,7 @@ junk = {
         )),
     }
 
-def nontrivial(filetype, text):
+def nontrivial(filetype, text, debug=None):
     "Identify a shred as trivial or nontrivial."
     if filetype:
         if debug:
@@ -203,10 +203,8 @@ class CommonReport:
         filtered = []
         for clique in self.cliques:
             (type, text) = self.extract_text(clique)
-            if text:
+            if nontrivial(type, text):
                 filtered.append(clique)
-            else:
-                raise ComparatorException("couldn't extracrt file text")
         self.cliques = filtered
 
 class CommonStatistics:
@@ -214,12 +212,14 @@ class CommonStatistics:
     def __init__(self, report):
         self.chunks = report.segment_count()
         self.trees = []
+        self.normalization = report.normalization
         for (tree, totallines) in report.trees.items():
             lines = report.line_count(tree)
             self.trees.append((tree, lines, totallines))
 
     def __str__(self):
-        rep = "%d overlaps\n" % self.chunks
+        rep = "Trees: " + " ".join(map(lambda x: x[0], self.trees))
+        rep = "%d overlaps with %s normalization\n" % (self.chunks, self.normalization)
         for (tree, lines, total) in self.trees:
-            rep += "%s:%d:%d\n" % (tree, lines, total)
+            rep += "%s:\t%d of %d (%02.2f%%)\n" % (tree, lines, total, (lines * 100.0)/total)
         return rep

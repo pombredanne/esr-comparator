@@ -16,12 +16,8 @@ if __name__ == '__main__':
         print "Shred-Size: %d" % state.shredsize
         if minsize:
             print "Minimum-Size: %d" % minsize
-        if stats:
-            print 75 * '-'
-            print "# %d overlaps." % state.segment_count()
-            for (tree, totallines) in state.trees.items():
-                lines = state.line_count(tree)
-                print "# %f%% of %s" % ((lines*100.0)/totallines, tree)
+        print 75 * '-'
+        sys.stdout.write(str(comparator.CommonStatistics(state)))
         print 75 * '-'
         for clique in state.cliques:
             for (file, start, end) in clique:
