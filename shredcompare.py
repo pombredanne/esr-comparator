@@ -1,21 +1,43 @@
 #!/usr/bin/env python
 #
-# shredcompare -- find similarities in file trees.
+# shredcompare -- find common cliques in shred lists
 #
-# 0.1 by Eric S. Raymond, 24 Aug 2003.
-#
-# Implements the shred algorithm described at:
-#
-#	http://theinquirer.net/?article=10061
-#
-# The -h option supports building a cache containing the shred list
-# for a tree you specify.  This is strictly a speed hack.  If your
-# tree is named `foo', the file will be named `foo.hash'.  On your
-# next comparison run it will be picked up automatically. It is
-# your responsibility to make sure each hash file is newer than
-# the corresponding tree.
+import getopt, sys, binascii
 
-import sys, os, os.path, re, md5, getopt, time
+class SHIF:
+    "SHIF-A file metadata container."
+    def __init__(self, name):
+        self.name = name
+        self.fp = open(name)
+        self.comments = []
+        id = self.fp.readline()
+        if not id.startswith("#SHIF-A "):
+            sys.stderr.write("shredcompare: %s is not a SHIF-A file."%fp.name)
+            sys.exit(1)
+        while True:
+            line = self.fp.readline()
+            if line == '%%\n':
+                break
+            (tag, value) = line.split(":")
+            value = value.strip()
+            if tag == "Normalization":
+                self.normalization = value.split(", ")
+                self.normalization.sort()
+            elif tag == "Shred-Size":
+                self.shredsize = int(value)
+            elif tag == "Hash":
+                self.hash = value
+            elif tag == "Comment":
+                self.comments.append(value)
+    def __check_match(self, other, attr):
+        if getattr(self, attr) != getattr(other, attr):
+            sys.stderr.write("shredcompare: %s of %s and %s doesn't match." \
+                             % (attr, self.name, other.name))
+            sys.exit(1)
+    def compatible(self, other):
+        self.__check_match(other, 'normalization')
+        self.__check_match(other, 'shredsize')
+        self.__check_match(other, 'hash')
 
 class Shred:
     "Represent a range of lines."
@@ -49,120 +71,73 @@ class Shred:
     # External representation
     def __str__(self):
         # 0-origin line numbers internally, 1-origin externally.
-        return "%s:%d-%d" % (self.file, self.start+1, self.end)
+        return "%s:%d-%d" % (self.file, self.start, self.end)
     __repr__ = __str__
 
-class ShredTree:
-    "Represent a collection of shreds corresponding to a file tree."
-    ws = re.compile(r"[ \t\n]+")
+def merge_hashes(fp, dict):
+    "Read and merge hashes corresponding to one file."
+    file = fp.readline().rstrip()
+    while True:
+        line = fp.readline()
+        if not line:
+            return False
+        if not line.strip():
+            return True
+        (start, end, hash) = line.split()
+        start = int(start)
+        end = int(end)
+        hash = binascii.unhexlify(hash)
+        if hash not in dict:
+            dict[hash] = []
+        dict[hash].append((file, start, end))
 
-    def __init__(self, path, ignorehash=False, shredsize=5, verbose=False):
-        self.path = path
-        self.shredsize = shredsize
-        self.verbose = verbose
-        self.shreds = {}
-        if ignorehash:
-            self.__shredtree()
-        else:
-            self.__read_hash()
-            if not self.shreds:
-                self.__shredtree()
+if __name__ == '__main__':
+    try:
+        (optlist, args) = getopt.getopt(sys.argv[1:], 'd')
+    except getopt.GetoptError:
+        sys.stderr.write("usage: shredcompare [-h] [-d] file\n")
+        sys.exit(2)
+    local_duplicates = True
+    for (opt, val) in optlist:
+        if opt == '-d':
+            local_duplicates = False
+        elif opt == '-h':
+	    sys.stderr.write("usage: shredcompare [-d] file\n");
+	    sys.stderr.write(" -d      = discard local duplicates.\n");
+	    sys.stderr.write(" -h      = help (display this message).\n");
+	    sys.exit(0);
 
-    # Dictionary emulation, meant to be called from outside
-    def __getitem__(self, key):
-        return self.shreds[key]
-    def __setitem__(self, key, value):
-        self.shreds[key] = value
-    def __delitem__(self, key):
-        del self.shreds[key]
-    def __contains__(self, item):
-        return item in self.shreds
-    def update(self, dict):
-        self.shreds.update(dict)
-    def keys(self):
-        return self.shreds.keys()
-
-    # Internal methods
-    def __shredtree(self):
-        "Shred a file tree; srt up dictionary of checksums-to-locations."
-        self.shreds = {}
-        if self.verbose:
-            print "% Shredding", self.path
-        # No precomputed hashes.  Prepare a news shred list.
-        for root, dirs, files in os.walk(self.path):
-            for file in files:
-                fullpath = os.path.join(root, file)
-                if self.__eligible(fullpath):
-                    self.__shredfile(fullpath)
-    def __shredfile(self, file):
-        "Build a dictionary of shred tuples corresponding to a specified file."
-        if self.verbose:
-            print file
-        fp = open(file)
-        lines = map(lambda x: ShredTree.ws.sub('', x), fp.readlines())
-        fp.close()
-        for i in range(len(lines)):
-            if lines[i]:
-                m = md5.new()
-                need = self.shredsize
-                j = i
-                while need > 0:
-                    if j >= len(lines):
-                        break
-                    elif lines[j]:
-                        m.update(lines[j])
-                        need -= 1
-                    j += 1
-                if need == 0:
-                    # Merging into a dict automatically suppresses duplicates.
-                    self.shreds[m.digest()] = Shred(file, i, j)
-    def __eligible(self, file):
-        "Is a file eligible for comparison?"
-        return filter(lambda x: file.endswith(x), ('.c','h','.y','.l','.txt'))
-    def __read_hash(self):
-        "Try to read a hash digest corresponding to this tree."
-        if os.path.exists(self.path + ".hash"):
-            # There's a precomputed shred list.
-            rfp = open(self.path + ".hash")
-            shreds = {}
-            while True:
-                digest = rfp.read(16)
-                line = rfp.readline()
-                if not line:
-                    break
-                (file, start, end) = line.split("\t")
-                self.shreds[digest] = Shred(file, int(start), int(end))
-            rfp.close()
-
-    # The only non-dictionary public method
-    def write_hash(self):
-        "Write a hash digest corresponding to a tree."
-        wfp = open(self.path + ".hash", "w")
-        for key in self.shreds:
-            shred = self.shreds[key]
-            wfp.write(key+shred.file+"\t"+str(shred.start)+"\t"+str(shred.end)+"\n")
-        wfp.close()
-
-def shredcompare(tree1, tree2, shredsize, verbose):
-    "Compare two trees.  Returns a list of matching shred pairs"
-    shreds1 = ShredTree(tree1, shredsize=shredsize, verbose=verbose)
-    shreds2 = ShredTree(tree2, shredsize=shredsize, verbose=verbose)
-    # Nuke everything but checksum matches between the trees
-    for key in shreds1.keys():
-        if not key in shreds2:
-            del shreds1[key]
-    for key in shreds2.keys():
-        if not key in shreds1:
-            del shreds2[key]
-    # Merge the match lists
+    shiflist = []
+    # Read input metadata
+    for file in args:
+        shiflist.append(SHIF(file))
+    # Metadata sanity check
+    for i in range(len(args)-1):
+        shiflist[i].compatible(shiflist[i+1])
+    # Read in all hashes
+    hashdict = {}
+    for shif in shiflist:
+        while merge_hashes(shif.fp, hashdict):
+            continue
+    # Nuke all unique hashes
+    for (key, matches) in hashdict.items():
+        if len(matches) == 1:
+            del hashdict[key]
+    # Maybe nuke all match sets that don't cross a tree boundary
+    if not local_duplicates:
+        pass			# FIXME
+    # Turn the remaining matches into match objects, because we're
+    # going to want to do logic on them.  We deferred it this long
+    # to lower memory usage.
     matches = []
-    for key in shreds1.keys():
-        matches.append((shreds1[key], shreds2[key]))
+    for clique in hashdict.values():
+        matches.append(map(lambda x: Shred(x[0], x[1], x[2]), clique))
     # Merge overlapping ranges if possible.
     # This is O(n**2) in the number of matching chunks.
     # Should performance ever become a problem, break this up into
     # separate passes over the chunks in each file. (Would correspond
     # to eliminating a bunch of off-diagonal entries.)
+    # FIXME: code currently only does two-way merge.
     retry = True
     while retry:
         retry = False
@@ -188,56 +163,16 @@ def shredcompare(tree1, tree2, shredsize, verbose):
                 retry = True
     matches = filter(lambda x: x, matches)
     matches.sort(lambda x, y: cmp(x[0], y[0]))	# by source chunk
-    return matches
+    # OK, dump all matches.
+    print "#SHIF-B 1.0"
+    print "Filter-Program: shredcompare.py 1.0"
+    print "Hash: MD5"
+    print "Shred-Size: %d" % shiflist[0].shredsize
+    print "Normalization:", ",".join(shiflist[0].normalization)
+    print "%%"
+    # FIXME: do something appropriate with comments
+    for match in matches:
+        for range in match:
+            print `range`
+        print "-"
 
-if __name__ == '__main__':
-    mark_time = None
-
-    def report_time(legend=None):
-        "Report time since start_time was set."
-        global mark_time
-        endtime = time.time()
-        if mark_time:
-            elapsed = endtime - mark_time 
-            hours = elapsed/3600; elapsed %= 3600
-            minutes = elapsed/60; elapsed %= 60
-            seconds = elapsed
-            print "%%%%#%%%% %s: %dh, %dm, %ds" % \
-            	(legend, hours, minutes, seconds)
-        mark_time = endtime
-
-    try:
-        (optlist, args) = getopt.getopt(sys.argv[1:], 'd:h:s:v')
-    except getopt.GetoptError:
-        sys.stderr.write("usage: shredcompare [-s shredsize] [-v] [-h] [-d dir] tree1 tree2\n")
-        sys.exit(2)
-    makehash = None
-    shredsize=5
-    verbose = False
-    for (opt, val) in optlist:
-        if opt == '-s':
-            shredsize = int(val)
-        elif opt == '-d':
-            os.chdir(val)
-        elif opt == '-h':
-            makehash = val
-        elif opt == '-v':
-            verbose = True
-    report_time()
-    if makehash:
-        shreds = ShredTree(makehash, ignorehash=True, shredsize=shredsize, verbose=verbose)
-        if verbose:
-            report_time("Shred list complete.")
-        shreds.write_hash()
-        if verbose:
-            report_time("Digesting complete.")
-    else:
-        matches = shredcompare(args[0], args[1], shredsize, verbose)
-        if verbose:
-            report_time("Match list complete.")
-        for (source, target) in matches:
-            print source, "->", target
-            if verbose:
-                sys.stdout.write(source.dump())
-
-# End
