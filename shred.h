@@ -21,8 +21,4 @@ struct hash_t
     unsigned char	hash[HASHSIZE];
 };
 
-/* hashmap.c */
-void file_intern(const char *);
-void hash_intern(const struct hash_t *);
-
 /* shred.h ends here */
