@@ -8,46 +8,51 @@ import os, sys, re, getopt
 shredline = re.compile("(.*):([0-9]+):([0-9]+)")
 
 # Tokens to be removed when checking whether a shred is significant
-C_junk = map(re.compile, (
-    # Idioms that don't convey any meaning in isolation
-    r"return *\(?[a-z]+\)? *;", r"return *\(?-?[01]+\)? *;", r"goto +[a-z]+;",
-    r"exit *\([01]\);",
-    # Pragmas
-    r'/\* *ARGSUSED *\*/', r'/\* *NOTREACHED *\*/', 
-    # Bare C keywords
-    r'\bbreak\b',  r'\bcase\b',r'\bcontinue\b', r'\bdefault\b',
-    r'\bdo\b', r'\belse\b', r'\benum\b', r'\bif\b', r'\bgoto\b', r'\breturn\b',
-    r'\bswitch\b', r'\bwhile\b',
-    r'enum', r'\bint\b', r'\blong\b', r'\bshort\b', r'\bstatic\b',
-    r'\bstruct\b', r'typedef', r'\bunion\b', r'\bvoid\b',
-    r'# *define',r'# *endif',r'# *else',r'# *if\b',
-    r'# *ifdef\b',r'# *ifndef\b',
-    # Comment delimiters with no content
-    r'/\*+', r'\*+/', r'\*+',
-    # Common preprocessor macros, not significant by themselves.
-    r'\bASSERT\b', r'\bFALSE\b', r'\bNULL\b', r'\bSTATIC\b', r'\bTRUE\b',
-    # Macro include lines are noise, too.
-    r'\s*#include.*',r'#\s*line.*',
-    # Common error macros.
-    r'\bEFAULT\b', r'\bEINVAL\b', r'\bENOSYS\b',
-    # Punctuation
-    r'\{', r'\}', r'\(', r'\)', r'\<', r'\>', r'\[', r'\]',
-    r'\^', '&', r'\|', r'\*', r'\?', r'\.', r'\+', 
-    '\\\n', ';', ':', '%', ',', '-', '/', '=', '!', '\n','\t', '\v'
-    ))
-shell_junk = map(re.compile, (
-    # Idioms that don't convey any meaning in isolation
-    r"exit *\([01]\);",
-    # Bare shell keywords
-    "\bcase\b", "\bdone\b", "\belse\b", "\besac\b", "\bfi\b", "\bif\b",
-    "\bwhile\b", 
-    # Blank comment
-    "^#\n",
-    ))
+junk = {
+    "C": map(re.compile, (
+        # Idioms that don't convey any meaning in isolation
+        r"return *\(?[a-z]+\)? *;", r"return *\(?-?[01]+\)? *;",
+        r"goto +[a-z]+;", r"exit *\([01]\);",
+        # Pragmas
+        r'/\* *ARGSUSED *\*/', r'/\* *NOTREACHED *\*/', 
+        # Bare C keywords
+        r'\bbreak\b',  r'\bcase\b',r'\bcontinue\b', r'\bdefault\b',
+        r'\bdo\b', r'\belse\b', r'\benum\b', r'\bif\b', r'\bgoto\b',
+        r'\breturn\b', r'\bswitch\b', r'\bwhile\b',
+        r'enum', r'\bint\b', r'\blong\b', r'\bshort\b', r'\bstatic\b',
+        r'\bstruct\b', r'typedef', r'\bunion\b', r'\bvoid\b',
+        r'# *define',r'# *endif',r'# *else',r'# *if\b',
+        r'# *ifdef\b',r'# *ifndef\b',
+        # Comment delimiters with no content
+        r'/\*+', r'\*+/', r'\*+', r'^ *\\s*\n',
+        # Common preprocessor macros, not significant by themselves.
+        r'\bASSERT\b', r'\bFALSE\b', r'\bNULL\b', r'\bSTATIC\b', r'\bTRUE\b',
+        # Macro include lines are noise, too.
+        r'\s*#include.*',r'#\s*line.*',
+        # Common error macros.
+        r'\bEFAULT\b', r'\bEINVAL\b', r'\bENOSYS\b',
+        # Punctuation
+        r'\{', r'\}', r'\(', r'\)', r'\<', r'\>', r'\[', r'\]',
+        r'\^', '&', r'\|', r'\*', r'\?', r'\.', r'\+', 
+        '\\\n', ';', ':', '%', ',', '-', '/', '=', '!', '\n','\t', '\v'
+        )),
+    "shell": map(re.compile, (
+        # Idioms that don't convey any meaning in isolation
+        r"exit *\([01]\);",
+        # Bare shell keywords
+        "\bcase\b", "\bdone\b", "\bdo\b", "\belse\b", "\besac\b",
+        "\bfi\b", "\bif\b", "\bwhile\b", 
+        # Blank comment
+        "^#\n",
+        )),
+    }
 
-def nontrivial(text, deletia):
+def nontrivial(text, filetype):
     "Identify a shred as trivial or nontrivial."
-    if deletia:
+    if filetype:
+        if debug:
+            print "New shred, type %s:" % `filetype`
+            sys.stdout.write(text)
         # Basic theory of this function is that if we throw out all C
         # syntax and and common constants, and there is still an
         # identifier, we're looking at something that might be
@@ -55,7 +60,7 @@ def nontrivial(text, deletia):
         text = ' ' + text
         while True:
             savecopy = text
-            for regexp in deletia:
+            for regexp in junk[filetype]:
                 text = regexp.sub(' ', text)
             if savecopy == text:
                 break
@@ -67,9 +72,8 @@ def nontrivial(text, deletia):
     return text.strip()
 
 def deduce_deletia(line):
-    "Deduce deletia from the data on its first line."
     if "sh" in line:
-        return shell_junk
+        return "shell"
 
 def report_common():
     "Generate a report on common code."
@@ -90,7 +94,7 @@ def report_common():
                     # Try to deduce the deletia
                     deletia = None
                     if file.endswith(".c") or file.endswith(".h"):
-                        deletia = C_junk
+                        deletia = "C"
                     # Skip to the relevant chunk
                     rfp = open(file)
                     for i in range(start-1):
