@@ -9,6 +9,7 @@
 typedef u_int16_t	linenum_t;
 #define TONET		htons
 #define FROMNET		ntohs
+#define UNIQUE_FLAG	(linenum_t)-1
 
 /*
  * The code depends on the assumption that this structure has 

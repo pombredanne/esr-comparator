@@ -359,9 +359,10 @@ main(int argc, char *argv[])
     extern char	*optarg;	/* set by getopt */
     extern int	optind;		/* set by getopt */
 
-    int status, file_only, compile_only;
+    int status, file_only, compile_only, nonuniques;
     struct scf_t	*scf;
     char *dir, *outfile;
+    struct sorthash_t *mp, *np;
 
     compile_only = file_only = 0;
     dir = outfile = NULL;
@@ -567,11 +568,43 @@ main(int argc, char *argv[])
 
 	if (debug)
 	{
+	    puts("Chunk list before compaction.");
+	    dump_array(sort_buffer, sort_count, NULL);
+	}
+
+	/*
+	 * To reduce the size of the in-core working set, we do a 
+	 * a pre-elimination of duplicates based on hash key alone, in
+	 * linear time.  This may leave in the the array hashes that
+	 * all point to the same tree.  We'll catch those in a later phase.
+	 * The technique: first mark...
+	 */
+	if (!HASHCMP(sort_buffer, sort_buffer+1))
+	    sort_buffer[0].hash.start = UNIQUE_FLAG;
+	for (np = sort_buffer+1; np < sort_buffer + sort_count-1; np++)
+	    if (!HASHCMP(np, np-1) && !HASHCMP(np, np+1))
+		np->hash.start = UNIQUE_FLAG;
+	if (!HASHCMP(sort_buffer+sort_count-2, sort_buffer+sort_count-1))
+	    sort_buffer[sort_count-1].hash.start = UNIQUE_FLAG;
+	/* ...then sweep. */
+	nonuniques = 0;
+	for (mp = np = sort_buffer+1; np < sort_buffer + sort_count-1; np++)
+	    if (np->hash.start != UNIQUE_FLAG && mp < np)
+	    {
+		*mp = *np;
+		nonuniques++;
+	    }
+	sort_buffer = (struct sorthash_t *)realloc(sort_buffer, 
+			       sizeof(struct sorthash_t)* nonuniques);
+	report_time("Compaction reduced %d entries to %d", 
+		    sort_count, nonuniques);
+	sort_count = nonuniques;
+
+	if (debug)
+	{
 	    puts("Chunk list before reduction.");
 	    dump_array(sort_buffer, sort_count, NULL);
 	}
-#ifdef DEBUG
-#endif /* DEBUG */
 
 	emit_report(sort_buffer, sort_count);
     }
