@@ -4,8 +4,79 @@
 #
 import os, sys, re, getopt
 
-# Template for parsing the output from comparator.
-shredline = re.compile("(.*):([0-9]+):([0-9]+):([0-9]+)")
+class CommonReport:
+    "Capture the state of common-segnent report."
+    # Template for parsing the output from comparator.
+    shredline = re.compile("(.*):([0-9]+):([0-9]+):([0-9]+)")
+
+    def __init__(self, fp):
+        # Read the SCF header
+        self.hash_method = "RXOR"
+        self.merge_program = None
+        id = fp.readline()
+        if not id.startswith("#SCF-B "):
+            sys.stderr.write("filterator: input is not a SCF-B file.\n")
+            sys.exit(1)
+        # Read metadata
+        while 1:
+            line = fp.readline()
+            if not line or line == '%%\n':
+                break
+            (tag, value) = line.split(":")
+            value = value.strip()
+            if tag == "Normalization":
+                self.normalization = value
+            elif tag == "Shred-Size":
+                self.shredsize = int(value)
+            elif tag == "Merge-Program":
+                self.merge_program = value
+            elif tag == "Hash-Method":
+                self.hash_method = value
+        # Read file statistics
+        self.trees = {}
+        while 1:
+            line = fp.readline()
+            if not line or line == '%%\n':
+                break
+            (tag, value) = line.split(":")
+            self.trees[tag] = int(value.strip())
+        # Now read the common-segment stuff
+        self.cliques = []
+        self.files = {}
+        locations = []
+        while 1:
+            line = fp.readline()
+            if not line:
+                break
+            m = CommonReport.shredline.search(line)
+            if m:
+                (file, start, end, length) = \
+                       (m.group(1), int(m.group(2)),
+                        int(m.group(3)), int(m.group(4)))
+                locations.append((file, start, end))
+                self.files[file] = length
+            if line == '%%\n':
+                self.cliques.append(locations)
+                locations = []
+
+    def segment_count(self):
+        "Number of common chunks in the report."
+        return len(self.cliques)
+
+    def line_count(self, tree):
+        "Number of common lines from a specified tree."
+        lines = 0
+        for clique in state.cliques:
+            for (file, start, end) in clique:
+                # We find only the first match in the clique that
+                # is part of the specified tree.  There could be others,
+                # and if whitespace removal is in effect they could
+                # have different names.
+                if file.startswith(tree):
+                    lines += end - start + 1
+                    break
+        return lines
+
 
 # Tokens to be removed when checking whether a shred is significant
 junk = {
@@ -45,7 +116,7 @@ junk = {
         r"\btrue\b", r"\bwhile\b", 
         # Blank comment
         "^#\n",
-        # Ounctuation and whitespace
+        # Punctuation and whitespace
         ':', ';', '\n','\t', '\v'
         )),
     }
@@ -77,75 +148,59 @@ def deduce_deletia(line):
     if "sh" in line:
         return "shell"
 
-def report_common(stats=1,list=1):
+def report_common(state, stats=1,list=1):
     "Generate a report on common code."
-    count = lines = 0
-    locations = []
-    while 1:
-        line = sys.stdin.readline()
-        if not line:
-            break
-        m = shredline.search(line)
-        if m:
-            locations.append((m.group(1), int(m.group(2)),
-                              int(m.group(3)), int(m.group(4))))
-        if line == '%%\n':
-            for (file, start, end, length) in locations:
-                if start == 1 and end == length:
-                    print "%% %s:%d-%d: entire (%d matches)" % (file, start, end, len(locations))
-                    continue
-                if end - start + 1 < minsize:
-                    continue
-                try:
-                    # Try to deduce the deletia
-                    deletia = None
-                    if file.endswith(".c") or file.endswith(".h"):
-                        deletia = "C"
-                    # Skip to the relevant chunk
-                    rfp = open(file)
-                    for i in range(start-1):
-                        line = rfp.readline()
-                        if not deletia and i == 0:
-                            deletia = deduce_deletia(line)
-                    text = ""
-                    for i in range(start, end+1):
-                        nextline = rfp.readline()
-                        if not deletia and i == 0 and start == 1:
-                            deletia = deduce_deletia(line)
-                        if nextline[0] == '%':
-                            nextline = '%' + nextline
-                        text += nextline
-                    rfp.close()
-                    if nofilter or nontrivial(text, deletia):
-                        # We do this here in order to avoid losing
-                        # the error message in noise if the user needs
-                        # -d and fails to supply it.
-                        if count == 0:
-                            print "Filter-Program: filterator 1.0"
-                            print "Filtering:", ("language", "none")[nofilter]
-                            print "Hash-Method: MD5"
-                            if merge_program:
-                                print "Merge-Program:", merge_program
-                            print "Normalization:", normalization
-                            print "Shred-Size: %d" % shredsize
-                            if minsize:
-                                print "Minimum-Size: %d" % minsize
-                            print 75 * '-'
-                        count += 1
-                        lines += end - start + 1
-                        if list:
-                            print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(locations))
-                            sys.stdout.write(text)
-                    locations = []
-                    break
-                except IOError:
-                    sys.stderr.write("filterator: can't open %s\n" % file)
-                    sys.exit(0)
+    print "Filter-Program: filterator 1.0"
+    print "Filtering:", ("language", "none")[nofilter]
+    print "Hash-Method: MD5"
+    if state.merge_program:
+        print "Merge-Program:", state.merge_program
+    print "Normalization:", state.normalization
+    print "Shred-Size: %d" % state.shredsize
+    if minsize:
+        print "Minimum-Size: %d" % minsize
     if stats:
         print 75 * '-'
-        print "# %d lines in %d overlaps." % (lines, count)
-        for (tree, linecount) in linecounts.items():
-            print "# %f%% of %s" % ((lines*100.0)/linecount, tree)
+        print "# %d overlaps." % state.segment_count()
+        for (tree, totallines) in state.trees.items():
+            lines = state.line_count(tree)
+            print "# %f%% of %s" % ((lines*100.0)/totallines, tree)
+    print 75 * '-'
+    for clique in state.cliques:
+        for (file, start, end) in clique:
+            if start == 1 and end == state.files[file]:
+                print "%% %s:%d-%d: entire (%d matches)" % (file, start, end, len(clique))
+                continue
+            if end - start + 1 < minsize:
+                continue
+            try:
+                # Try to deduce the deletia
+                deletia = None
+                if file.endswith(".c") or file.endswith(".h"):
+                    deletia = "C"
+                # Skip to the relevant chunk
+                rfp = open(file)
+                for i in range(start-1):
+                    line = rfp.readline()
+                    if not deletia and i == 0:
+                        deletia = deduce_deletia(line)
+                text = ""
+                for i in range(start, end+1):
+                    nextline = rfp.readline()
+                    if not deletia and i == 0 and start == 1:
+                        deletia = deduce_deletia(line)
+                    if nextline[0] == '%':
+                        nextline = '%' + nextline
+                    text += nextline
+                rfp.close()
+                if nofilter or nontrivial(text, deletia):
+                     if list:
+                        print "%% %s:%d-%d: (%d matches)" % (file, start, end, len(clique))
+                        sys.stdout.write(text)
+                break
+            except IOError:
+                sys.stderr.write("filterator: can't open %s\n" % file)
+                sys.exit(0)
 
 if __name__ == '__main__':
     try:
@@ -166,34 +221,5 @@ if __name__ == '__main__':
         elif opt == '-x':
             debug = 1
 
-    # Read the SCF header
-    hash_method = "RXOR"
-    merge_program = None
-    id = sys.stdin.readline()
-    if not id.startswith("#SCF-B "):
-        sys.stderr.write("filterator: input is not a SCF-B file.\n")
-        sys.exit(1)
-    # Read metadata
-    while 1:
-        line = sys.stdin.readline()
-        if not line or line == '%%\n':
-            break
-        (tag, value) = line.split(":")
-        value = value.strip()
-        if tag == "Normalization":
-            normalization = value
-        elif tag == "Shred-Size":
-            shredsize = int(value)
-        elif tag == "Merge-Program":
-            merge_program = value
-        elif tag == "Hash-Method":
-            hash_method = value
-    # Read file statistics
-    while 1:
-        line = sys.stdin.readline()
-        if not line or line == '%%\n':
-            break
-        (tag, value) = line.split(":")
-        linecounts[tag] = int(value.strip())
-
-    report_common()
+    state = CommonReport(sys.stdin)
+    report_common(state)
