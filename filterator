@@ -29,8 +29,8 @@ def nontrivial(text):
     "Identify a shred as trivial or nontrivial."
     # Basic theory of this function is that if we throw out all C
     # syntax and and common constants, and there is still an
-    # identifier with a name longer than one char left, we're looking
-    # at something that might be interesting.
+    # identifier, we're looking at something that might be
+    # interesting.
     text = ' ' + text
     while True:
         savecopy = text
