@@ -193,21 +193,22 @@ def shredcompare(tree1, tree2, shredsize, verbose):
                 retry = True
     return filter(lambda x: x, matches)
 
-mark_time = None
-
-def report_time(legend=None):
-    "Report time since start_time was set."
-    global mark_time
-    endtime = time.time()
-    if mark_time:
-        elapsed = endtime - mark_time 
-        hours = elapsed/3600; elapsed %= 3600
-        minutes = elapsed/60; elapsed %= 60
-        seconds = elapsed
-        print "%%%%#%%%% %s: %dh, %dm, %ds" % (legend, hours, minutes, seconds)
-    mark_time = endtime
-
 if __name__ == '__main__':
+    mark_time = None
+
+    def report_time(legend=None):
+        "Report time since start_time was set."
+        global mark_time
+        endtime = time.time()
+        if mark_time:
+            elapsed = endtime - mark_time 
+            hours = elapsed/3600; elapsed %= 3600
+            minutes = elapsed/60; elapsed %= 60
+            seconds = elapsed
+            print "%%%%#%%%% %s: %dh, %dm, %ds" % \
+            	(legend, hours, minutes, seconds)
+        mark_time = endtime
+
     try:
         (optlist, args) = getopt.getopt(sys.argv[1:], 'h:s:v')
     except getopt.GetoptError:
