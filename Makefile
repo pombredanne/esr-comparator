@@ -2,11 +2,11 @@
 
 VERS=0.1
 
-SOURCES = shredtree.c shredcompare.c main.c md5.c md5.h filterator
+CODE    = shredtree.c shredcompare.c main.c md5.c md5.h filterator
 DOCS    = README comparator.xml
 EXTRAS  = shredtree.py shredcompare.py
 TEST    = test1 test2 test3 test4
-ALL     = $(SOURCES) $(DOCS) $(EXTRAS) $(TEST)
+SOURCES = $(CODE) $(DOCS) $(EXTRAS) $(TEST)
 
 CFLAGS=-g
 
