@@ -157,7 +157,7 @@ static void write_scf(const char *tree, FILE *ofp)
 	if (!debug && progress++ % 100 == 0)
 	    fprintf(stderr, "\b\b\b%02.0f%%", progress / (file_count * 0.01));
     }
-    fprintf(stderr, ", done, %d total chunks.\n", totalchunks);
+    fprintf(stderr, "\b\b\b100%%, done, %d total chunks.\n", totalchunks);
 }
 
 void read_scf(const char *name, FILE *fp)
