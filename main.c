@@ -76,7 +76,7 @@ static void write_scf(const char *tree, FILE *ofp)
 /* generate shred file for given tree */
 {
     char	**place, **list;
-    int		file_count;
+    int		file_count, progress, totalchunks;
     u_int32_t	netfile_count;
     char	buf[BUFSIZ];
 
@@ -102,6 +102,8 @@ static void write_scf(const char *tree, FILE *ofp)
 
     netfile_count = htonl(file_count);
     fwrite(&netfile_count, sizeof(u_int32_t), 1, ofp);
+    fprintf(stderr, "%% Reading %s...   ", tree);
+    progress = totalchunks = 0;
     for (place = list; place < list + file_count; place++)
     {
 	linenum_t	net_chunks;
@@ -150,8 +152,12 @@ static void write_scf(const char *tree, FILE *ofp)
 	    fwrite(&this.end,   sizeof(linenum_t), 1, ofp);
 	    fwrite(&this.hash,  sizeof(char), HASHSIZE, ofp);
 	}
+	totalchunks += chunk_count;
 	free(chunk_buffer);
+	if (!debug && progress++ % 100 == 0)
+	    fprintf(stderr, "\b\b\b%02.0f%%", progress / (file_count * 0.01));
     }
+    fprintf(stderr, ", done, %d total chunks.\n", totalchunks);
 }
 
 void read_scf(const char *name, FILE *fp)
