@@ -44,7 +44,9 @@ void merge_scf(const char *name, FILE *fp)
 {
     u_int32_t	sectcount;
     int hashcount = 0;
+    struct stat sb;
 
+    stat(name, &sb);
     fprintf(stderr, "%% Reading hash list %s...   ", name);
     fread(&sectcount, sizeof(u_int32_t), 1, fp);
     sectcount = ntohl(sectcount);
@@ -72,10 +74,8 @@ void merge_scf(const char *name, FILE *fp)
 	    this.end = FROMNET(this.end);
 	    corehook(this, head->file);
 	    hashcount++;
-#ifdef FIXME
 	    if (hashcount % 10000 == 0)
-		fprintf(stderr,"\b\b\b%02.0f%%",(ftell(fp) / (total * 0.01)));
-#endif
+		fprintf(stderr,"\b\b\b%02.0f%%",(ftell(fp) / (sb.st_size * 0.01)));
 	}
     }
     fprintf(stderr, "\b\b\b100%%...done, %d entries\n", hashcount);

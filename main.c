@@ -191,6 +191,17 @@ void report_time(char *legend, ...)
     mark_time = endtime;
 }
 
+static void usage(void)
+{
+    fprintf(stderr,"usage: shredtree [-c] [-d dir ] [-s shredsize] [-w] [-x] path...\n");
+    fprintf(stderr,"  -c      = generate SCF files\n");
+    fprintf(stderr,"  -d dir  = change directory before digesting.\n");
+    fprintf(stderr,"  -s size = set shred size (default %d)\n", shredsize);
+    fprintf(stderr,"  -w      = remove whitespace.\n");
+    fprintf(stderr,"  -x      = debug, display chunks in output.\n");
+    exit(0);
+}
+
 main(int argc, char *argv[])
 {
     extern char	*optarg;	/* set by getopt */
@@ -226,17 +237,8 @@ main(int argc, char *argv[])
 	    debug = 1;
 	    break;
 
-	case 'h':
 	default:
-	    fprintf(stderr,"usage: shredtree [-c] [-d dir ] [-h] [-s shredsize] [-w] [-x] path\n");
-	    fprintf(stderr,"  -c      = generate SCF files\n");
-	    fprintf(stderr,"  -d dir  = change directory before digesting.\n");
-	    fprintf(stderr,"  -h      = help (display this message).\n");
-	    fprintf(stderr,"  -s size = set shred size (default %d)\n",
-		    shredsize);
-	    fprintf(stderr,"  -w      = remove whitespace.\n");
-	    fprintf(stderr,"  -x      = debug, display chunks in output.\n");
-	    exit(0);
+	    usage();
 	}
     }
 
@@ -246,10 +248,13 @@ main(int argc, char *argv[])
 	sort_count = 0;
     }
 
+    if ((argc - optind) == 0)
+	usage();
+
     report_time(NULL);
 
     /* special case if user gave exactly one tree */
-    if (optind == argc - 1)
+    if (!compile_only && optind == argc - 1)
     {
 	generate_shredfile(argv[optind], stdout);
 	exit(0);

@@ -6,6 +6,8 @@ EXTRAS  = shredtree.py shredcompare.py
 TEST    = test1 test2 test3 test4
 ALL     = $(SOURCES) $(DOCS) $(EXTRAS) $(TEST)
 
+CFLAGS=-g
+
 all: comparator comparator.1
 
 main.o: main.c shred.h
