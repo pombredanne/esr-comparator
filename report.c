@@ -153,7 +153,7 @@ static int collapse_ranges(struct match_t *reduced, int nonuniques)
 		 for (rp=sp->matches; rp < sp->matches+sp->nmatches; rp++)
 		     printf("%s:%d:%d\n",  rp->file, rp->start, rp->end);
 #endif /* DEBUG */
-		 free(tp->matches);
+		 /* free(tp->matches); */
 		 nonuniques--;
 		 tp->matches = NULL;
 	     }
