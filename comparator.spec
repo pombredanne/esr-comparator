@@ -44,8 +44,11 @@ cp comparator.py "$RPM_BUILD_ROOT"${pylib}
 %{_libdir}/python*/site-packages/comparator.py
 
 %changelog
-* Thu Jul  8 2004 Eric S. Raymond <esr@snark.thyrsus.com> - 2.5-1
-- Alan Burlinson's tweaks to ease porting to SunOS.
+* Sat Aug  7 2004 Eric S. Raymond <esr@snark.thyrsus.com> - 2.5-1
+- Alan Burlinson's tweaks to ease porting to SunOS. Emil Sit's 
+  dramatic speedup for SCF-file reads.  Fix incorrect statistics
+  generation with filterator -mfF options -- counts were too high.
+  Documentation fixes.
 
 * Thu Mar 11 2004 Eric S. Raymond <esr@snark.thyrsus.com> 2.4-1
 - Fixed strtok() bug apparently introduced by C library change.

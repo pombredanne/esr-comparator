@@ -118,17 +118,20 @@ class CommonReport:
     def cliquefilter(self, predicate):
         self.read_matches()
         filtered = []
+        # Any patch band that matches the predicate keeps the entire clique.
         for clique in self.cliques:
             for (file, start, end) in clique:
                 if predicate(file, start, end):
                     filtered.append(clique)
                     break
-            else:
-                for (treename, properties) in self.trees:
-                    if treename == file.split("/")[0]:
-                        break
-                properties['matches'] -= 1
-                properties['matchlines'] -= end - start + 1
+        # Correct the statistics for each clique not kept.
+        for clique in self.cliques:
+            if clique not in filtered:
+                for (file, start, end) in clique:
+                    for (treename, properties) in self.trees:
+                        if treename == file.split("/")[0]:
+                            properties['matches'] -= 1
+                            properties['matchlines'] -= end - start + 1
         self.cliques = filtered
         self.matches = len(filtered)
 
