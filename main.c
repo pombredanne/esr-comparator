@@ -304,23 +304,18 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
     }
 }
 
-static void dump_array(struct sorthash_t *obarray, 
-		int hashcount, 
-		linenum_t (*fn)(linenum_t))
+void dump_array(const char *legend, 
+		struct sorthash_t *obarray, int hashcount)
 /* dump the contents of a sort_hash array */
 {
     struct sorthash_t	*np;
 
+    fputs(legend, stderr);
     for (np = obarray; np < obarray + hashcount; np++)
     {
 	struct hash_t scratch;
 
 	scratch = np->hash;
-	if (fn)
-	{
-	    scratch.start = fn(np->hash.start);
-	    scratch.end   = fn(np->hash.end);
-	}
 	printf("%d: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x %s:%d:%d\n", 
 	       np-obarray, 
 	       scratch.hash[0], 
@@ -561,10 +556,7 @@ main(int argc, char *argv[])
     if (!compile_only)
     {
 	if (debug)
-	{
-	    printf("Consolidated hash list:\n");
-	    dump_array(sort_buffer, sort_count, NULL);
-	}
+	    dump_array("Consolidated hash list:\n", sort_buffer, sort_count);
 
 	/* now we're ready to emit the report */
 	puts("#SCF-B 1.1");
@@ -580,13 +572,6 @@ main(int argc, char *argv[])
 	report_time("Hash merge done, %d shreds", sort_count);
 	sort_hashes(sort_buffer, sort_count);
 	report_time("Sort done");
-
-	if (debug)
-	{
-	    puts("Chunk list before reduction.");
-	    dump_array(sort_buffer, sort_count, NULL);
-	}
-
 	emit_report(sort_buffer, sort_count);
     }
 

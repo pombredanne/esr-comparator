@@ -169,6 +169,9 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
      unsigned int nonuniques, nreduced, progress, hashcount = *hashcountp;
      struct sorthash_t *mp, *np;
 
+     if (debug)
+	 dump_array("Chunk list before reduction.\n",obarray, hashcount);
+
      /*
       * To reduce the size of the in-core working set, we do a a
       * pre-elimination of duplicates based on hash key alone, in
@@ -203,6 +206,9 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
      hashcount = mp - obarray;
      obarray = (struct sorthash_t *)realloc(obarray, 
 			    sizeof(struct sorthash_t)* hashcount);
+
+     if (debug)
+	 dump_array("Chunk list after reduction.\n",obarray, hashcount);
 
      /* build list of hashes with more than one range associated */
      nonuniques = progress = 0;
@@ -286,6 +292,8 @@ void emit_report(struct sorthash_t *obarray, int hashcount)
     int mergecount;
 
     hitlist = reduce_matches(obarray, &hashcount);
+    if (debug)
+	dump_array("After removing uniques.\n", obarray, hashcount);
     report_time("%d range groups after removing unique hashes", hashcount);
     mergecount = collapse_ranges(hitlist, hashcount);
     report_time("%d range groups after merging", mergecount);
