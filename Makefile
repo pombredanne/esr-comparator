@@ -1,6 +1,6 @@
 # Makefile for the comparator/filterator tools
 
-VERS=1.3
+VERS=1.4
 
 CODE    = shredtree.c shred.h report.c main.c md5.c md5.h filterator
 DOCS    = README NEWS comparator.xml scf-standard.xml COPYING
