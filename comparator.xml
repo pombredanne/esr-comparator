@@ -19,7 +19,7 @@
   <arg choice='opt'>-c</arg>
   <arg choice='opt'>-C</arg>
   <arg choice='opt'>-d <replaceable>dir</replaceable></arg>
-  <arg choice='opt'>-m <replaceable>size</replaceable></arg>
+  <arg choice='opt'>-m <replaceable>minsize</replaceable></arg>
   <arg choice='opt'>-n</arg>
   <arg choice='opt'>-o <replaceable>file</replaceable></arg>
   <arg choice='opt'>-r</arg>
@@ -32,8 +32,6 @@
   <command>filterator</command>
   <arg choice='opt'>-d <replaceable>dir</replaceable></arg>
   <arg choice='opt'>-m <replaceable>minsize</replaceable></arg>
-  <arg choice='opt'>-n</arg>
-  <arg choice='opt'>-x</arg>
   <sbr/>
   <command>comparator.py</command>
 </cmdsynopsis>
@@ -175,19 +173,15 @@ directing shell interpretation, and the segment consists entirely
 of shell keywords and punctuation.</para></listitem>
 </orderedlist>
 
+<para>Significance filtering can be disabled with the
+<option>-n</option> option.</para>
 </refsect2>
 
 <refsect2><title>filterator</title>
 
 <para><application>filterator</application> is a postprocessor for the
 SCF-B output of <application>comparator</application> that produces an
-actual code listing.  By default, it throws away ranges that appear to
-be noise.  The noise test for C files is to throw away whitespace, C syntax,
-#include lines and a few common macros and see if anything is left.
-The noise test for shell files throws away Bourne-shell keywords</para>
-
-<para>The
-<option>-d</option> acts as it does for
+actual code listing. The <option>-d</option> acts as it does for
 <application>comparator</application>.  The <option>-m</option> option
 sets the minimum size of overlap to be reported. Setting this to a
 slightly larger number than the <application>comparator</application>
