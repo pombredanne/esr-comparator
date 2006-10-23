@@ -28,7 +28,7 @@
   <arg choice='opt'>-v</arg>
   <arg choice='opt'>-w</arg>
   <arg choice='opt'>-x</arg>
-  <arg choice='plain' rep='repeat'>path</arg>
+  <arg choice='plain' rep='repeat'>source-tree-path</arg>
   <sbr/>
   <command>filterator</command>
   <arg choice='opt'>-d <replaceable>dir</replaceable></arg>
@@ -68,7 +68,7 @@ with the next-error function of Emacs.</para>
 wherever they are.  It is insensitive to rearrangements of the source
 trees.  With appropriate options, code can be normalized at input to
 ignore differences in whitespace and (in C code) brace placement.  An
-option to strip comments also exists</para>
+option to strip comments also exists.</para>
 
 <para>The program is capable of generating a hash list for a source
 code tree which can be used in place of the tree itself.  Thus, it is
@@ -96,7 +96,7 @@ line.  The name of the resulting file is the argument name with
 <para>The <option>-o</option> option directs output to a specified file. This
 may be used with <option>-c</option> to override the normal
 <filename>.scf</filename> convention, or simply as an alternative
-to ouput redirection when generating a final report.  One advantage
+to output redirection when generating a final report.  One advantage
 of <option>-o</option> is that the program won't create the output
 file until it is ready to write; thus, unlike shell redirects, it
 won't leave an empty file lying aeound if it aborts early.</para>
@@ -282,7 +282,7 @@ no possibility of false negatives.</para>
 <para>The design of this program accepts some size limits to get high
 performance in the typical case.  The RXOR hash function's performance
 will degrade, possibly leading to false positives, on shreds of 512
-or more characters.  Also, comparison will handle maximum of 65536
+or more characters.  Also, comparison will handle a maximum of 65536
 lines per file (you will be warned if if this limit is exceeded).  A
 full integer line-number range would increase working-set size by
 33%.</para>
