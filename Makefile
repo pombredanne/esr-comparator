@@ -37,7 +37,7 @@ linebyline: linebyline.c
 	$(CC) -DTEST $(CFLAGS) -o linebyline linebyline.c
 
 clean:
-	rm -f comparator linebyline *.o *~ comparator.1
+	rm -f comparator linebyline *.o *~ comparator.1 hashtab.h
 	rm -f *.dump *.scf
 
 comparator.1: comparator.xml

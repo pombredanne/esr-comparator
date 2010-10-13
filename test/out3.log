@@ -1,0 +1,14 @@
+#SCF-B 2.0
+Filtering: language
+Hash-Method: RXOR
+Matches: 1
+Merge-Program: comparator 2.5
+Normalization: line-oriented, remove-whitespace, remove-braces
+Shred-Size: 3
+%%
+test3-b: matches=1, matchlines=16, totallines=16
+test3-a: matches=1, matchlines=12, totallines=12
+%%
+test3-a/original.c:1:12:12
+test3-b/copy.c:1:16:16
+%%

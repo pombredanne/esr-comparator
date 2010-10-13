@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+#
+# dumpscf -- dump scf files in an inspectable ASCII form.
+
+import sys, struct, binascii, getopt
+import comparator
+
+def getline():
+    return sys.stdin.readline()
+
+def getshort():
+    return struct.unpack("!H", sys.stdin.read(2))[0]
+
+def getint():
+    return struct.unpack("!I", sys.stdin.read(4))[0]
+
+def gethash():
+    if hashmethod == "MD5":
+        return struct.unpack("!HH16sB", sys.stdin.read(21))
+    else:
+        return struct.unpack("!HH8sB", sys.stdin.read(13))
+
+if __name__ == '__main__':
+    try:
+        (optlist, args) = getopt.getopt(sys.argv[1:], 'v')
+    except getopt.GetoptError:
+        sys.stderr.write("usage: dumpscf [-v]\n")
+        sys.exit(2)
+    verbose = 0
+    for (opt, val) in optlist:
+        if opt == '-v':
+            verbose = 1
+
+    hashmethod = "RXOR"
+    while 1:
+        line = getline()
+        sys.stdout.write(line)
+        if line.find("MD5") > -1:
+            hashmethod = "MD5"
+        if line == "%%\n":
+            break
+    numfiles = getint()
+    print "Files:", numfiles
+    while numfiles:
+        numfiles -= 1
+        file = getline().rstrip()
+        print file
+        if verbose:
+            sys.stderr.write(file + "\n")
+        print "Length:", getshort()
+        chunks = getshort()
+        print "Chunks:", chunks
+        while chunks:
+            chunks -= 1
+            (start, end, hash, flags) = gethash()
+            sys.stdout.write("%d:%d:%s" % (start, end, binascii.hexlify(hash)))
+            if flags:                
+                sys.stdout.write("\tinsignificant")
+            sys.stdout.write("\n")
+    print "Total length:", getint()
+

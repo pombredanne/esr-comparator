@@ -1,0 +1,16 @@
+#SCF-B 2.0
+Filtering: language
+Hash-Method: RXOR
+Matches: 2
+Normalization: line-oriented, remove-whitespace, remove-braces
+Shred-Size: 3
+%%
+test1-b: matches=2, matchlines=13, totallines=18
+test1-a: matches=2, matchlines=13, totallines=24
+%%
+test1-a/subdir/c.txt:1:9:13
+test1-b/odd.txt:3:11:18
+%%
+test1-a/subdir/c.txt:10:13:13
+test1-b/odd.txt:15:18:18
+%%
