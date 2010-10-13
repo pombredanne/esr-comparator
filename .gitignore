@@ -1,0 +1,6 @@
+comparator
+linebyline
+hashtab.h
+*.o
+*~
+*.1
