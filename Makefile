@@ -38,7 +38,7 @@ linebyline: linebyline.c
 
 clean:
 	rm -f comparator linebyline *.o *~ comparator.1 hashtab.h
-	rm -f *.dump *.scf
+	rm -f *.dump *.scf *.html SHIPPER.*
 
 comparator.1: comparator.xml
 	xmlto man comparator.xml
@@ -99,4 +99,5 @@ comparator-$(VERS).tar.gz: $(SOURCES) comparator.1
 dist: comparator-$(VERS).tar.gz
 
 release: comparator-$(VERS).tar.gz comparator.html
-	shipper -f; rm -f CHANGES ANNOUNCE* *.1 *.html *.rpm *.lsm
+	shipper -u -m -t; make clean
+
