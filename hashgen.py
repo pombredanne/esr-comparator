@@ -1,9 +1,9 @@
 #!/bin/env python
-# Generate hash function mapping text bytes to an unsigned integral type, using
-# MD5 to generate the magic values.  Based on an algorithm suggested by
-# Ron Rivest.
+# Generate hash function mapping text bytes to an unsigned integral
+# type, using MD5 to generate the magic values.  Based on an algorithm
+# suggested by Ron Rivest.
 
-import sys, md5
+import sys, hashlib
 
 def tablegen(maxlen, width):
     print "static hashval_t magicbits[256][%d] = " % maxlen
@@ -13,7 +13,7 @@ def tablegen(maxlen, width):
         for j in range(maxlen):
             if j % 3 == 0:
                 sys.stdout.write('\n\t')
-            m = md5.new()
+            m = hashlib.md5()
             m.update(`i` + `j`)
             sys.stdout.write('0x' + m.hexdigest()[-(width*2):] + "ULL,")
         print "}, /* end char %02x */" % i
