@@ -213,7 +213,7 @@ static void read_scf(struct scf_t *scf)
     stat(scf->file, &sb);
     if (verbose)
 	fprintf(stderr, "%% Reading hash list %s...    ", scf->file);
-    fread(&filecount, sizeof(linecount_t), 1, scf->fp);
+    (void)fread(&filecount, sizeof(linecount_t), 1, scf->fp);
     filecount = ntohl(filecount);
     while (filecount--)
     {
@@ -221,23 +221,23 @@ static void read_scf(struct scf_t *scf)
 	linenum_t	lines, chunks;
 	struct filehdr_t	*filehdr;
 
-	fgets(buf, sizeof(buf), scf->fp);
+	(void)fgets(buf, sizeof(buf), scf->fp);
 	*strchr(buf, '\n') = '\0';
 
-	fread(&lines, sizeof(linenum_t), 1, scf->fp);
+	(void)fread(&lines, sizeof(linenum_t), 1, scf->fp);
 	lines = FROMNET(lines);
 	filehdr = register_file(buf, lines);
 
-	fread(&chunks, sizeof(linenum_t), 1, scf->fp);
+	(void)fread(&chunks, sizeof(linenum_t), 1, scf->fp);
 	chunks = FROMNET(chunks);
 	while (chunks--)
 	{
 	    struct hash_t	this;
 
-	    fread(&this.start, sizeof(linenum_t), 1, scf->fp);
-	    fread(&this.end,  sizeof(linenum_t), 1, scf->fp);
-	    fread(&this.hash, sizeof(hashval_t), 1, scf->fp);
-	    fread(&this.flags, sizeof(flag_t), 1, scf->fp);
+	    (void)fread(&this.start, sizeof(linenum_t), 1, scf->fp);
+	    (void)fread(&this.end,  sizeof(linenum_t), 1, scf->fp);
+	    (void)fread(&this.hash, sizeof(hashval_t), 1, scf->fp);
+	    (void)fread(&this.flags, sizeof(flag_t), 1, scf->fp);
 	    this.start = FROMNET(this.start);
 	    this.end = FROMNET(this.end);
 	    corehook(this, filehdr);
@@ -249,7 +249,7 @@ static void read_scf(struct scf_t *scf)
     if (verbose)
 	fprintf(stderr, "\b\b\b\b100%%...done, %d shreds\n", hashcount);
 
-    fread(&scf->totallines, sizeof(linecount_t), 1, scf->fp);
+    (void)fread(&scf->totallines, sizeof(linecount_t), 1, scf->fp);
     scf->totallines = ntohl(scf->totallines);
 }
 
@@ -303,10 +303,12 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
 	scf->fp   = fopen(scf->file, "r");
 	if (!scf->fp)
 	{
-	    fprintf(stderr, "comparator: file %s, %s", scf->file, strerror(errno));
+	    (void)fprintf(stderr, 
+			  "comparator: file %s, %s", 
+			  scf->file, strerror(errno));
 	    exit(1);
 	}
-	fgets(buf, sizeof(buf), scf->fp);
+	(void)fgets(buf, sizeof(buf), scf->fp);
 	if (strncmp(buf, "#SCF-A 2.0", 9))
 	{
 	    fprintf(stderr, 
@@ -526,7 +528,7 @@ main(int argc, char *argv[])
     {
 	if (dir)
 	{
-	    chdir(dir);
+	    (void)chdir(dir);
 	}
 	write_scf(argv[optind], redirect(outfile));
 	exit(0);
@@ -561,11 +563,11 @@ main(int argc, char *argv[])
 	    if (dir)
 	    {
 		olddir = getcwd(NULL, PATH_MAX);
-		chdir(dir);
+		(void)chdir(dir);
 	    }
 	    write_scf(source, ofp);
 	    if (dir)
-		chdir(olddir);
+		(void)chdir(olddir);
 	    fclose(ofp);
 	}
 	else
@@ -573,12 +575,12 @@ main(int argc, char *argv[])
 	    if (dir)
 	    {
 		olddir = getcwd(NULL, PATH_MAX);
-		chdir(dir);
+		(void)chdir(dir);
 	    }
 	    init_scf(source, scf, 0);
 	    scf->totallines = merge_tree(source);
 	    if (dir)
-		chdir(olddir);
+		(void)chdir(olddir);
 	}
     }
 
