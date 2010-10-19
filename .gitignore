@@ -4,3 +4,4 @@ hashtab.h
 *.o
 *~
 *.1
+test/*.log
