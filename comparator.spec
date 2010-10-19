@@ -7,7 +7,7 @@ Group: Utilities
 URL: http://www.catb.org/~esr/comparator/
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-root
-#Project-Tags: source code, comparison, forensics, copyright
+#Project-Tag-List: source code, comparison, forensics, copyright
 
 %description
 comparator and filterator are a pair of tools for rapidly finding common
