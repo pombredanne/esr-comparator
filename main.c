@@ -213,7 +213,10 @@ static void read_scf(struct scf_t *scf)
     stat(scf->file, &sb);
     if (verbose)
 	fprintf(stderr, "%% Reading hash list %s...    ", scf->file);
-    (void)fread(&filecount, sizeof(linecount_t), 1, scf->fp);
+    if (fread(&filecount, sizeof(linecount_t), 1, scf->fp) != 1) 
+    {
+	(void)fputs("comparator: fread() failed!\n", stderr);
+    }
     filecount = ntohl(filecount);
     while (filecount--)
     {
@@ -221,23 +224,35 @@ static void read_scf(struct scf_t *scf)
 	linenum_t	lines, chunks;
 	struct filehdr_t	*filehdr;
 
-	(void)fgets(buf, sizeof(buf), scf->fp);
+	if (fgets(buf, sizeof(buf), scf->fp) == NULL)
+	{
+	    (void)fputs("comparator: fgets() failed!\n", stderr);
+	}
 	*strchr(buf, '\n') = '\0';
 
-	(void)fread(&lines, sizeof(linenum_t), 1, scf->fp);
+	if (fread(&lines, sizeof(linenum_t), 1, scf->fp) != 1)
+	{
+	    (void)fputs("comparator: fread() failed!\n", stderr);
+	}
 	lines = FROMNET(lines);
 	filehdr = register_file(buf, lines);
 
-	(void)fread(&chunks, sizeof(linenum_t), 1, scf->fp);
+	if (fread(&chunks, sizeof(linenum_t), 1, scf->fp) != 1)
+	{
+	    (void)fputs("comparator: fread() failed!\n", stderr);
+	}
 	chunks = FROMNET(chunks);
 	while (chunks--)
 	{
 	    struct hash_t	this;
 
-	    (void)fread(&this.start, sizeof(linenum_t), 1, scf->fp);
-	    (void)fread(&this.end,  sizeof(linenum_t), 1, scf->fp);
-	    (void)fread(&this.hash, sizeof(hashval_t), 1, scf->fp);
-	    (void)fread(&this.flags, sizeof(flag_t), 1, scf->fp);
+	    if (fread(&this.start, sizeof(linenum_t), 1, scf->fp) != 1
+		|| fread(&this.end,  sizeof(linenum_t), 1, scf->fp) != 1
+		|| fread(&this.hash, sizeof(hashval_t), 1, scf->fp) != 1
+		|| fread(&this.flags, sizeof(flag_t), 1, scf->fp) != 1)
+	    {
+		(void)fputs("comparator: fread() failed!\n", stderr);
+	    }
 	    this.start = FROMNET(this.start);
 	    this.end = FROMNET(this.end);
 	    corehook(this, filehdr);
@@ -249,7 +264,10 @@ static void read_scf(struct scf_t *scf)
     if (verbose)
 	fprintf(stderr, "\b\b\b\b100%%...done, %d shreds\n", hashcount);
 
-    (void)fread(&scf->totallines, sizeof(linecount_t), 1, scf->fp);
+    if (fread(&scf->totallines, sizeof(linecount_t), 1, scf->fp) != 1)
+    {
+	(void)fputs("comparator: fread() failed!\n", stderr);
+    }
     scf->totallines = ntohl(scf->totallines);
 }
 
@@ -308,7 +326,10 @@ static void init_scf(char *file, struct scf_t *scf, const int readfile)
 			  scf->file, strerror(errno));
 	    exit(1);
 	}
-	(void)fgets(buf, sizeof(buf), scf->fp);
+	if (fgets(buf, sizeof(buf), scf->fp) == NULL)
+	{
+	    (void)fputs("comparator: frgets() failed!\n", stderr);
+	}
 	if (strncmp(buf, "#SCF-A 2.0", 9))
 	{
 	    fprintf(stderr, 
