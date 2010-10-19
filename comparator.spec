@@ -1,13 +1,13 @@
 Name: comparator
 Summary: fast comparison of large source-code trees
-Version: 2.7
+Version: 2.8
 Release: 1
-License: GPL
+License: BSD
 Group: Utilities
 URL: http://www.catb.org/~esr/comparator/
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-root
-#Keywords: source code, comparison
+#Project-Tags: source code, comparison, forensics, copyright
 
 %description
 comparator and filterator are a pair of tools for rapidly finding common
@@ -44,6 +44,10 @@ cp comparator.py "$RPM_BUILD_ROOT"${pylib}
 %{_libdir}/python*/site-packages/comparator.py
 
 %changelog
+* Tue Oct 19 2005 Eric S. Raymond <esr@snark.thyrsus.com> - 2.8-1
+- Change license to BSD. Tweak Python to use hashlib rather than
+  the deprecated md5 module.  Suppress some compiler warnings.
+
 * Fri Jan  7 2005 Eric S. Raymond <esr@snark.thyrsus.com> - 2.7-1
 - Improvements to regression-test machinery.  
 - Document the FAQ about comparing a tree to itself.
