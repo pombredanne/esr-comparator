@@ -528,7 +528,11 @@ main(int argc, char *argv[])
     {
 	if (dir)
 	{
-	    (void)chdir(dir);
+	    if (chdir(dir) != 0)
+	    {
+		fprintf(stderr, "comparator: cd failed!\n");
+		exit(1);
+	    }
 	}
 	write_scf(argv[optind], redirect(outfile));
 	exit(0);
@@ -563,11 +567,20 @@ main(int argc, char *argv[])
 	    if (dir)
 	    {
 		olddir = getcwd(NULL, PATH_MAX);
-		(void)chdir(dir);
+		if (chdir(dir) != 0)
+		{
+		    fprintf(stderr, "comparator: cd failed!\n");
+		    exit(1);
+		}
 	    }
 	    write_scf(source, ofp);
-	    if (dir)
-		(void)chdir(olddir);
+	    if (dir) {
+		if (chdir(dir) != 0)
+		{
+		    fprintf(stderr, "comparator: cd failed!\n");
+		    exit(1);
+		}
+	    }
 	    fclose(ofp);
 	}
 	else
@@ -575,12 +588,22 @@ main(int argc, char *argv[])
 	    if (dir)
 	    {
 		olddir = getcwd(NULL, PATH_MAX);
-		(void)chdir(dir);
+		if (chdir(dir) != 0)
+		{
+		    fprintf(stderr, "comparator: cd failed!\n");
+		    exit(1);
+		}
 	    }
 	    init_scf(source, scf, 0);
 	    scf->totallines = merge_tree(source);
 	    if (dir)
-		(void)chdir(olddir);
+	    {
+		if (chdir(dir) != 0)
+		{
+		    fprintf(stderr, "comparator: cd failed!\n");
+		    exit(1);
+		}
+	    }
 	}
     }
 
