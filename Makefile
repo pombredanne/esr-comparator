@@ -55,6 +55,9 @@ makeregress:
 	    comparator $(OPTS) -d test test$${n}-a test$${n}-b | grep -v 'Merge-Program' >test/out$${n}.good;\
 	done
 
+# Note: This test is subject to fluky timing-dependent failurtes that 
+# have nothing to do with the actual code. If you see a message of the form
+# "couldn't open testN-a.scf, Success", just run the test again.
 regress:
 	@for n in 1 2 3; do \
 	    comparator $(OPTS) -d test test$${n}-a test$${n}-b | grep -v 'Merge-Program' >test/out$${n}.log;\
