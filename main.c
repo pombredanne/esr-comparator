@@ -530,7 +530,7 @@ main(int argc, char *argv[])
 	{
 	    if (chdir(dir) != 0)
 	    {
-		fprintf(stderr, "comparator: cd failed!\n");
+		fprintf(stderr, "comparator: single-tree cd %s failed!\n", dir);
 		exit(1);
 	    }
 	}
@@ -569,15 +569,15 @@ main(int argc, char *argv[])
 		olddir = getcwd(NULL, PATH_MAX);
 		if (chdir(dir) != 0)
 		{
-		    fprintf(stderr, "comparator: cd failed!\n");
+		    fprintf(stderr, "comparator: descent cd %s failed!\n", dir);
 		    exit(1);
 		}
 	    }
 	    write_scf(source, ofp);
 	    if (dir) {
-		if (chdir(dir) != 0)
+		if (chdir(olddir) != 0)
 		{
-		    fprintf(stderr, "comparator: cd failed!\n");
+		    fprintf(stderr, "comparator: return cd %s failed!\n", dir);
 		    exit(1);
 		}
 	    }
@@ -590,7 +590,7 @@ main(int argc, char *argv[])
 		olddir = getcwd(NULL, PATH_MAX);
 		if (chdir(dir) != 0)
 		{
-		    fprintf(stderr, "comparator: cd failed!\n");
+		    fprintf(stderr, "comparator: descent cd %s failed!\n", dir);
 		    exit(1);
 		}
 	    }
@@ -598,9 +598,9 @@ main(int argc, char *argv[])
 	    scf->totallines = merge_tree(source);
 	    if (dir)
 	    {
-		if (chdir(dir) != 0)
+		if (chdir(olddir) != 0)
 		{
-		    fprintf(stderr, "comparator: cd failed!\n");
+		    fprintf(stderr, "comparator: return cd %s failed!\n", dir);
 		    exit(1);
 		}
 	    }
