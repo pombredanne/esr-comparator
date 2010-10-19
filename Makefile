@@ -64,9 +64,9 @@ regress:
 	    else \
 		echo "Test $${n} from trees failed."; \
 	    fi; \
-	    comparator $(OPTS) -d test -c test$${n}-a >test$${n}-a.scf; \
-	    comparator $(OPTS) -d test -c test$${n}-b >test$${n}-b.scf; \
-	    comparator $(OPTS) test$${n}-a.scf test$${n}-b.scf >test/out$${n}.log;\
+	    comparator $(OPTS) -d test -c test$${n}-a | grep -v 'Merge-Program' >test$${n}-a.scf; \
+	    comparator $(OPTS) -d test -c test$${n}-b | grep -v 'Merge-Program' >test$${n}-b.scf; \
+	    comparator $(OPTS) test$${n}-a.scf test$${n}-b.scf | grep -v 'Merge-Program' >test/out$${n}.log;\
 	    rm test$${n}-a.scf test$${n}-b.scf; \
 	    if diff -u test/out$${n}.good test/out$${n}.log; \
 	    then \
