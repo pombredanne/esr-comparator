@@ -171,7 +171,7 @@ static void write_scf(const char *tree, FILE *ofp)
 	    if (debug)
 	    {
 		fprintf(stderr,
-			"%d: %s %s:%d:%d",
+			"%ld: %s %s:%d:%d",
 			np-chunk_buffer, hash_dump(this.hash),
 		       *place, this.start, this.end);
 		if (np->flags)
@@ -373,7 +373,7 @@ void dump_array(const char *legend,
     for (np = obarray; np < obarray + hashcount; np++)
 	if (!(np->hash.flags & INTERNAL_FLAG))
 	{
-	    fprintf(stdout, "%2d: %s %s:%d:%d",
+	    fprintf(stdout, "%2ld: %s %s:%d:%d",
 		    np-obarray, 
 		    hash_dump(np->hash.hash),
 		    np->file->name, np->hash.start, np->hash.end);

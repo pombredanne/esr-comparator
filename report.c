@@ -295,9 +295,9 @@ struct match_t *reduce_matches(struct sorthash_t *obarray, int *hashcountp)
 
 	 if (debug)
 	 {
-	     printf("*** %d has %d in its clique\n", np-obarray, nmatches);
+	     printf("*** %ld has %d in its clique\n", np-obarray, nmatches);
 	     for (i = 0; i < nmatches; i++)
-		 printf("%d: %s:%d:%d\n", 
+		 printf("%ld: %s:%d:%d\n", 
 			np-obarray+i, np[i].file->name, np[i].hash.start, np[i].hash.end);
 	 }
 
