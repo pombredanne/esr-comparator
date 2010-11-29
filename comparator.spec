@@ -7,6 +7,7 @@ Group: Utilities
 URL: http://www.catb.org/~esr/comparator/
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-root
+#Destinations: freshmeat
 #Project-Tag-List: source code, comparison, forensics, copyright
 
 %description
