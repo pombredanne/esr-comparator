@@ -14,7 +14,9 @@ def eligible(file):
         return False
     elif filter(lambda x: file.endswith(x), ('.o','~', '.bdf')):
         return False
-    elif filter(lambda x: file.find(x)>-1, ('RCS','SCCS','CVS','SVN','.svn')):
+    elif filter(lambda x: file.find(x)>-1, ('RCS','SCCS','CVS','SVN')):
+        return False
+    elif filter(lambda x: file.endswith(x), ('.svn','.git','.hg','.bzr')):
         return False
     elif c_only:
         return filter(lambda x: file.endswith(x), ('.c','.cc','.h','.html'))

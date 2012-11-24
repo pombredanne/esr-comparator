@@ -1,3 +1,6 @@
+2.9: 2012-11-24
+  Exclude .git/.bzr/.hg repo directories as well as .svn.
+
 2.8: 2005-10-19
   Change license to BSD. Tweak Python to use hashlib rather than
   the deprecated md5 module.  Suppress some compiler warnings.
