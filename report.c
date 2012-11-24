@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <stdbool.h>
 #include "shred.h"
 
 #define min(x, y)	((x < y) ? (x) : (y)) 
@@ -76,7 +77,7 @@ static int merge_ranges(struct sorthash_t *p,
     return(1);
 }
 
-static int sametree(const char *s, const char *t)
+static bool sametree(const char *s, const char *t)
 /* are two files from the same tree? */
 {
     int sn = strchr(s, '/') - s;

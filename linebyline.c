@@ -10,12 +10,13 @@ NAME:
 #include <regex.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdbool.h>
 #include "shred.h"
 
 /* control bits */
-static int remove_braces = 0;
-static int remove_whitespace = 0;
-static int remove_comments = 0;
+static bool remove_braces = false;
+static bool remove_whitespace = false;
+static bool remove_comments = false;
 
 static char *c_patterns[] = {
     /* Idioms that don't convey any meaning in isolation */

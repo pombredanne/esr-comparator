@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <time.h>
+#include <stdbool.h>
 #include "shred.h"
 
 int verbose, debug, minsize, nofilter;
@@ -49,7 +50,7 @@ struct filehdr_t *register_file(const char *file, linenum_t length)
     return(new);
 }
 
-static int is_scf_file(const char *file)
+static bool is_scf_file(const char *file)
 /* is the specified file an SCF hash list? */
 {
     char	buf[BUFSIZ];
@@ -63,7 +64,7 @@ static int is_scf_file(const char *file)
 	return(0);
     }
     fclose(fp);
-    return(!strncmp(buf, "#SCF-A ", 7));
+    return(strncmp(buf, "#SCF-A ", 7) == 0);
 }
 
 /* 

@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "shred.h"
 
 /* control bits, meant to be set at startup */
@@ -39,17 +40,17 @@ static int file_count;
 
 #define MIN_PRINTABLE	0.9
 
-static int eligible(const char *file)
+static bool eligible(const char *file)
 /* is the specified file eligible to be compared? */ 
 {
 #define endswith(suff)	!strcmp(suff, file + strlen(file) - strlen(suff))
     if (strstr(file, "CVS") || strstr(file,"RCS") || strstr(file,"SCCS") || strstr(file, "SVN") || endswith(".svn") || endswith(".git") || endswith(".hg") || endswith(".bzr"))
-	return(0);
+	return(false);
     /* fast check for the most common suffixes */
     else if (endswith(".c") || endswith(".h") || endswith(".html"))
-	return(1);
+	return(true);
     else if (endswith(".o") || endswith("~") || endswith(".bdf"))
-	return(0);
+	return(false);
 #undef endswith
     else
     {
