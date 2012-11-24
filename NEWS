@@ -1,0 +1,84 @@
+2.8: 2005-10-19
+  Change license to BSD. Tweak Python to use hashlib rather than
+  the deprecated md5 module.  Suppress some compiler warnings.
+
+2.7: 2005-01-07
+  Improvements to regression-test machinery.  
+  Document the FAQ about comparing a tree to itself.
+
+2.6: 2004-08-20
+  Ignore .svn files and and SVN subdirectories.  Typo fixes on manual page.
+
+2.5: 2004-07-07
+  Alan Burlinson's tweaks to ease porting to SunOS. Emil Sit's 
+  dramatic speedup for SCF-file reads.  Fix incorrect statistics
+  generation with filterator -mfF options -- counts were too high.
+  Documentation fixes.
+
+2.4: 2004-03-11
+  Fixed strtok() bug apparently introduced by C library change.
+  Added -n, -f, and -F options to filterator.
+
+2.3: 2003-12-29
+  Source RPMs no longer depend on myversion symbol.
+  New -N option style supports multiple normalizers.
+  Fix a bug that might have caused a SEGV on really large shreds.
+
+2.2: 2003-12-24
+  Better error reporting in comparator.py.
+  Fix a packaging error.
+
+2.1: 2003-08-19
+  Refactored code to make it possible to plug in new feature analyzers.
+  Logic for handling trailing blank lines in files works slightly better.
+
+2.0: 2003-08-18
+  Now uses custom 8-byte digest function suggested by Ron Rivest, the inventor
+  of MD5.  The new function is faster and about halves the size of SCF files.
+  This format change is not compatible with 1.x versions.
+  There is a new -m option to set the minimum span size to be output.
+  The filterator -s option has been changed to -m to match it.
+  filterator is now a wrapper around comparator.py, a loadable Python
+  module which can be used to write other report generators.
+  Significance filtering for C and shell is now done within comparator
+  itself, and is accordingly much faster.
+  FreeBSD port patches from Warren Toomey.
+
+1.6: 2003-09-15
+  Regression-test production now in place.
+  Second application of qsort trick, for significant speedups on
+  trees with many common matches.
+  New -v option to enable progress messages; they're off by default.
+
+1.5: 2003-09-12
+  Fix bug in -r option.
+  Capture trailing braces (as on C functions) in chunks even when they are
+  ignored for comparison purposes.
+  Range reports now include the line length of the file.
+  Documentation improvements.
+
+1.4: 2003-09-12
+  Fix brown-paper-bag bug in reduction logic, introduced when I optimized it.
+  SCF-B format now includes codebase size so we can compute percentages.
+  filterator now generates a trailer containing percentage overlaps.
+
+1.3: 2003-09-12
+  -C now implies -w.
+  A new -r option strips comments.
+  Code is cleaned up to pass gcc -Wall.
+  filterator can now perform significance checks on shreds from shellscripts.
+  There	is now a progress meter while making SCF files.
+  The logic for merging ranges has been seriously speed-tuned and is 
+  66% faster.  This code is O(n**2) on the number of common shreds and
+  is the bottleneck on large trees.
+
+1.2: 2003-09-10
+  Add -C option; -w wasn't good enough to make indent-style difference
+  invisible by itself.
+
+1.1: 2003-09-09
+  Fix silly division by zero error. Add COPYING file.
+  Add -s option to filterator and make it ignore form feeds in filtered mode.
+
+1.0: 2003-09-07
+  Initial build.

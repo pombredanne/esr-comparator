@@ -5,3 +5,4 @@ hashtab.h
 *~
 *.1
 test/*.log
+MANIFEST

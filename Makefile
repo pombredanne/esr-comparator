@@ -8,10 +8,10 @@ VERS=$(shell sed <comparator.spec -n -e '/Version: \(.*\)/s//\1/p')
 CODE    = shredtree.c shred.h report.c hash.c linebyline.c main.c \
 		hash.h hashtab.h filterator comparator.py 
 SCRIPTS = hashgen.py setup.py
-DOCS    = README comparator.xml scf-standard.xml COPYING
+DOCS    = README comparator.xml scf-standard.xml COPYING NEWS control
 EXTRAS  = shredtree.py shredcompare.py
 TEST    = test
-SOURCES = $(CODE) $(SCRIPTS) $(DOCS) $(EXTRAS) $(TEST) comparator.spec Makefile
+SOURCES = $(CODE) $(SCRIPTS) $(DOCS) $(EXTRAS) $(TEST) Makefile
 CFLAGS  = -O3
 LDFLAGS = 
 
