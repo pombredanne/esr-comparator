@@ -6,17 +6,17 @@ Package: comparator
 Description: Rapidly find common code segments in large source trees.
  comparator and filterator are a pair of programs for identifying  common
  or closely matching segments in source trees.  They are fast enough to
- gove near-instant results even on trees running to millions of lines each.
+ give near-instant results even on trees running to millions of lines each.
 
-#XBS-Gitorious-URL: https://gitorious.org/comparator
+XBS-Gitorious-URL: https://gitorious.org/comparator
 
-#XBS-Ohloh-URL: http://www.ohloh.net/p/comparator
+XBS-Ohloh-URL: http://www.ohloh.net/p/comparator
 
 XBS-Destinations: freecode
 
 Homepage: http://www.catb.org/~esr/comparator
 
-#XBS-Logo: comparator-logo.png
+XBS-Logo: comparator-logo.png
 
 XBS-Project-Tag-List: source code, forensics, copyright
 
