@@ -16,7 +16,10 @@ XBS-Destinations: freecode
 
 Homepage: http://www.catb.org/~esr/comparator
 
+XBS-HTML-Target: index.html
+
 XBS-Logo: comparator-logo.png
 
-XBS-Project-Tag-List: source code, forensics, copyright
+XBS-Freecode-Tags: source code, forensics, copyright
 
+XBS-VC-Tag-Template: %(version)s
