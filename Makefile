@@ -55,7 +55,7 @@ makeregress:
 	    comparator $(OPTS) -d test test$${n}-a test$${n}-b | grep -v 'Merge-Program' >test/out$${n}.good;\
 	done
 
-# Note: This test is subject to fluky timing-dependent failurtes that 
+# Note: This test is subject to fluky timing-dependent failures that 
 # have nothing to do with the actual code. If you see a message of the form
 # "couldn't open testN-a.scf, Success", just run the test again.
 regress:
@@ -69,6 +69,7 @@ regress:
 	    fi; \
 	    comparator $(OPTS) -d test -c test$${n}-a | grep -v 'Merge-Program' >test$${n}-a.scf; \
 	    comparator $(OPTS) -d test -c test$${n}-b | grep -v 'Merge-Program' >test$${n}-b.scf; \
+	    sync; sync; \
 	    comparator $(OPTS) test$${n}-a.scf test$${n}-b.scf | grep -v 'Merge-Program' >test/out$${n}.log;\
 	    rm test$${n}-a.scf test$${n}-b.scf; \
 	    if diff -u test/out$${n}.good test/out$${n}.log; \
