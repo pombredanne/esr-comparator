@@ -67,6 +67,8 @@ regress:
 	    else \
 		echo "Test $${n} from trees failed."; \
 	    fi; \
+	done; \
+	for n in 1 2 3; do \
 	    comparator $(OPTS) -d test -c test$${n}-a | grep -v 'Merge-Program' >test$${n}-a.scf; \
 	    comparator $(OPTS) -d test -c test$${n}-b | grep -v 'Merge-Program' >test$${n}-b.scf; \
 	    sync; sync; \
