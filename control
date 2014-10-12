@@ -12,7 +12,7 @@ XBS-Gitorious-URL: https://gitorious.org/comparator
 
 XBS-Ohloh-URL: http://www.ohloh.net/p/comparator
 
-XBS-Destinations: freecode
+#XBS-Destinations: freecode
 
 Homepage: http://www.catb.org/~esr/comparator
 
