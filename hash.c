@@ -62,6 +62,8 @@ Other good material is at <http://burtleburtle.net/bob/hash/>.
 
 ****************************************************************************/
 
+#include <inttypes.h>
+
 #include "hashtab.h"	/* table T of magic values */
 
 /* following code only relies on hashval_t being an integral type */
@@ -96,7 +98,7 @@ char *hash_dump(hashval_t hash)
 {
     static char buffer[33];
 
-    snprintf(buffer, sizeof(buffer)-1, "%016llx", hash);
+    snprintf(buffer, sizeof(buffer)-1, "%016" PRIx64, hash);
     return(buffer);
 }
 

@@ -103,5 +103,5 @@ comparator-$(VERS).tar.gz: $(SOURCES) comparator.1
 dist: comparator-$(VERS).tar.gz
 
 release: comparator-$(VERS).tar.gz comparator.html
-	shipper -u -m -t; make clean
+	shipper version=$(VERS) | sh -e -x
 

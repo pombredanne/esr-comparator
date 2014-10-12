@@ -1,3 +1,6 @@
+Repository head:
+  Use standard uint64_t rather than long long.
+
 2.9: 2012-11-24
   Exclude .git/.bzr/.hg repo directories as well as .svn.
 

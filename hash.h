@@ -1,7 +1,9 @@
 /* interface file for comparator hash function */
 
+#include <stdint.h>
+
 #ifndef FORCE_MD5
-typedef unsigned long long	hashval_t;
+typedef uint64_t	hashval_t;
 #define HASHMETHOD	"RXOR"
 #else
 typedef unsigned char	hashval_t[16];
