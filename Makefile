@@ -3,7 +3,7 @@
 # By building with -DLARGEFILES you can go to all 32-byte offsets.
 # This increases working-set size by 20% but handles > 65336 lines per file.
 
-VERS=2.9
+VERS=2.10
 
 CODE    = shredtree.c shred.h report.c hash.c linebyline.c main.c \
 		hash.h hashtab.h filterator comparator.py 

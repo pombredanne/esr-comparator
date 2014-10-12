@@ -1,4 +1,4 @@
-Repository head:
+2.10: 2004-10-12
   Use standard uint64_t rather than long long.
 
 2.9: 2012-11-24
