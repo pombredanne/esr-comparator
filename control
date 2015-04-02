@@ -8,7 +8,7 @@ Description: Rapidly find common code segments in large source trees.
  or closely matching segments in source trees.  They are fast enough to
  give near-instant results even on trees running to millions of lines each.
 
-XBS-Gitorious-URL: https://gitorious.org/comparator
+XBS-Repository-URL: http://thyrsus.com/gitweb/?p=comparator.git
 
 XBS-Ohloh-URL: http://www.ohloh.net/p/comparator
 
