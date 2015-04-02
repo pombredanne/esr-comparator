@@ -10,7 +10,9 @@ Description: Rapidly find common code segments in large source trees.
 
 XBS-Repository-URL: http://thyrsus.com/gitweb/?p=comparator.git
 
-XBS-Ohloh-URL: http://www.ohloh.net/p/comparator
+XBS-Clone-From: git@thyrsus.com:comparator
+
+XBS-Openhub-URL: http://www.openhub.net/p/comparator
 
 #XBS-Destinations: freecode
 
