@@ -16,7 +16,7 @@ XBS-HTML-Target: index.html
 
 XBS-Repository-URL: http://thyrsus.com/gitweb/?p=comparator.git
 
-XBS-Openhub-URL: http://www.openhub.net/p/comparator
+XBS-OpenHub-URL: http://www.openhub.net/p/comparator
 
 XBS-Logo: comparator-logo.png
 
