@@ -107,3 +107,6 @@ dist: comparator-$(VERS).tar.gz
 release: comparator-$(VERS).tar.gz comparator.html
 	shipper version=$(VERS) | sh -e -x
 
+refresh: comparator.html
+	shipper -N -w version=$(VERS) | sh -e -x
+

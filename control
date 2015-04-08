@@ -8,20 +8,18 @@ Description: Rapidly find common code segments in large source trees.
  or closely matching segments in source trees.  They are fast enough to
  give near-instant results even on trees running to millions of lines each.
 
-XBS-Repository-URL: http://thyrsus.com/gitweb/?p=comparator.git
-
-XBS-Clone-From: git@thyrsus.com:comparator
-
-XBS-Openhub-URL: http://www.openhub.net/p/comparator
-
-#XBS-Destinations: freecode
+#XBS-Destinations: freshcode
 
 Homepage: http://www.catb.org/~esr/comparator
 
 XBS-HTML-Target: index.html
 
+XBS-Repository-URL: http://thyrsus.com/gitweb/?p=comparator.git
+
+XBS-Openhub-URL: http://www.openhub.net/p/comparator
+
 XBS-Logo: comparator-logo.png
 
-XBS-Freecode-Tags: source code, forensics, copyright
+#XBS-Project-Tags: source code, forensics, copyright
 
 XBS-VC-Tag-Template: %(version)s
