@@ -1,4 +1,8 @@
-/* main.c -- main sequence of comparator */
+/*
+ * main.c -- main sequence of comparator
+ *
+ * SPDX-License-Identifier: BSD-2-clause
+ */
 
 #include <limits.h>
 #include <stdio.h>

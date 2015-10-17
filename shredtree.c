@@ -1,4 +1,8 @@
-/* shedtree.c -- generate MD5 hash list from a file tree */
+/*
+ * shedtree.c -- generate MD5 hash list from a file tree
+ *
+ * SPDX-License-Identifier: BSD-2-clause
+ */
 
 #include <stdio.h>
 #include <unistd.h>

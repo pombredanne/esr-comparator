@@ -1,4 +1,8 @@
-/* hash.c -- hash and digest computation for comparator */
+/* 
+ * hash.c -- hash and digest computation for comparator
+ *
+ * SPDX-License-Identifier: BSD-2-clause
+ */
 #include <stdio.h>
 #include "hash.h"
 

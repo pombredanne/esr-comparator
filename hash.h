@@ -1,5 +1,7 @@
 /* interface file for comparator hash function */
 
+/* SPDX-License-Identifier: BSD-2-clause */
+
 #include <stdint.h>
 
 #ifndef FORCE_MD5

@@ -2,6 +2,8 @@
 # Generate hash function mapping text bytes to an unsigned integral
 # type, using MD5 to generate the magic values.  Based on an algorithm
 # suggested by Ron Rivest.
+#
+# SPDX-License-Identifier: BSD-2-clause
 
 import sys, hashlib
 

@@ -1,4 +1,8 @@
-/* shred.h -- types for shred similarity tools */
+/*
+ * shred.h -- types for shred similarity tools
+ *
+ * SPDX-License-Identifier: BSD-2-clause
+ */
 
 #include <sys/types.h>
 #include <netinet/in.h>

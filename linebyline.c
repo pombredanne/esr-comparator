@@ -3,6 +3,9 @@
 NAME:
    linebyline.c -- line-oriented feature analyzer for source-code comparisons
 
+LICENSE
+   SPDX-License-Identifier: BSD-2-clause
+
 ******************************************************************************/
 #include <stdlib.h>
 #include <stdio.h>

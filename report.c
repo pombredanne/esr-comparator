@@ -1,4 +1,8 @@
-/* report.c -- search hash lists for common matches */
+/*
+ * report.c -- search hash lists for common matches
+ *
+ * SPDX-License-Identifier: BSD-2-clause
+ */
 
 #include <unistd.h>
 #include <stdio.h>

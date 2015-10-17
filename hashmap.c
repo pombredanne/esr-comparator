@@ -1,4 +1,8 @@
-/* hashmap.c -- fast lookup for hash lists. */
+/*
+ * hashmap.c -- fast lookup for hash lists.
+ *
+ * SPDX-License-Identifier: BSD-2-clause
+ */
 
 #include <sys/types.h>
 #include "shred.h"
